@@ -10,6 +10,7 @@ import { buildEnvelope } from "./envelope";
 import { type RepoInfo, repoInfo } from "./git";
 import { baseRev, gitOpFor } from "./git-state";
 import { appendOutbox, flushOutbox, type OutboxEntry } from "./outbox";
+import { revertedPaths } from "./reverts";
 import { handleSessionCommand } from "./session-command";
 import { writeSessionId } from "./session-file";
 import { transcriptTokens, transcriptToolUsage } from "./transcript";
@@ -63,6 +64,8 @@ function addGitContext(input: HookInput, envelope: IngestEnvelope, repo: RepoInf
     if (n !== "PreToolUse" && envelope.command) {
       const op = gitOpFor(envelope.command, input.cwd, envelope.exitCode);
       if (op) envelope.git = op;
+      const reverted = envelope.exitCode === 0 ? revertedPaths(envelope.command, input.cwd, repo.root) : [];
+      if (reverted.length) envelope.reverted = reverted.slice(0, 200);
     }
   } catch {
     // git context is an enrichment; the event still goes out without it
