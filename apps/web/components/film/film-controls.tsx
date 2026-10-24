@@ -1,5 +1,5 @@
 import { DURATION, lastBefore, mmss } from "./film-clock";
-import { CHAPTERS } from "./film-story";
+import { CHAPTERS } from "./film-timeline";
 
 type Props = {
   s: number;
