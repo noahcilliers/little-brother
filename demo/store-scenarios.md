@@ -1,19 +1,22 @@
 # Demo scenarios: Quill & Kettle
 
-Three live scenarios on **lb-demo-store**, a small online shop (stationery, kitchen, tea). Each one has three
-agents with prompts that clash on purpose. This file stays here, not in the demo repo, so agents can't read
-each other's prompts.
+Three live scenarios on [quill-and-kettle](https://github.com/noahcilliers/quill-and-kettle), a small online
+shop (stationery, kitchen, tea). Each one has three agents with prompts that clash on purpose. This file stays
+here, not in the shop's repo, so agents can't read each other's prompts.
 
 ## Setup
 
+Once per person, on their own laptop:
+
 ```sh
-demo/store.sh init ~/lb-demo-store --install              # one laptop per person: each runs this
-demo/store.sh init /tmp/lb-demo/store --worktrees --install  # rehearsal: noah/joshua/ash worktrees on one machine
-demo/store.sh reset ~/lb-demo-store                        # between scenarios
+git clone https://github.com/noahcilliers/quill-and-kettle.git && cd quill-and-kettle
+npm install
+git checkout -b <handle>/work    # noah/work, joshua/work or ash/work
 ```
 
-`init` makes the same `main` commit on every machine. On `main`, `npm run typecheck` and `npm test` pass and
-`npm run dev` serves the shop at http://localhost:5173.
+On `main`, `npm run typecheck` and `npm test` pass and `npm run dev` serves the shop at http://localhost:5173.
+Everyone clones the same repo, so everyone starts from the same commit. That matters: the classifier only
+blocks two agents editing the same lines when both started from the same commit.
 
 | Person | Owns (`.littlebrother.json`) | Branch |
 | --- | --- | --- |
@@ -21,8 +24,17 @@ demo/store.sh reset ~/lb-demo-store                        # between scenarios
 | Joshua | cart and checkout: `src/contracts/cart.ts`, `src/contracts/order.ts`, `src/cart/**`, `src/checkout/**` | `joshua/work` |
 | Ash | storefront: `web/**` | `ash/work` |
 
+The owners in `.littlebrother.json` are matched against each person's Little Brother handle, so join as
+`noah`, `joshua` and `ash`.
+
+Keep the clone outside any folder with a `CLAUDE.md` above it (Claude Code loads those for every folder below
+them), so the agents only see the shop.
+
 **Before each scenario:**
-1. `demo/store.sh reset` on every machine.
+1. Reset to `main`, discarding the last scenario's changes:
+   ```sh
+   git fetch && git checkout -B "$(git branch --show-current)" origin/main && git clean -fd
+   ```
 2. Start a new Little Brother session on the dashboard and have all three `lb join` it. A fresh session means
    failure memory from one scenario doesn't leak into the next.
 3. Start Claude Code with the task list on: `CLAUDE_CODE_ENABLE_TODO_TOOLS=1 claude`.
