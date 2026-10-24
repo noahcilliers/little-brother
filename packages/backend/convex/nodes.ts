@@ -6,8 +6,16 @@ import { sha1Hex } from "./hash";
 type NewNode = Omit<Doc<"nodes">, "_id" | "_creationTime" | "touches" | "references" | "files"> &
   Partial<Pick<Doc<"nodes">, "touches" | "references" | "files">>;
 
-export function insertNode(ctx: MutationCtx, node: NewNode): Promise<Id<"nodes">> {
-  return ctx.db.insert("nodes", { files: [], touches: [], references: [], ...node });
+/** Copies the author's room onto the node so classifier reads can stay inside one room. */
+export async function insertNode(ctx: MutationCtx, node: NewNode): Promise<Id<"nodes">> {
+  const teamId = node.teamId ?? (await ctx.db.get(node.agentId))?.teamId;
+  return ctx.db.insert("nodes", {
+    files: [],
+    touches: [],
+    references: [],
+    ...node,
+    ...(teamId ? { teamId } : {}),
+  });
 }
 
 export async function activeVerbs(ctx: QueryCtx): Promise<VerbDef[]> {

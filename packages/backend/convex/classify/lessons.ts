@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, internalQuery } from "../_generated/server";
+import { insertNode } from "../nodes";
 import { stored } from "./load";
 
 function outputTail(payload: unknown): string | undefined {
@@ -59,7 +60,7 @@ export const insertLesson = internalMutation({
         .take(500)
     ).find((n) => n.kind === "knowledge" && n.parentId === a.intentId);
     if (existing) return null;
-    return ctx.db.insert("nodes", {
+    return insertNode(ctx, {
       agentId: intent.agentId,
       kind: "knowledge",
       verb: "LEARN",

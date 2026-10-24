@@ -1,13 +1,17 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type AgentLaunch, endSession, type Limits, type RunningAgent, startAgent } from "./agent";
+import type { Limits } from "./agent";
 import type { RunRecord } from "./aggregate";
+import type { Arm } from "./arm";
 import { type Backend, closeRun, openRun, snapshot } from "./backend";
 import type { EvalCase, Variant } from "./case";
+import { hookUsage, parseTimingLog } from "./hook-timing";
 import { mergeAll, runChecks } from "./oracle";
+import { runAgents, type Started, sleep, timingFile } from "./run-agents";
 import { scoreRun } from "./score";
-import { type AgentState, dueAt } from "./triggers";
+import { logTokens } from "./stream";
+import { addTokens, ZERO_TOKENS } from "./tokens";
 import { commitAgentWork, createWorkspace } from "./workspace";
 
 export type RunContext = {
@@ -27,95 +31,52 @@ export type RunContext = {
   settleSec: number;
 };
 
-const TICK_MS = 500;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const readTiming = (file: string) => (existsSync(file) ? parseTimingLog(readFileSync(file, "utf8")) : []);
 
-type Started = {
-  agent: RunningAgent;
-  startedAt: number;
-  fallback: boolean;
-  exit?: { code: number | null; timedOut: boolean };
-};
-
-async function runAgents(
-  c: EvalCase,
-  variant: Variant,
-  runDir: string,
-  code: string,
-  ctx: RunContext,
-  worktrees: Map<string, string>,
-) {
-  const states = new Map<string, AgentState>(
-    c.agents.map((a) => [a.handle, { startedAt: null, firstEditAt: null, doneAt: null }]),
-  );
-  const started = new Map<string, Started>();
-  const runStart = Date.now();
-  while (started.size < c.agents.length || [...states.values()].some((s) => s.doneAt === null)) {
-    for (const spec of c.agents) {
-      if (started.has(spec.handle)) continue;
-      const due = dueAt(spec.start, runStart, states);
-      if (!due || due.at > Date.now()) continue;
-      const state = states.get(spec.handle);
-      const cwd = worktrees.get(spec.handle);
-      if (!state || !cwd) throw new Error(`no state or worktree for ${spec.handle}`);
-      state.startedAt = Date.now();
-      const launch: AgentLaunch = {
-        handle: spec.handle,
-        prompt: spec.prompt[variant],
-        cwd,
-        sessionCode: code,
-        lbHome: ctx.lbHome,
-        sessionDir: join(runDir, "lb-sessions", spec.handle),
-        pluginDir: ctx.pluginDir,
-        mcpConfig: ctx.mcpConfig,
-        logFile: join(runDir, `${spec.handle}.stream.jsonl`),
-        limits: ctx.limits,
-        onFirstEdit: () => {
-          state.firstEditAt = Date.now();
-        },
-      };
-      const agent = startAgent(launch);
-      const entry: Started = { agent, startedAt: state.startedAt, fallback: due.fallback };
-      started.set(spec.handle, entry);
-      void agent.done.then((exit) => {
-        if (spec.endsSession) endSession(launch, agent.sessionId, ctx.cliPath);
-        entry.exit = exit;
-        state.doneAt = Date.now();
-      });
-    }
-    await sleep(TICK_MS);
-  }
-  return started;
+/** Little Brother output in an `off` run means the arm leaked, and its token totals would be meaningless. */
+function assertNoLb(started: Map<string, Started>, timingLines: number): void {
+  const heard = [...started].filter(([, s]) => s.agent.log.lbMessages.length).map(([h]) => h);
+  if (timingLines || heard.length)
+    throw new Error(
+      `off arm reached Little Brother (${timingLines} hook calls, messages to ${heard.join(", ") || "none"})`,
+    );
 }
 
-/** One case, one prompt variant, one repetition: run the agents live, then read back and score. */
+/** One case, prompt variant, arm and repetition: run the agents live, then read back and score. */
 export async function runCase(
   c: EvalCase,
   variant: Variant,
+  arm: Arm,
   run: number,
   ctx: RunContext,
 ): Promise<RunRecord> {
-  const name = `${c.id}-${variant}-${run}`;
+  const name = arm === "on" ? `${c.id}-${variant}-${run}` : `${c.id}-${variant}-off-${run}`;
   const runDir = join(ctx.outDir, "runs", name);
   // Session codes are capped at 40 characters; a longer one is dropped and the hooks fail open silently.
   const code = `ev${ctx.tag}-${createHash("sha1").update(name).digest("hex").slice(0, 10)}`;
   mkdirSync(runDir, { recursive: true });
   const t0 = Date.now();
-  const base = { caseId: c.id, variant, run };
+  const base = { caseId: c.id, variant, arm, run };
   const handles = c.agents.map((a) => a.handle);
   let started = new Map<string, Started>();
   const spent = () => [...started.values()].reduce((n, s) => n + s.agent.log.costUsd, 0);
+  const tokens = () =>
+    [...started.values()].map((s) => logTokens(s.agent.log)).reduce(addTokens, ZERO_TOKENS);
   try {
     const wsDir = join(ctx.workDir, name);
     const ws = createWorkspace(ctx.shopSrc, wsDir, handles, ctx.modules);
-    openRun(ctx.backend, code, name);
-    started = await runAgents(c, variant, runDir, code, ctx, ws.worktrees);
-    await sleep(ctx.settleSec * 1000);
-    const snap = snapshot(ctx.backend, code);
-    const seen = new Set(snap.agents.map((a) => a.handle));
-    const unseen = [...started.keys()].filter((h) => !seen.has(h));
-    if (unseen.length) throw new Error(`no hook from ${unseen.join(", ")} reached session ${code}`);
-    closeRun(ctx.backend, code);
+    if (arm === "on") openRun(ctx.backend, code, name);
+    started = await runAgents(c, variant, arm, runDir, code, ctx, ws.worktrees);
+    const timingLog = handles.flatMap((h) => readTiming(timingFile(runDir, h)));
+    let snap: ReturnType<typeof snapshot> | null = null;
+    if (arm === "on") {
+      await sleep(ctx.settleSec * 1000);
+      snap = snapshot(ctx.backend, code);
+      const seen = new Set(snap.agents.map((a) => a.handle));
+      const unseen = [...started.keys()].filter((h) => !seen.has(h));
+      if (unseen.length) throw new Error(`no hook from ${unseen.join(", ")} reached session ${code}`);
+      closeRun(ctx.backend, code);
+    } else assertNoLb(started, timingLog.length);
     for (const [h, dir] of ws.worktrees) commitAgentWork(dir, h);
     const merged = mergeAll(ws, wsDir, handles, ctx.modules);
     const logs = new Map([...started].map(([h, s]) => [h, s.agent.log]));
@@ -125,9 +86,22 @@ export async function runCase(
       startedAt: started.get(h)?.startedAt ?? null,
       firstEditAt: started.get(h)?.agent.log.firstEditAt ?? null,
     }));
-    const score = scoreRun(c, snap.classifications, timing, checks);
-    const costUsd = spent();
-    const record: RunRecord = { ...base, score, costUsd, wallSec: (Date.now() - t0) / 1000 };
+    const classifications = snap?.classifications ?? [];
+    const score = scoreRun(c, classifications, timing, checks);
+    const hooks = snap
+      ? hookUsage(
+          timingLog,
+          classifications.reduce((n, k) => n + (k.tokensSaved ?? 0), 0),
+        )
+      : undefined;
+    const record: RunRecord = {
+      ...base,
+      score,
+      costUsd: spent(),
+      tokens: tokens(),
+      wallSec: (Date.now() - t0) / 1000,
+      ...(hooks ? { hooks } : {}),
+    };
     const agents = [...started].map(([h, s]) => ({
       handle: h,
       sessionId: s.agent.sessionId,
@@ -139,6 +113,7 @@ export async function runCase(
       commands: s.agent.log.commands,
       lbMessages: s.agent.log.lbMessages,
       costUsd: s.agent.log.costUsd,
+      tokens: logTokens(s.agent.log),
       turns: s.agent.log.turns,
       result: s.agent.log.resultText.slice(0, 2000),
     }));
@@ -153,6 +128,7 @@ export async function runCase(
       ...base,
       score: { control: c.expect.length === 0, expectations: [], falsePositives: [] },
       costUsd: spent(),
+      tokens: tokens(),
       wallSec: (Date.now() - t0) / 1000,
       error,
     };

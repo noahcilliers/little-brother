@@ -22,6 +22,7 @@ type Verdict = Pick<
 export function writeVerdict(s: Story, t: number, v: Verdict) {
   return s.ctx.db.insert("classifications", {
     ...v,
+    teamId: s.teamId,
     direction: "new_needs_other",
     evidence: [],
     confidence: 0.9,

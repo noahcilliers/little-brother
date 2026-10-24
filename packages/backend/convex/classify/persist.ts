@@ -133,6 +133,7 @@ export async function persistJudgments(
         nodeId: next._id,
         againstNodeId: other._id,
         agentIds: next.agentId === other.agentId ? [next.agentId] : [next.agentId, other.agentId],
+        ...(next.teamId ? { teamId: next.teamId } : {}),
         status: "open",
       });
     }

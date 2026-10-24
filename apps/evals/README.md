@@ -55,14 +55,45 @@ The headline numbers:
 Each result also records the time from the later agent's prompt to the row, and whether the row came
 before that agent's first edit.
 
+## Hook overhead
+
+Each agent runs with `LB_TIMING_FILE=<run>/<handle>.hooks.jsonl`, so every `lb hook` call appends one line:
+total ms from process start to exit, ms per phase (boot, stdin, session, git, normalize, deliver, flush),
+whether it was delivered or hit the watchdog, and how many characters of output reach the model. The
+report's "Hook overhead" section pools PreToolUse calls across runs for p50/p95/max against the 150 ms
+target, shows where the time goes by phase, and sets estimated tokens injected (chars / 4) against the
+catches' `tokensSaved`. Node can't time its own exec and teardown, so the harness measures that once per
+invocation and adds it to every call. `--compare` shows the change in all of these.
+
+The same log works outside evals: set `LB_TIMING_FILE` in any shell or Claude session to time real use.
+
+## Measured savings
+
+`tokensSaved` is an estimate: a catch is credited with what the work it pointed at cost. To measure it,
+run with `--arm both`. Every case and variant then also runs with Little Brother off: same prompts and
+limits, but no plugin, hooks or MCP server, and no backend session. A run with the arm off fails if any
+hook call or Little Brother message shows up.
+
+Every run records its agents' summed API usage from the stream output. The report's "Measured savings"
+section compares, per case and variant, mean new tokens (input + output + cache writes, the definition
+`tokensSaved` uses) and cost with Little Brother off against on, with one standard error. It shows the
+catch-based estimate next to that, and how often the planted clash happened in each arm. Runs aren't
+paired, so it takes a few `--runs` per arm before a gap means more than noise; gaps under two standard
+errors are marked. Detection and hook metrics read only runs with Little Brother on.
+
+```sh
+pnpm --filter @lb/evals eval --arm both --variant pointed --runs 3
+```
+
 ## Layout
 
 - `cases/`: the suite. Duplicate, conflict, dependency (semantic and ordering), stale, and controls.
   Every agent has a `pointed` prompt that names files and a `natural` one that doesn't.
-- `src/`: the harness. `score.ts`, `aggregate.ts`, `stream.ts`, `triggers.ts` and `case.ts` are pure
-  and unit tested. The rest is I/O.
-- `results/` (gitignored): per run, `run.json` (agents, commands, Little Brother messages, checks, rows)
-  and each agent's raw `stream.jsonl`. Per invocation, `summary.json`, `runs.json` and `report.md`.
+- `src/`: the harness. `score.ts`, `aggregate.ts`, `measured-savings.ts`, `stream.ts`, `triggers.ts` and
+  `case.ts` are pure and unit tested. The rest is I/O.
+- `results/` (gitignored): per run, `run.json` (agents, commands, Little Brother messages, checks, rows),
+  each agent's raw `stream.jsonl` and its hook timing log `hooks.jsonl`. Runs with Little Brother off go in
+  `runs/<case>-<variant>-off-<n>/`. Per invocation, `summary.json`, `runs.json` and `report.md`.
 
 ## Writing a case
 

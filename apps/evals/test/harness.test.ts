@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CASES } from "../cases";
 import { caseProblems, type EvalCase, startOrder } from "../src/case";
-import { applyLine, emptyLog, redirectTargets } from "../src/stream";
+import { applyLine, emptyLog, logTokens, redirectTargets } from "../src/stream";
 import { type AgentState, dueAt } from "../src/triggers";
 
 describe("cases", () => {
@@ -110,6 +110,24 @@ describe("applyLine", () => {
       finished: true,
       resultText: "done",
     });
+  });
+
+  it("counts each message's usage once, keeping its largest counts", () => {
+    const log = emptyLog();
+    const msg = (id: string | undefined, output: number) =>
+      JSON.stringify({
+        type: "assistant",
+        message: {
+          ...(id ? { id } : {}),
+          usage: { input_tokens: 5, output_tokens: output, cache_read_input_tokens: 1000 },
+          content: [{ type: "text", text: "x" }],
+        },
+      });
+    applyLine(log, msg("m1", 3), root, 1);
+    applyLine(log, msg("m1", 40), root, 2);
+    applyLine(log, msg("m2", 7), root, 3);
+    applyLine(log, msg(undefined, 1), root, 4);
+    expect(logTokens(log)).toEqual({ input: 15, output: 48, cacheCreation: 0, cacheRead: 3000 });
   });
 
   it("ignores lines it doesn't understand", () => {

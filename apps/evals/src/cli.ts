@@ -1,9 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { newTokens } from "@lb/core";
 import { CASES } from "../cases";
 import { type RunRecord, type Summary, summarize } from "./aggregate";
 import { type Backend, describeBackend, healthy } from "./backend";
+import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
 import { renderCompare } from "./compare";
 import { shOrThrow } from "./exec";
@@ -100,25 +102,33 @@ async function main(): Promise<void> {
     settleSec: opts.settleSec,
   };
   const jobs = cases.flatMap((c) =>
-    opts.variants.flatMap((v) => Array.from({ length: opts.runs }, (_, i) => ({ c, v, run: i + 1 }))),
+    opts.variants.flatMap((v) =>
+      opts.arms.flatMap((arm) => Array.from({ length: opts.runs }, (_, i) => ({ c, v, arm, run: i + 1 }))),
+    ),
   );
   console.log(`${jobs.length} run(s) · ${backendInfo}\nresults → ${outDir}\nworktrees → ${workDir}`);
   let done = 0;
-  const runs: RunRecord[] = await pool(jobs, opts.concurrency, async ({ c, v, run }) => {
-    const r = await runCase(c, v, run, ctx);
+  const runs: RunRecord[] = await pool(jobs, opts.concurrency, async ({ c, v, arm, run }) => {
+    const r = await runCase(c, v, arm, run, ctx);
+    // With Little Brother off there are no rows to score, only whether the clash happened.
     const outcomes =
-      r.score.expectations.map((e) => e.outcome).join(",") || (r.score.control ? "control" : "-");
+      r.score.expectations
+        .map((e) => (arm === "off" ? (e.materialized ? "clash" : "no-clash") : e.outcome))
+        .join(",") || (r.score.control ? "control" : "-");
+    const tokens = r.tokens ? ` · ${Math.round(newTokens(r.tokens) / 1000)}k tok` : "";
     console.log(
-      `[${++done}/${jobs.length}] ${c.id} ${v} #${run}: ${r.error ? `ERROR ${r.error}` : outcomes} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)} · ${Math.round(r.wallSec)} s`,
+      `[${++done}/${jobs.length}] ${c.id} ${v} ${arm === "off" ? "LB-off " : ""}#${run}: ${r.error ? `ERROR ${r.error}` : outcomes} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`,
     );
     return r;
   });
 
-  const summary = summarize(runs);
+  const spawnMs = spawnOverheadMs();
+  const summary = summarize(runs, spawnMs);
   const meta = {
     startedAt: startedAt.toISOString(),
     model: opts.model,
     variants: opts.variants,
+    arms: opts.arms,
     runsPerCase: opts.runs,
     backend: backendInfo,
     wallSec: (Date.now() - startedAt.getTime()) / 1000,

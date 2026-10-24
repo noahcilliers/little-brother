@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { transcriptUsage } from "../src/usage";
+import { newTokens, tokenCounts, transcriptUsage } from "../src/usage";
 
 const assistant = (id: string, usage: Record<string, number>, content: unknown[]) => ({
   type: "assistant",
@@ -53,5 +53,19 @@ describe("transcriptUsage", () => {
   it("keeps the most recent tool calls when capped", () => {
     const entries = ["a", "b", "c"].map((id, i) => assistant(`m${i}`, { output_tokens: 10 }, [toolUse(id)]));
     expect(Object.keys(transcriptUsage(entries, 2).toolTokens)).toEqual(["b", "c"]);
+  });
+});
+
+describe("tokenCounts", () => {
+  it("reads usage by kind and leaves cache reads out of new tokens", () => {
+    const t = tokenCounts({
+      input_tokens: 10,
+      output_tokens: 100,
+      cache_creation_input_tokens: 90,
+      cache_read_input_tokens: 50_000,
+    });
+    expect(t).toEqual({ input: 10, output: 100, cacheCreation: 90, cacheRead: 50_000 });
+    expect(newTokens(t)).toBe(200);
+    expect(tokenCounts(null)).toEqual({ input: 0, output: 0, cacheCreation: 0, cacheRead: 0 });
   });
 });

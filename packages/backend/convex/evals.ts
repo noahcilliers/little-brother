@@ -128,6 +128,7 @@ export const snapshot = internalQuery({
             againstText: against?.text ?? null,
             inbox: inbox.length,
             latencyMs: c.latencyMs,
+            tokensSaved: c.tokensSaved ?? null,
             at: c.at,
           });
         }

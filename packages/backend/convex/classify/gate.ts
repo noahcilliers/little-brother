@@ -23,10 +23,11 @@ async function handleOf(ctx: QueryCtx, agentId: Doc<"agents">["_id"]): Promise<s
   return member?.handle;
 }
 
-function openRows(ctx: QueryCtx): Promise<Doc<"classifications">[]> {
+/** Open rows in the node's room; a gate only acts on rows involving this agent, which share its room. */
+function openRows(ctx: QueryCtx, next: Doc<"nodes">): Promise<Doc<"classifications">[]> {
   return ctx.db
     .query("classifications")
-    .withIndex("by_status", (q) => q.eq("status", "open"))
+    .withIndex("by_team_status", (q) => q.eq("teamId", next.teamId).eq("status", "open"))
     .order("desc")
     .take(OPEN_SCAN);
 }
@@ -48,7 +49,7 @@ export async function claimGate(
   if (next.kind !== "action") return [];
   const mine = mutatedPaths(view);
   if (mine.size === 0) return [];
-  const rows = (await openRows(ctx)).filter(
+  const rows = (await openRows(ctx, next)).filter(
     (c) =>
       c.winnerAgentId &&
       c.winnerAgentId !== next.agentId &&
@@ -89,7 +90,7 @@ export async function openConflictGate(
   view: ClassifiedNode,
 ): Promise<Judgment[]> {
   if (next.kind !== "action") return [];
-  const rows = await openRows(ctx);
+  const rows = await openRows(ctx, next);
   const mine = rows.filter(
     (c) => c.action === "block" && c.type === "conflict" && c.agentIds.includes(next.agentId),
   );

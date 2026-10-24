@@ -1,9 +1,11 @@
 import { parseArgs } from "node:util";
+import type { Arm } from "./arm";
 import type { Variant } from "./case";
 
 export type Options = {
   cases: string[];
   variants: Variant[];
+  arms: Arm[];
   runs: number;
   model: string;
   maxTurns: number;
@@ -22,7 +24,8 @@ export const USAGE = `pnpm --filter @lb/evals eval [options]
 
   --cases a,b        case ids or id prefixes (default: all)
   --variant v        pointed | natural | both (default: both)
-  --runs n           repetitions per case and variant (default: 3)
+  --arm a            on | off | both: Little Brother on, off, or both to measure savings (default: on)
+  --runs n           repetitions per case, variant and arm (default: 3)
   --model m          agent model (default: sonnet)
   --max-turns n      per agent (default: 30)
   --max-budget usd   per agent (default: 1.5)
@@ -48,6 +51,7 @@ export function parseOptions(argv: string[]): Options {
     options: {
       cases: { type: "string" },
       variant: { type: "string" },
+      arm: { type: "string" },
       runs: { type: "string" },
       model: { type: "string" },
       "max-turns": { type: "string" },
@@ -70,6 +74,8 @@ export function parseOptions(argv: string[]): Options {
   const variant = values.variant ?? "both";
   if (!["pointed", "natural", "both"].includes(variant))
     throw new Error("--variant must be pointed, natural or both");
+  const arm = values.arm ?? "on";
+  if (!["on", "off", "both"].includes(arm)) throw new Error("--arm must be on, off or both");
   return {
     cases: values.cases
       ? values.cases
@@ -78,6 +84,7 @@ export function parseOptions(argv: string[]): Options {
           .filter(Boolean)
       : [],
     variants: variant === "both" ? ["pointed", "natural"] : [variant as Variant],
+    arms: arm === "both" ? ["off", "on"] : [arm as Arm],
     runs: Math.round(num(values.runs, 3, "runs")),
     model: values.model ?? "sonnet",
     maxTurns: Math.round(num(values["max-turns"], 30, "max-turns")),

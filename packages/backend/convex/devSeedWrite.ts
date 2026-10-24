@@ -15,6 +15,7 @@ export type Story = {
   now: number;
   at: number;
   agent: Record<Handle, Id<"agents">>;
+  teamId: Id<"teams">;
   handles: Handle[];
   /** Story seconds → wall-clock ms. */
   T: (s: number) => number;
@@ -53,6 +54,7 @@ export async function startStory(ctx: MutationCtx, at: number, handles: Handle[]
     now,
     at,
     agent,
+    teamId: scope.teamId,
     handles,
     T: (s) => Math.round(base + s * UNIT_MS),
     seen: (s) => s !== undefined && s <= at,
@@ -92,6 +94,7 @@ export async function writeNode(
   return s.ctx.db.insert("nodes", {
     ...EMPTY,
     agentId: s.agent[a],
+    teamId: s.teamId,
     kind: row.kind,
     verb,
     text: row.text,
@@ -124,6 +127,7 @@ async function writeAct(
   const nodeId = await s.ctx.db.insert("nodes", {
     ...EMPTY,
     agentId: s.agent[k.a],
+    teamId: s.teamId,
     kind: "action",
     verb,
     text: `${verb} ${k.topic} ${x.target}${x.outcome === "failed" ? " → FAIL" : ""}`,

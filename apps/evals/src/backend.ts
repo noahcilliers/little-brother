@@ -31,6 +31,7 @@ const Snapshot = z.object({
       againstText: z.string().nullable(),
       inbox: z.number(),
       latencyMs: z.number(),
+      tokensSaved: z.number().nullable().optional(),
       at: z.number(),
     }),
   ),
