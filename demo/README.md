@@ -6,6 +6,9 @@
 - `setup.sh` — turns `shop/` into a git repo with `main` plus `noah/auth`, `joshua/checkout`, `ash/frontend`.
 - `solution/` — reference overlay (JWT bearer + Vite proxy) proving the integration test can pass. Never copied
   by `setup.sh`.
+- `store-scenarios.md` — the three live demo scenarios and their prompts. They run on
+  [quill-and-kettle](https://github.com/noahcilliers/quill-and-kettle), a separate repo; the evals still use
+  `shop/`.
 
 ```sh
 demo/setup.sh ~/lb-demo-shop --install           # one repo, three branches
