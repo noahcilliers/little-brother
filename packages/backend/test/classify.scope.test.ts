@@ -73,7 +73,8 @@ describe("hot-path retrieval scope", () => {
       await insertNode(ctx, edit(noah, "db/users.ts"));
       // More open work than the old deployment-wide window (200 rows) held, all newer than noah's.
       for (let i = 0; i < 250; i++) await insertNode(ctx, edit(stranger, `other/${i}.ts`));
-      return runSyncChecks(ctx, await insertNode(ctx, edit(joshua, "db/users.ts")));
+      const result = await runSyncChecks(ctx, await insertNode(ctx, edit(joshua, "db/users.ts")));
+      return result.judgments;
     });
     expect(judgments[0]).toMatchObject({ relation: "textual_conflict" });
   });

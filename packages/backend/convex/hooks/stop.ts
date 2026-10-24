@@ -7,7 +7,7 @@ import { closeOpenTasks } from "../tasks";
 import { applyToolTokens } from "../tokens";
 import type { HookHandler } from "./types";
 
-const MAX_STOP_BLOCKS = 2;
+const MAX_STOP_BLOCKS = 1;
 
 /** A trajectory fails when its last test (or, lacking tests, last command) failed. */
 async function trajectoryOutcome(ctx: MutationCtx, intent: Doc<"nodes">): Promise<"succeeded" | "failed"> {
@@ -39,14 +39,16 @@ async function closeIntent(ctx: MutationCtx, agent: Doc<"agents">): Promise<stri
 
 export const onStop: HookHandler = async ({ ctx, agent, env }) => {
   await applyToolTokens(ctx, agent, env.toolTokens);
-  const urgent = await unackedUrgent(ctx, agent._id);
+  // Only a conflict waiting on a person holds the agent back. Ordinary notices were already delivered with the
+  // hooks; demanding acks for them cost a model turn each and changed nothing the agent did.
+  const urgent = (await unackedUrgent(ctx, agent._id)).filter((i) => i.action === "block");
   const attempts = Math.max(0, ...urgent.map((i) => i.attempts));
   if (urgent.length > 0 && !env.stopHookActive && attempts < MAX_STOP_BLOCKS) {
     for (const item of urgent) {
       await ctx.db.patch(item._id, { attempts: item.attempts + 1, state: "delivered" });
     }
     const digest = renderDigest(urgent.map((i) => ({ id: i._id, text: i.text })));
-    const reason = `${digest}\nThese need a response before you stop: adapt your work, then call little-brother ack with each id.`;
+    const reason = `${digest}\nThe owner hasn't decided this yet. Avoid the contested change: finish other parts, or stop and tell the user what is waiting on the decision.`;
     return {
       output: blockStop(reason),
       summary: `stop blocked by ${urgent.length} item(s)`,

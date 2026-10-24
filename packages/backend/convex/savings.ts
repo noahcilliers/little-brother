@@ -1,8 +1,30 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
+// The before/after eval measured a redo at ~0.6× the original task (the users table: 6.5k redone vs ~11k
+// originally), and caught agents spending tokens inspecting the other side right after the catch. Both are
+// taken off the gross credit; the constants stay until the eval data fits them per relation.
+const REDO_FACTOR = 0.6;
+const COORDINATION_WINDOW_MS = 10 * 60_000;
+const INSPECT = /\bgit\s+(show|diff|log|fetch|merge|branch)\b/;
+
+/** Tokens the caught agent spent reading the other side's work right after the catch. */
+async function coordinationTokens(ctx: QueryCtx, c: Doc<"classifications">): Promise<number> {
+  const caught = await ctx.db.get(c.nodeId);
+  if (!caught) return 0;
+  const after = await ctx.db
+    .query("nodes")
+    .withIndex("by_agent", (q) => q.eq("agentId", caught.agentId).gte("at", c.at))
+    .take(200);
+  return after
+    .filter((n) => n.at <= c.at + COORDINATION_WINDOW_MS && n.kind === "action")
+    .filter((n) => n.verb === "READ" || INSPECT.test(n.text))
+    .reduce((s, n) => s + (n.tokens ?? 0), 0);
+}
+
 /**
- * Estimated tokens a catch spared, stored as `classifications.tokensSaved` and always shown as an estimate:
+ * Estimated tokens a catch spared, net: the gross credit below × REDO_FACTOR, minus what the caught agent spent
+ * coordinating. Stored once per catch as `classifications.tokensSaved` and always shown as an estimate. Gross:
  * - duplicate: what the owner's original task cost (the work the duplicate would have redone)
  * - stale (repeats_failure): what the failed trajectory behind the lesson cost
  * - conflict that blocked or serialized, once resolved: what the superseded task cost when it was overruled
@@ -59,7 +81,8 @@ export async function savingsFor(ctx: QueryCtx, c: Doc<"classifications">): Prom
 }
 
 export async function refreshSavings(ctx: MutationCtx, c: Doc<"classifications">): Promise<void> {
-  const value = await savingsFor(ctx, c);
+  const gross = await savingsFor(ctx, c);
+  const value = gross === undefined ? undefined : gross * REDO_FACTOR - (await coordinationTokens(ctx, c));
   const tokensSaved = value && value > 0 ? Math.round(value) : undefined;
   if (tokensSaved !== c.tokensSaved) await ctx.db.patch(c._id, { tokensSaved });
 }

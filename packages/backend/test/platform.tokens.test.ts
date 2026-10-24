@@ -81,7 +81,7 @@ describe("tokens saved per catch (estimates)", () => {
     expect(dup?.tokensSaved).toBeUndefined();
 
     await send(t, noah, "Stop", "n1", { toolTokens: { "tu-users-noah": 4200 } });
-    expect((await classifications(t))[0]?.tokensSaved).toBe(4200);
+    expect((await classifications(t))[0]?.tokensSaved).toBe(4200 * 0.6);
   });
 
   test("stale: the failed trajectory behind the lesson (its abandoned task)", async () => {
@@ -108,7 +108,7 @@ describe("tokens saved per catch (estimates)", () => {
     const res = await send(t, ash, "PreToolUse", "a1", cors("tu-ash"));
     expect(JSON.stringify(res.output)).toContain("deny");
     const stale = (await classifications(t)).find((c) => c.relation === "repeats_failure");
-    expect(stale?.tokensSaved).toBe(3800);
+    expect(stale?.tokensSaved).toBe(3800 * 0.6);
   });
 
   test("conflict: the superseded task's tokens once the owner decides", async () => {
@@ -144,6 +144,6 @@ describe("tokens saved per catch (estimates)", () => {
       classificationId: classificationId as Id<"classifications">,
       keepNodeId: keep._id,
     });
-    expect((await classifications(t))[0]?.tokensSaved).toBe(2500);
+    expect((await classifications(t))[0]?.tokensSaved).toBe(2500 * 0.6);
   });
 });

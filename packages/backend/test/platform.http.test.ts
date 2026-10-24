@@ -90,7 +90,8 @@ describe("http routes", () => {
     const res = await post(t, "/hook/SessionStart", envelope("SessionStart", "a1"), tok);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { output: unknown };
-    expect(JSON.stringify(body.output)).toContain("team digest");
+    // Alone in the session with nothing known: no context is injected at all.
+    expect(body.output).toBeNull();
   });
 
   test("mcp ack applies feedback; post tools create nodes; unknown session falls back", async () => {

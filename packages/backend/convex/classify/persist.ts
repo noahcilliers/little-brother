@@ -1,7 +1,9 @@
 import {
+  ACTION_RANK,
   type Action,
-  type Counterpart,
+  catchKey,
   dedupe,
+  interventionAction,
   isFailureMemory,
   type Judgment,
   otherSideAction,
@@ -13,14 +15,9 @@ import {
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { stored } from "./load";
+import { avoidedTokens, counterpartOf, openCatch } from "./persist-parts";
 
 type Notified = "warn" | "serialize" | "block";
-
-async function counterpartOf(ctx: QueryCtx, node: Doc<"nodes">): Promise<Counterpart> {
-  const agent = await ctx.db.get(node.agentId);
-  const member = agent ? await ctx.db.get(agent.memberId) : null;
-  return { name: member?.handle ?? "another agent", active: agent?.status === "active", text: node.text };
-}
 
 /** The hook links the event to its node right before classifying, so it is among the agent's latest. */
 async function eventFor(ctx: QueryCtx, node: Doc<"nodes">): Promise<Id<"events"> | undefined> {
@@ -63,24 +60,37 @@ export type PersistOptions = {
 };
 
 /**
- * Step 7 + fan-out: store each judgment worth keeping (non-ignore, or any LLM verdict as a training label),
- * de-duplicated per pair and relation, and queue inbox items for affected agents.
+ * Step 7 + fan-out: store each judgment worth keeping (non-ignore, or any LLM verdict as a training label) and
+ * queue inbox items. Alerts are kept once per catch (pair of goals): a later step of the same work re-uses the
+ * open row and notifies nobody unless the severity rises. Returns the row each alerting judgment maps to.
  */
 export async function persistJudgments(
   ctx: MutationCtx,
   next: Doc<"nodes">,
   judgments: Judgment[],
   opts: PersistOptions,
-): Promise<void> {
+): Promise<Map<string, Id<"classifications">>> {
+  const rows = new Map<string, Id<"classifications">>();
   // A takeover passes for the new node (action ignore) but is still news: the other side must stop.
   const keep = judgments.filter((j) => j.action !== "ignore" || j.source === "llm" || j.winner === "next");
-  if (keep.length === 0) return;
+  if (keep.length === 0) return rows;
   const eventId = await eventFor(ctx, next);
   const self = await counterpartOf(ctx, next);
-  for (const j of keep) {
-    const otherId = ctx.db.normalizeId("nodes", j.otherNodeId);
+  for (const raw of keep) {
+    const otherId = ctx.db.normalizeId("nodes", raw.otherNodeId);
     const other = otherId ? await ctx.db.get(otherId) : null;
     if (!other) continue;
+    const j: Judgment = {
+      ...raw,
+      action: interventionAction({ ...raw, avoidedTokens: await avoidedTokens(ctx, other) }),
+    };
+    const key = catchKey(next, other);
+    const existing = j.action === "ignore" ? undefined : await openCatch(ctx, key);
+    if (existing) {
+      rows.set(j.otherNodeId, existing._id);
+      // Same catch, no more severe: the agents already know. Only a rise in severity is news.
+      if (ACTION_RANK[j.action] <= ACTION_RANK[existing.action]) continue;
+    }
     // Both sides of a pair get classified (often concurrently, in separate actions), so look both ways:
     // A-vs-B and B-vs-A are one collision and must not alert twice.
     const forward = await ctx.db
@@ -97,10 +107,12 @@ export async function persistJudgments(
     const takeover = j.winner === "next";
     // Stored as warn so the hook (which denies on serialize rows for its node) lets the winner through.
     const rowAction: Action = takeover ? "warn" : j.action;
-    const decision = dedupe(
-      prior.map((p) => ({ id: p._id, relation: p.relation, action: p.action, status: p.status })),
-      { relation: j.relation, action: rowAction },
-    );
+    const decision = existing
+      ? { kind: "raise" as const, id: existing._id }
+      : dedupe(
+          prior.map((p) => ({ id: p._id, relation: p.relation, action: p.action, status: p.status })),
+          { relation: j.relation, action: rowAction },
+        );
     if (decision.kind === "skip") continue;
     const them = await counterpartOf(ctx, other);
     const notice = takeover
@@ -120,6 +132,7 @@ export async function persistJudgments(
       retrievalScore: j.retrievalScore,
       source: j.source,
       latencyMs: j.latencyMs,
+      catchKey: key,
       at: Date.now(),
     };
     let classificationId: Id<"classifications">;
@@ -137,6 +150,7 @@ export async function persistJudgments(
         status: "open",
       });
     }
+    rows.set(j.otherNodeId, classificationId);
     if (takeover) {
       await enqueue(ctx, other.agentId, classificationId, "serialize", notice);
       continue;
@@ -154,6 +168,7 @@ export async function persistJudgments(
       );
     }
   }
+  return rows;
 }
 
 export const SYNC_SELF: ReadonlySet<Action> = new Set<Action>(["warn"]);

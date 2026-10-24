@@ -37,6 +37,7 @@ async function inbox(ctx: MutationCtx, agent: Doc<"agents">): Promise<Posted> {
       renderDigest(
         items.map((i) => ({ id: i._id, text: i.text })),
         20,
+        true,
       ) || "inbox empty",
   };
 }

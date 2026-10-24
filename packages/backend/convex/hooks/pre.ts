@@ -68,12 +68,15 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
   });
   // Linked before the checks run so classifications can find the event that triggered them.
   await ctx.db.patch(eventId, { nodeId });
-  const judgments = await runSyncChecks(ctx, nodeId);
-  // Prefer the classifier's rendered reason (owner names, what to do instead); fall back to raw evidence.
-  const stored = await ctx.db
+  const { judgments, rowIds } = await runSyncChecks(ctx, nodeId);
+  // Prefer the classifier's rendered reason (owner names, what they built, what to do instead) from the catch
+  // rows this step maps to; fall back to raw evidence.
+  const byNode = await ctx.db
     .query("classifications")
     .withIndex("by_node", (q) => q.eq("nodeId", nodeId))
     .collect();
+  const matched = (await Promise.all(rowIds.map((id) => ctx.db.get(id)))).filter((c) => c !== null);
+  const stored = [...new Map([...byNode, ...matched].map((c) => [c._id, c])).values()];
   // Equal severity: a known failure is the most actionable explanation, then duplicates, then conflicts.
   const explains = { stale: 0, duplicate: 1, conflict: 2, normal: 3 } as const;
   const urgentReasons = stored

@@ -6,6 +6,8 @@ export type Counterpart = {
   name: string; // member handle, supplied by the caller
   active: boolean;
   text: string; // their node's compact signature
+  /** What they built (files, exports, head of diff), so the reader can use it without opening their branch. */
+  card?: string;
 };
 
 const CLAIM = "claim: ";
@@ -17,12 +19,12 @@ function strip(evidence: string): string {
 const NEXT_STEP: Record<Relation, string> = {
   independent: "",
   overlap_compatible: "",
-  duplicate: "Reuse their work instead of redoing it.",
+  duplicate: "Use theirs as is (it's described above); you don't need to open their branch.",
   textual_conflict: "Let it land first, or work on something else meanwhile.",
   semantic_conflict: "Coordinate before changing it; the owner decides.",
   intent_contradiction: "These goals pull in opposite directions; the owner decides.",
   ordering_dependency: "One side must land first.",
-  repeats_failure: "Try a different approach.",
+  repeats_failure: "Skip that approach; take the one that worked.",
 };
 
 function line(j: Judgment, who: Counterpart): string {
@@ -43,7 +45,10 @@ function line(j: Judgment, who: Counterpart): string {
       ...[...claims.slice(0, 1), ...extra].map((e) => `${e}.`),
     ].join(" ");
   }
-  return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead} ${NEXT_STEP[j.relation]}`.trim();
+  const built = who.card && j.relation !== "repeats_failure" ? ` They built: ${who.card}.` : "";
+  // Rules can label a textual clash as duplicated work (two creates of one file); advise by what it is.
+  const next = j.type === "duplicate" ? NEXT_STEP.duplicate : NEXT_STEP[j.relation];
+  return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
 }
 
 /**

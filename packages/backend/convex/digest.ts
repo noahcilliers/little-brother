@@ -5,10 +5,10 @@ import { markDeliveredIds, queuedItems } from "./inbox";
 import { sessionAgents } from "./sessionRows";
 
 const MAX_LINES = 15;
+// One line, injected once per session and only when there are teammates: every token here is re-read on
+// every later turn, and the measured eval showed short sessions paying more for context than they saved.
 const PROTOCOL = [
-  "[little-brother protocol] Other agents share this repo; a denied edit names who owns the work, so build on it.",
-  "After acting on an item, call little-brother `ack` with its id; call `report_failure` when an approach fails.",
-  "Call `status` to see the team and `post_decision` when you pick an interface others will depend on.",
+  "[little-brother] A denied edit says who owns the work and what exists; use it as described, no need to inspect their branch. Acks are optional.",
 ];
 
 const clip = (s: string, n = 120) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
@@ -69,6 +69,8 @@ export async function teamDigest(ctx: QueryCtx, me: Doc<"agents">, withProtocol:
   const team = await teamLines(ctx, me);
   const conflicts = await conflictLines(ctx, me);
   const failures = await failureLines(ctx, me);
+  // Alone with nothing known: say nothing at all.
+  if (withProtocol && team.length === 0 && conflicts.length === 0 && failures.length === 0) return "";
   const body = [
     ...(team.length ? ["Team:", ...team] : ["Team: no other active agents"]),
     ...(conflicts.length ? ["Open conflicts involving you:", ...conflicts] : []),

@@ -178,8 +178,11 @@ export default defineSchema({
     tokensSaved: v.optional(v.number()), // estimate: tokens the catch spared (see convex/savings.ts)
     gitStatus: v.optional(v.union(v.literal("confirmed"), v.literal("clean"), v.literal("missed"))),
     latencyMs: v.number(),
+    // One coordination event between two goals, however many steps re-trigger it (core catchKey).
+    catchKey: v.optional(v.string()),
     at: v.number(),
   })
+    .index("by_catch", ["catchKey", "at"])
     .index("by_node", ["nodeId"])
     .index("by_status", ["status", "at"])
     .index("by_team_status", ["teamId", "status", "at"])

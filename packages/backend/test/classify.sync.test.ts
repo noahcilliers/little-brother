@@ -61,7 +61,7 @@ function insert(t: T, n: NodeIn): Promise<Id<"nodes">> {
   );
 }
 
-const sync = (t: T, id: Id<"nodes">) => t.run((ctx) => runSyncChecks(ctx, id));
+const sync = (t: T, id: Id<"nodes">) => t.run((ctx) => runSyncChecks(ctx, id).then((r) => r.judgments));
 const rows = (t: T) =>
   t.run(async (ctx) => ({
     classifications: await ctx.db.query("classifications").collect(),

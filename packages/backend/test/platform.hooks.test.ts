@@ -70,7 +70,7 @@ describe("hook ingest", () => {
     const text = JSON.stringify(res.output);
     expect(text).toContain("@noah");
     expect(text).toContain("switch auth to JWT");
-    expect(text).toContain("protocol");
+    expect(text).toContain("A denied edit says who owns the work");
     expect((await agentOf(t, "a1")).status).toBe("active");
   });
 
@@ -98,7 +98,8 @@ describe("hook ingest", () => {
     expect(intent?.text).toBe("PLAN build checkout");
     const itemId = await queueItem(t, agent._id, agent.intentId, "warn");
     const res = await hook(t, tok, envelope("UserPromptSubmit", "a1", { prompt: "continue" }));
-    expect(JSON.stringify(res.output)).toContain(itemId);
+    expect(JSON.stringify(res.output)).toContain("warn: auth uses jwt now");
+    expect(JSON.stringify(res.output)).not.toContain(itemId);
     expect((await t.run((ctx) => ctx.db.get(itemId)))?.state).toBe("delivered");
   });
 
@@ -128,7 +129,7 @@ describe("hook ingest", () => {
       tok,
       envelope("PostToolUse", "a1", { tool: "Bash", command: "pnpm vitest run", exitCode: 1 }),
     );
-    expect(JSON.stringify(post.output)).toContain(itemId);
+    expect(JSON.stringify(post.output)).toContain("warn: auth uses jwt now");
     const updated = await t.run((ctx) => ctx.db.get(action._id));
     expect(updated?.outcome).toBe("failed");
     expect(updated?.text).toContain("→ FAIL");
@@ -143,7 +144,7 @@ describe("hook ingest", () => {
     expect(node?.verb).toBe("EXPLORE");
   });
 
-  test("Stop blocks on unacked urgent items at most twice, then closes the intent as failed", async () => {
+  test("Stop holds the agent once for an undecided blocking conflict, then closes the intent as failed", async () => {
     const t = makeT();
     const tok = await joinMember(t, "ash");
     await hook(t, tok, envelope("UserPromptSubmit", "a1", { prompt: "add cors" }));
@@ -154,10 +155,9 @@ describe("hook ingest", () => {
     await queueItem(t, agent._id, intentId, "block");
     const first = await hook(t, tok, envelope("Stop", "a1"));
     expect(first.output).toMatchObject({ decision: "block" });
-    const second = await hook(t, tok, envelope("Stop", "a1"));
-    expect(second.output).toMatchObject({ decision: "block" });
-    const third = await hook(t, tok, envelope("Stop", "a1", { tokens: 1234 }));
-    expect(third.output).toBeNull();
+    expect(JSON.stringify(first.output)).not.toContain("ack");
+    const second = await hook(t, tok, envelope("Stop", "a1", { tokens: 1234 }));
+    expect(second.output).toBeNull();
     const intent = await t.run((ctx) => ctx.db.get(intentId));
     expect(intent?.outcome).toBe("failed");
     const stopEvent = await t.run((ctx) =>
