@@ -17,9 +17,17 @@ import { SelectedPanel } from "./selected-panel";
 import { Sessions } from "./sessions";
 import { TopBar } from "./top-bar";
 
+/** Members read by session id; the shared live view reads by the host's watch token and cannot decide. */
+type Source =
+  | { sessionId: SessionId; watchToken?: undefined }
+  | { watchToken: string; sessionId?: undefined };
+
 /** One session's board: each person's tasks on one time axis, people and the selected task beside it, transcripts below. */
-export function Board({ sessionId }: { sessionId: SessionId }) {
-  const raw = useQuery(api.dashboard.board, { sessionId });
+export function Board({ sessionId, watchToken }: Source) {
+  const member = useQuery(api.dashboard.board, sessionId ? { sessionId } : "skip");
+  const watched = useQuery(api.watch.board, watchToken ? { token: watchToken } : "skip");
+  const raw = watchToken ? watched : member;
+  const readOnly = watchToken !== undefined;
   const board = useMemo(() => (raw ? cleanBoard(raw) : undefined), [raw]);
   const [selected, setSelected] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
@@ -39,7 +47,7 @@ export function Board({ sessionId }: { sessionId: SessionId }) {
         t={play.t}
         highlight={highlight}
         onHighlight={setHighlight}
-        waiting={decisions.open ? 0 : decisions.count}
+        waiting={decisions.open || readOnly ? 0 : decisions.count}
         onOpenDecision={() => decisions.show()}
       />
       <div className="grid">
@@ -73,7 +81,7 @@ export function Board({ sessionId }: { sessionId: SessionId }) {
               t={play.t}
               start={start}
               colorOf={colorOf}
-              onOpenDecision={(id) => decisions.show(id)}
+              onOpenDecision={(id) => (readOnly ? undefined : decisions.show(id))}
             />
           </div>
         ) : null}
@@ -99,7 +107,7 @@ export function Board({ sessionId }: { sessionId: SessionId }) {
         onReplay={play.replay}
         onScrub={play.scrub}
       />
-      <DecisionModal queue={decisions} colorOf={colorOf} />
+      {readOnly ? null : <DecisionModal queue={decisions} colorOf={colorOf} />}
     </div>
   );
 }

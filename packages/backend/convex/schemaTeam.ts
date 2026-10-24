@@ -78,9 +78,12 @@ export const teamTables = {
     createdBy: v.id("members"),
     createdAt: v.number(),
     endedAt: v.optional(v.number()),
+    // Set while the host shares a read-only live view (judges, a projector); clearing it kills the link.
+    watchToken: v.optional(v.string()),
   })
     .index("by_team", ["teamId", "createdAt"])
-    .index("by_code", ["code"]),
+    .index("by_code", ["code"])
+    .index("by_watch", ["watchToken"]),
 
   // What the server did for a room, for its host: join attempts, admissions, dropped events, classifier
   // runs and failures. Hook arrivals themselves are read from `events`, not duplicated here.

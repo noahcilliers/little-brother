@@ -19,8 +19,10 @@ function summary(steps: LogStep[]): string {
 }
 
 /** Live record of what the classifier compared in this session and why it decided what it did. */
-export function ClassifierLog({ sessionId }: { sessionId: SessionId }) {
-  const steps = useQuery(api.dashboard.log, { sessionId });
+export function ClassifierLog({ sessionId, watchToken }: { sessionId?: SessionId; watchToken?: string }) {
+  const member = useQuery(api.dashboard.log, sessionId ? { sessionId } : "skip");
+  const watched = useQuery(api.watch.log, watchToken ? { token: watchToken } : "skip");
+  const steps = watchToken ? watched : member;
   const [catchesOnly, setCatchesOnly] = useState(false);
   if (steps === undefined) return <PageState title="Loading classifier log…" />;
   if (steps === null || steps.length === 0)

@@ -128,4 +128,19 @@ describe("rooms, sessions and connect tokens", () => {
     const t = makeT();
     expect((await post(t, "/join", { invite: "calhacks", handle: "ash" })).status).toBe(403);
   });
+
+  test("the host's read-only live view works by token without sign-in, and turning it off kills the link", async () => {
+    vi.stubEnv("LB_ALLOW_INVITE", "0");
+    const t = makeT();
+    const ash = await signedIn(t, "ash");
+    const { roomId } = await ash.mutation(api.rooms.create, { name: "cal" });
+    const { sessionId } = await ash.mutation(api.sessions.create, { roomId, name: "demo" });
+    const { watchToken } = await ash.mutation(api.sessions.setWatch, { sessionId, on: true });
+    const token = watchToken ?? "";
+    expect(await t.query(api.watch.session, { token })).toMatchObject({ name: "demo", room: "cal" });
+    expect((await t.query(api.watch.board, { token }))?.agents).toEqual([]);
+    expect(await t.query(api.watch.board, { token: "x".repeat(32) })).toBeNull();
+    await ash.mutation(api.sessions.setWatch, { sessionId, on: false });
+    expect(await t.query(api.watch.session, { token })).toBeNull();
+  });
 });

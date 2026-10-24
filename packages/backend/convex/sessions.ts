@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { openMode, requireRoom, viewerMember, viewSession } from "./access";
 import { requestOrJoin } from "./admission";
+import { randomToken } from "./hash";
 import { logForMember, writeLog } from "./serverLog";
 import { freeCode, sessionByCode } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
@@ -32,14 +33,42 @@ export const get = query({
     if (!s) return null;
     const team = await ctx.db.get(s.teamId);
     const me = await viewerMember(ctx);
+    const isHost = team !== null && me !== null && team.ownerId === me.userId;
     return {
-      isHost: team !== null && me !== null && team.ownerId === me.userId,
+      isHost,
+      // Join QR: members may share the invite; the watch link is the host's to hand out.
+      inviteCode: me ? (team?.inviteCode ?? null) : null,
+      watchToken: isHost ? (s.watchToken ?? null) : null,
       id: s._id,
       name: s.name,
       code: s.code,
       endedAt: s.endedAt ?? null,
       room: { id: s.teamId, name: team?.name ?? "room" },
     };
+  },
+});
+
+/** Host only: turn the read-only live view on (a fresh link) or off (the old link stops working). */
+export const setWatch = mutation({
+  args: { sessionId: v.id("sessions"), on: v.boolean() },
+  handler: async (ctx, { sessionId, on }) => {
+    const s = await ctx.db.get(sessionId);
+    if (!s) return null;
+    const { team, member } = await requireRoom(ctx, s.teamId);
+    if (team.ownerId !== member.userId) throw new ConvexError("Only the room's host can share a live view.");
+    const watchToken = on ? randomToken(16) : undefined;
+    await ctx.db.patch(sessionId, { watchToken });
+    await writeLog(ctx, {
+      teamId: s.teamId,
+      sessionId,
+      memberId: member._id,
+      level: "info",
+      kind: "watch",
+      text: on
+        ? `@${member.handle} shared a read-only live view`
+        : `@${member.handle} turned the live view off`,
+    });
+    return { watchToken: watchToken ?? null };
   },
 });
 

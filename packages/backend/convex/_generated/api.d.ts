@@ -90,6 +90,7 @@ import type * as teamMembers from "../teamMembers.js";
 import type * as tokenAuth from "../tokenAuth.js";
 import type * as tokens from "../tokens.js";
 import type * as verify from "../verify.js";
+import type * as watch from "../watch.js";
 
 import type {
   ApiFromModules,
@@ -180,6 +181,7 @@ declare const fullApi: ApiFromModules<{
   tokenAuth: typeof tokenAuth;
   tokens: typeof tokens;
   verify: typeof verify;
+  watch: typeof watch;
 }>;
 
 /**

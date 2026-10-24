@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api, asSessionId } from "@/lib/api";
 import { Board } from "../board/board";
 import { WaitingRoom } from "../rooms/waiting-room";
+import { ShareButton } from "../share/share-button";
 import { AppHeader } from "../shell/app-header";
 import { CodeChip } from "../shell/code-chip";
 import { PageState } from "../shell/page-state";
@@ -50,6 +51,7 @@ export function SessionView({ sessionId }: { sessionId: string }) {
       >
         {session.endedAt !== null ? <span className="row-tag">ended</span> : null}
         <CodeChip code={session.code} />
+        <ShareButton session={session} />
         {empty ? null : <ViewSwitch tab={tab} onChange={setTab} host={session.isHost} />}
         {empty ? null : <JoinPopover code={session.code} />}
         <SessionActions session={session} />
