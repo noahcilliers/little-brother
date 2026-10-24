@@ -1,6 +1,6 @@
 import { cleanPrompt } from "@lb/core";
-import type { Doc } from "../_generated/dataModel";
-import { clip, lbSentence } from "./labels";
+import type { Doc, Id } from "../_generated/dataModel";
+import { capitalize, clip, lbSentence } from "./labels";
 import { payloadField, payloadString } from "./shared";
 import type { Source } from "./source";
 import type { BoardTask } from "./tasks";
@@ -14,7 +14,14 @@ export type SessionLine = {
   head?: string;
   task?: string;
 };
-export type Session = { agentId: string; lines: SessionLine[] };
+/** One pane per live Claude session; `color` is its person's, so panes match their timeline lane. */
+export type Session = {
+  agentId: string;
+  name: string;
+  branch: string;
+  color: number;
+  lines: SessionLine[];
+};
 
 const LINES_PER_AGENT = 160;
 // Task-list tools already appear as ☐/☑ lines from the tasks table; reads are context, not work.
@@ -123,8 +130,15 @@ function inboxLine(i: Doc<"inbox">, src: Source, taskOf: Map<string, string>): S
   };
 }
 
-/** Each agent's session, oldest first, as the bottom panes show it. */
-export function buildSessions(src: Source, tasks: BoardTask[], taskOf: Map<string, string>): Session[] {
+/** Each live Claude session, oldest first, as the bottom panes show it. `panes` comes from splitSessions. */
+export function buildSessions(
+  panes: { src: Source; labels: Map<Id<"agents">, string> },
+  tasks: BoardTask[],
+  taskOf: Map<string, string>,
+): Session[] {
+  const { src, labels } = panes;
+  // Board tasks name their person's timeline lane; the raw task row says which session ran it.
+  const paneOf = new Map<string, string>(src.tasks.map((t) => [t._id, t.agentId]));
   const order: Record<LineKind, number> = {
     prompt: 0,
     task: 1,
@@ -139,11 +153,17 @@ export function buildSessions(src: Source, tasks: BoardTask[], taskOf: Map<strin
   return src.agents.map((a) => {
     const lines = [
       ...src.events.filter((e) => e.agentId === a._id).map((e) => eventLine(e, src, taskOf)),
-      ...tasks.filter((t) => t.agentId === a._id).flatMap(taskLines),
+      ...tasks.filter((t) => (paneOf.get(t.id) ?? t.agentId) === a._id).flatMap(taskLines),
       ...src.inbox.filter((i) => i.agentId === a._id).map((i) => inboxLine(i, src, taskOf)),
     ]
       .filter((l): l is SessionLine => l !== undefined)
       .sort((x, y) => x.t - y.t || order[x.kind] - order[y.kind]);
-    return { agentId: a._id, lines: lines.slice(-LINES_PER_AGENT) };
+    return {
+      agentId: a._id,
+      name: capitalize(labels.get(a._id) ?? "agent"),
+      branch: a.branch,
+      color: src.colors.get(a._id) ?? 1,
+      lines: lines.slice(-LINES_PER_AGENT),
+    };
   });
 }

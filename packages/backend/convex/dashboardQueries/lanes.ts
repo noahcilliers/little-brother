@@ -2,31 +2,36 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { Klass } from "./shared";
 import type { Source } from "./source";
 
-// A person often leaves dead Claude Code sessions behind (restarts, resumes), so those fold into the person's
-// first lane. Sessions running side by side are different agents, though, and each keeps a lane of its own,
-// or a person testing alone could never watch two of their sessions meet.
+// A person often runs several Claude Code sessions (new windows, restarts, resumes). The timeline shows
+// people, so it folds them into one lane per member. The session panes show what each terminal is doing,
+// so there only dead sessions fold away and every live one keeps a pane of its own.
 
 const STATUS_RANK: Record<Doc<"agents">["status"], number> = { active: 2, idle: 1, offline: 0 };
 
-type Lane = { lane: Doc<"agents">; members: Doc<"agents">[]; n: number; of: number };
+/** Agents that share a lane; the first one's id names the lane, so it stays stable across renders. */
+type Group = Doc<"agents">[];
 
-/** Groups one person's agents (oldest first) into lanes: the first lane holds the dead and the earliest live. */
-function personLanes(mine: Doc<"agents">[]): Lane[] {
-  const [anchor, ...rest] = mine;
+function byPerson(agents: Doc<"agents">[]): Group[] {
+  const people = new Map<string, Group>();
+  for (const a of agents) people.set(a.memberId, [...(people.get(a.memberId) ?? []), a]);
+  return [...people.values()];
+}
+
+/** One person's agents, oldest first: the first group holds the dead ones and the earliest live one. */
+function liveGroups(mine: Group): Group[] {
+  const anchor = mine[0];
   if (!anchor) return [];
   const live = mine.filter((a) => a.status !== "offline");
   const own = live.filter((a) => a !== anchor && a !== live[0]);
-  const folded = [anchor, ...rest.filter((a) => !own.includes(a))];
-  const groups = [folded, ...own.map((a) => [a])];
-  return groups.map((members, i) => ({ lane: members[0] ?? anchor, members, n: i + 1, of: groups.length }));
+  return [mine.filter((a) => !own.includes(a)), ...own.map((a) => [a])];
 }
 
-/** The lane keeps its first session's id (stable across renders) and its freshest branch and status. */
-function laneRow({ lane, members }: Lane): Doc<"agents"> {
-  const best = members.reduce((b, a) => (STATUS_RANK[a.status] > STATUS_RANK[b.status] ? a : b), lane);
-  const fresh = members.reduce((f, a) => (a.lastSeenAt > f.lastSeenAt ? a : f), lane);
+/** The lane keeps its anchor's id and its freshest branch and best status. */
+function laneRow(group: Group, anchor: Doc<"agents">): Doc<"agents"> {
+  const best = group.reduce((b, a) => (STATUS_RANK[a.status] > STATUS_RANK[b.status] ? a : b), anchor);
+  const fresh = group.reduce((f, a) => (a.lastSeenAt > f.lastSeenAt ? a : f), anchor);
   return {
-    ...lane,
+    ...anchor,
     status: best.status,
     branch: fresh.branch,
     intentId: fresh.intentId,
@@ -34,27 +39,16 @@ function laneRow({ lane, members }: Lane): Doc<"agents"> {
   };
 }
 
-function laneMap(src: Source) {
-  const people = new Map<string, Doc<"agents">[]>();
-  for (const a of src.agents) people.set(a.memberId, [...(people.get(a.memberId) ?? []), a]);
-  const lanes = [...people.values()].flatMap(personLanes);
+/** Rewrites every agent reference in the source to its group's lane. */
+function fold(src: Source, groups: Group[]): Source {
   const laneOf = new Map<string, Id<"agents">>();
-  const labels = new Map<Id<"agents">, string>();
-  const colors = new Map<Id<"agents">, number>();
-  lanes.forEach((l, i) => {
-    const handle = src.handles.get(l.lane._id) ?? "agent";
-    for (const a of l.members) {
-      laneOf.set(a._id, l.lane._id);
-      labels.set(a._id, l.of > 1 ? `${handle} · ${l.n}` : handle);
-      // Lanes take colors in join order, so two of one person's sessions never look alike.
-      colors.set(a._id, (i % 6) + 1);
-    }
-  });
-  return { lanes: lanes.map(laneRow), laneOf, labels, colors };
-}
-
-export function mergeLanes(src: Source): Source {
-  const { lanes, laneOf, labels, colors } = laneMap(src);
+  const lanes: Doc<"agents">[] = [];
+  for (const g of groups) {
+    const anchor = g[0];
+    if (!anchor) continue;
+    for (const a of g) laneOf.set(a._id, anchor._id);
+    lanes.push(laneRow(g, anchor));
+  }
   const to = <T extends Id<"agents"> | undefined>(id: T): T => (id ? (laneOf.get(id) ?? id) : id) as T;
   const verdict = (c: Klass): Klass => ({
     ...c,
@@ -65,8 +59,6 @@ export function mergeLanes(src: Source): Source {
   return {
     ...src,
     agents: lanes,
-    labels,
-    colors,
     nodes,
     nodeById: new Map(nodes.map((n) => [n._id, n])),
     tasks: src.tasks.map((t) => ({ ...t, agentId: to(t.agentId) })),
@@ -75,4 +67,28 @@ export function mergeLanes(src: Source): Source {
     verdicts: src.verdicts.map(verdict),
     recentVerdicts: src.recentVerdicts.map(verdict),
   };
+}
+
+/** One lane per person, for the timeline. */
+export function mergeLanes(src: Source): Source {
+  return fold(src, byPerson(src.agents));
+}
+
+/**
+ * One lane per live Claude session, for the session panes. `labels` names each lane by its person, plus
+ * "· n" when that person has several live sessions.
+ */
+export function splitSessions(src: Source): { src: Source; labels: Map<Id<"agents">, string> } {
+  const labels = new Map<Id<"agents">, string>();
+  const groups = byPerson(src.agents).flatMap((mine) => {
+    const split = liveGroups(mine);
+    split.forEach((g, i) => {
+      const anchor = g[0];
+      if (!anchor) return;
+      const handle = src.handles.get(anchor._id) ?? "agent";
+      labels.set(anchor._id, split.length > 1 ? `${handle} · ${i + 1}` : handle);
+    });
+    return split;
+  });
+  return { src: fold(src, groups), labels };
 }

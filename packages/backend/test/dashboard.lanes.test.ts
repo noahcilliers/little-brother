@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Doc, Id } from "../convex/_generated/dataModel";
-import { mergeLanes } from "../convex/dashboardQueries/lanes";
+import { mergeLanes, splitSessions } from "../convex/dashboardQueries/lanes";
 import type { Source } from "../convex/dashboardQueries/source";
 
 let clock = 0;
@@ -44,7 +44,6 @@ function source(
   return {
     agents,
     handles,
-    labels: new Map(handles),
     colors: new Map(),
     nodes,
     nodeById: new Map(nodes.map((n) => [n._id, n])),
@@ -59,33 +58,39 @@ function source(
 
 const handles = { m1: "noah", m2: "sam" };
 
-test("two live sessions of one person get a lane each, numbered and colored apart", () => {
-  const src = mergeLanes(source([agent("a1", "m1", "active"), agent("a2", "m1", "idle")], handles));
-  expect(src.agents.map((a) => a._id)).toEqual(["a1", "a2"]);
-  expect(src.agents.map((a) => src.labels.get(a._id))).toEqual(["noah · 1", "noah · 2"]);
-  expect(src.colors.get("a1" as Id<"agents">)).not.toBe(src.colors.get("a2" as Id<"agents">));
+test("the timeline keeps one lane per person however many sessions are live", () => {
+  const agents = [agent("a1", "m1", "active"), agent("a2", "m1", "idle"), agent("s1", "m2", "active")];
+  const src = mergeLanes(source(agents, handles, [node("n1", "a2")]));
+  expect(src.agents.map((a) => a._id)).toEqual(["a1", "s1"]);
+  expect(src.nodes.map((n) => n.agentId)).toEqual(["a1"]);
 });
 
-test("dead sessions fold into the person's first lane alongside the earliest live one", () => {
+test("two live sessions of one person get a pane each, numbered", () => {
+  const { src, labels } = splitSessions(
+    source([agent("a1", "m1", "active"), agent("a2", "m1", "idle")], handles),
+  );
+  expect(src.agents.map((a) => a._id)).toEqual(["a1", "a2"]);
+  expect(src.agents.map((a) => labels.get(a._id))).toEqual(["noah · 1", "noah · 2"]);
+});
+
+test("dead sessions fold into the person's first pane alongside the earliest live one", () => {
   const agents = [
     agent("dead1", "m1", "offline"),
     agent("live1", "m1", "active"),
     agent("dead2", "m1", "offline"),
     agent("live2", "m1", "active"),
   ];
-  const src = mergeLanes(
-    source(agents, handles, [node("n1", "dead2"), node("n2", "live1"), node("n3", "live2")]),
-  );
+  const nodes = [node("n1", "dead2"), node("n2", "live1"), node("n3", "live2")];
+  const { src } = splitSessions(source(agents, handles, nodes));
   expect(src.agents.map((a) => a._id)).toEqual(["dead1", "live2"]);
   expect(src.agents[0]?.status).toBe("active");
   expect(src.nodes.map((n) => n.agentId)).toEqual(["dead1", "dead1", "live2"]);
-  expect(src.labels.get("dead2" as Id<"agents">)).toBe("noah · 1");
 });
 
-test("one live session per person keeps a single unnumbered lane", () => {
+test("one live session per person keeps a single unnumbered pane", () => {
   const agents = [agent("old", "m1", "offline"), agent("new", "m1", "active"), agent("s1", "m2", "active")];
-  const src = mergeLanes(source(agents, handles));
+  const { src, labels } = splitSessions(source(agents, handles));
   expect(src.agents.map((a) => a._id)).toEqual(["old", "s1"]);
   expect(src.agents[0]?.branch).toBe("b-new");
-  expect(src.agents.map((a) => src.labels.get(a._id))).toEqual(["noah", "sam"]);
+  expect(src.agents.map((a) => labels.get(a._id))).toEqual(["noah", "sam"]);
 });

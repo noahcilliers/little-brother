@@ -10,7 +10,7 @@ const EVENTS_PER_AGENT = 300;
 const INBOX_PER_AGENT = 40;
 const VERDICT_SCAN = 1000;
 
-/** Every Claude session that joined this Little Brother session, live ones first (lanes.ts folds dead ones per person later). */
+/** Every Claude session that joined this Little Brother session, live ones first (lanes merge per person later). */
 async function laneAgents(ctx: Ctx, sessionId: Id<"sessions">): Promise<Doc<"agents">[]> {
   const agents = (
     await ctx.db
@@ -25,8 +25,6 @@ async function laneAgents(ctx: Ctx, sessionId: Id<"sessions">): Promise<Doc<"age
 export type Source = {
   agents: Doc<"agents">[];
   handles: Map<Id<"agents">, string>;
-  /** What the board calls each lane: the handle, plus "· n" when one person has several live sessions. */
-  labels: Map<Id<"agents">, string>;
   colors: Map<Id<"agents">, number>;
   nodes: Doc<"nodes">[];
   nodeById: Map<Id<"nodes">, Doc<"nodes">>;
@@ -137,7 +135,6 @@ export async function loadSource(ctx: Ctx, sessionId: Id<"sessions">): Promise<S
     topicOwners: await ownersOf(ctx, agents[0]?.repo),
     agents,
     handles,
-    labels: new Map(handles),
     colors,
     nodes,
     nodeById,

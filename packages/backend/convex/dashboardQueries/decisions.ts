@@ -7,8 +7,6 @@ export type DecisionSide = {
   nodeId: Id<"nodes">;
   agentId: string;
   handle: string;
-  /** The lane's label, which tells apart two sessions of one person; `handle` stays raw for inbox matching. */
-  who: string;
   taskId?: string;
   subject: string;
   /** What "Keep …" names: the task subject without its leading verb. */
@@ -54,7 +52,6 @@ export function buildDecisions(
       nodeId,
       agentId: n.agentId,
       handle: handles.get(n.agentId) ?? "agent",
-      who: src.labels.get(n.agentId) ?? handles.get(n.agentId) ?? "agent",
       taskId,
       subject,
       keep: subjectThing(subject),

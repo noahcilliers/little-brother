@@ -42,7 +42,7 @@ export function DecisionSide({
     <section className="dside">
       <header>
         <i style={{ background: color }} />
-        <b style={{ color }}>{side.who}</b>
+        <b style={{ color }}>{side.handle}</b>
         <span className="kbd">{keyHint}</span>
       </header>
       <div className="dsubject">{side.subject}</div>

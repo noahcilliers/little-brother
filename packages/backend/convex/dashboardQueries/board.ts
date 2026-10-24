@@ -4,7 +4,7 @@ import { buildCatches } from "./catches";
 import { buildDecisions } from "./decisions";
 import { buildGoals, buildShared } from "./goals";
 import { capitalize } from "./labels";
-import { mergeLanes } from "./lanes";
+import { mergeLanes, splitSessions } from "./lanes";
 import type { LooseAction } from "./routine";
 import { buildSessions } from "./sessions";
 import { type Ctx, payloadField, payloadString } from "./shared";
@@ -37,7 +37,7 @@ function agentRows(src: Source, tasks: BoardTask[], loose: LooseAction[]) {
     return {
       id: a._id as string,
       handle,
-      name: capitalize(src.labels.get(a._id) ?? handle),
+      name: capitalize(handle),
       color: src.colors.get(a._id) ?? 1,
       branch: a.branch,
       active: a.status === "active",
@@ -48,7 +48,8 @@ function agentRows(src: Source, tasks: BoardTask[], loose: LooseAction[]) {
 
 /** Everything the one-screen dashboard needs; the client only lays it out on the time axis. */
 export async function board(ctx: Ctx, sessionId: Id<"sessions">) {
-  const src = mergeLanes(await loadSource(ctx, sessionId));
+  const raw = await loadSource(ctx, sessionId);
+  const src = mergeLanes(raw);
   const { tasks, taskOfNode, loose } = buildTasks(src);
   fillTokens(src, tasks, loose);
   const goals = buildGoals(src, tasks);
@@ -72,7 +73,7 @@ export async function board(ctx: Ctx, sessionId: Id<"sessions">) {
     decisions: buildDecisions(src, tasks, taskOfNode),
     shared,
     catches,
-    sessions: buildSessions(src, tasks, taskOfNode),
+    sessions: buildSessions(splitSessions(raw), tasks, taskOfNode),
     verifies: verifyBadges(src),
     beats: buildBeats(src, goals, tasks, shared, catches),
     counts: {
