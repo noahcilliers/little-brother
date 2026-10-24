@@ -3,7 +3,8 @@ import type { ArmStats, SavingsSummary } from "./measured-savings";
 const tok = (x: number | null): string => {
   if (x === null) return "–";
   const r = Math.round(x);
-  return Math.abs(r) >= 10_000 ? `${(r / 1000).toFixed(0)}k` : String(r);
+  const abs = Math.abs(r);
+  return `${r < 0 ? "−" : ""}${abs >= 1000 ? `${(abs / 1000).toFixed(1)}k` : abs}`;
 };
 const usd = (x: number | null): string =>
   x === null ? "–" : `${x < 0 ? "−" : ""}$${Math.abs(x).toFixed(2)}`;
