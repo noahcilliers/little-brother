@@ -3,7 +3,7 @@ import { at } from "./film-clock";
 
 // The conflict the owner settles in the film: both sides with the diffs the connector captured.
 
-export const CONFLICT_AT = 26;
+export const CONFLICT_AT = 32;
 
 type Classification = BoardCatch["classificationId"];
 type NodeId = BoardDecision["sides"][number]["nodeId"];
@@ -35,7 +35,7 @@ export const DECISION: BoardDecision = {
   topic: "auth.mechanism",
   owner: "noah",
   t: at(CONFLICT_AT),
-  detectedAfterMs: at(CONFLICT_AT) - at(24),
+  detectedAfterMs: at(CONFLICT_AT) - at(29.6),
   rationale:
     "issueToken() moves auth to JWT bearer tokens while Ash's currentUser() reads a cookie session. Each passes its own tests; merged, the storefront never sees a logged-in user.",
   sides: [
@@ -48,18 +48,18 @@ export const DECISION: BoardDecision = {
       keep: "JWT bearer",
       file: "src/auth/issue-token.ts",
       preview: JWT_DIFF,
-      at: at(24),
+      at: at(29.6),
     },
     {
-      nodeId: nid("a5.0"),
+      nodeId: nid("a4.0"),
       agentId: "ash",
       handle: "ash",
-      taskId: "a5",
+      taskId: "a4",
       subject: "Cookie session login",
       keep: "cookie sessions",
       file: "src/login/session.ts",
       preview: SESSION_DIFF,
-      at: at(23.4),
+      at: at(29.2),
     },
   ],
 };
