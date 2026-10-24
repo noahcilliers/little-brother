@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook SessionStart",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook SessionStart",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook UserPromptSubmit",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook UserPromptSubmit",
             "timeout": 3
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook PreToolUse",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook PreToolUse",
             "timeout": 3
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook PostToolUse",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook PostToolUse",
             "timeout": 3
           }
         ]
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook PostToolUseFailure",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook PostToolUseFailure",
             "timeout": 3,
             "async": true
           }
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook TaskCreated",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook TaskCreated",
             "timeout": 3
           }
         ]
@@ -76,7 +76,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook TaskCompleted",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook TaskCompleted",
             "timeout": 3
           }
         ]
@@ -87,7 +87,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook Stop",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook Stop",
             "timeout": 5
           }
         ]
@@ -98,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook PreCompact",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook PreCompact",
             "timeout": 5
           }
         ]
@@ -109,7 +109,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lb hook SessionEnd",
+            "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook SessionEnd",
             "timeout": 3
           }
         ]

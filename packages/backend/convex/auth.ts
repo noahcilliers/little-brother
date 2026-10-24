@@ -6,6 +6,9 @@ import { convexAuth } from "@convex-dev/auth/server";
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     GitHub({
+      // GitHub now returns `iss` on the OAuth redirect; without the matching issuer, @auth/core rejects it
+      // ("unexpected iss response parameter value") and sign-in never completes.
+      issuer: "https://github.com/login/oauth",
       profile(profile) {
         return {
           id: profile.id.toString(),

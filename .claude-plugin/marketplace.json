@@ -11,7 +11,7 @@
       "name": "little-brother",
       "source": "./plugin",
       "description": "Hooks, `lb mcp` server and team-protocol skill for Little Brother.",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }

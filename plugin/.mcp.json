@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "lb": {
-      "command": "lb",
-      "args": ["mcp"],
+      "command": "sh",
+      "args": ["-c", "PATH=\"$HOME/.local/bin:$PATH\" exec lb mcp"],
       "env": {
         "LB_SESSION_DIR": "${CLAUDE_PLUGIN_DATA}/sessions"
       }

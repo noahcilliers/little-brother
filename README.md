@@ -1,7 +1,6 @@
 # Little Brother
 
 Little Brother is a coordination layer for teammates who each run their own Claude Code session on the same repo. It watches every session's prompts, edits and commands. When two agents start the same work, or one of them breaks a contract another relies on, it warns them early. It also warns before an agent retries an approach a teammate already saw fail.
-
 - **Deploy it** (once per team): see [DEPLOY.md](DEPLOY.md#part-a-deploy-once-one-person).
 - **Connect a laptop:** see [DEPLOY.md](DEPLOY.md#part-b-connect-a-laptop-each-teammate). In short:
 
@@ -17,13 +16,13 @@ Little Brother is a coordination layer for teammates who each run their own Clau
 
 ## Layout
 
-| Path | What |
-| --- | --- |
-| `packages/core` | Shared schemas and pure logic |
-| `packages/backend` | Convex backend: ingest, classifier cascade, HTTP routes |
-| `apps/web` | Next.js dashboard, sign-in and connector downloads |
-| `apps/connector` | `lb` CLI: hook pipe, stdio MCP server, `join`, `verify` |
-| `plugin/` | Claude Code plugin: hooks, MCP and skill. Listed in `.claude-plugin/marketplace.json` |
+| Path               | What                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `packages/core`    | Shared schemas and pure logic                                                         |
+| `packages/backend` | Convex backend: ingest, classifier cascade, HTTP routes                               |
+| `apps/web`         | Next.js dashboard, sign-in and connector downloads                                    |
+| `apps/connector`   | `lb` CLI: hook pipe, stdio MCP server, `join`, `verify`                               |
+| `plugin/`          | Claude Code plugin: hooks, MCP and skill. Listed in `.claude-plugin/marketplace.json` |
 
 ## Develop
 

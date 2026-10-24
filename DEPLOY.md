@@ -2,12 +2,12 @@
 
 Little Brother has three parts, each delivered differently:
 
-| Part | Runs on | Delivered by |
-| --- | --- | --- |
-| Backend: `packages/backend` | Convex cloud | `npx convex deploy`, run by the Vercel build |
-| Dashboard and installer: `apps/web` | Vercel | a Git push to `main` |
-| Connector: `lb`, a single file `lb.mjs` | each laptop | `curl <site>/install.sh \| sh` |
-| Claude Code plugin: `plugin/` | each laptop | `claude plugin install` from this GitHub repo |
+| Part                                    | Runs on      | Delivered by                                  |
+| --------------------------------------- | ------------ | --------------------------------------------- |
+| Backend: `packages/backend`             | Convex cloud | `npx convex deploy`, run by the Vercel build  |
+| Dashboard and installer: `apps/web`     | Vercel       | a Git push to `main`                          |
+| Connector: `lb`, a single file `lb.mjs` | each laptop  | `curl <site>/install.sh \| sh`                |
+| Claude Code plugin: `plugin/`           | each laptop  | `claude plugin install` from this GitHub repo |
 
 One person deploys once (Part A). Each teammate then connects their laptop (Part B), which takes about two minutes.
 
@@ -33,7 +33,6 @@ Note the two URLs it prints. The deployment URL is `https://<name>.convex.cloud`
 ### A2. Create the GitHub OAuth app
 
 Go to GitHub, then **Settings → Developer settings → OAuth Apps → New OAuth App**, and fill in:
-
 - **Homepage URL:** `<web>`
 - **Authorization callback URL:** `<convex-site>/api/auth/callback/github`
 
@@ -73,11 +72,11 @@ If `npx @convex-dev/auth` can't run non-interactively, generate the key pair wit
    `publish-connector.mjs` bundles the connector into `public/lb.mjs` and writes `public/install.sh` with the site origin baked in. `convex deploy` then pushes the backend and runs `next build` with `NEXT_PUBLIC_CONVEX_URL` pointing at production.
 4. Under **Environment Variables**, set:
 
-   | Name | Value | Environments |
-   | --- | --- | --- |
-   | `CONVEX_DEPLOY_KEY` | In the Convex dashboard, open the production deployment's **Deployment Settings → General** and generate a production deploy key | Production only |
-   | `LB_PUBLIC_ORIGIN` | `<web>`. Optional: when unset it defaults to the production Vercel domain. Set it once you use a custom domain | Production |
-   | `NEXT_PUBLIC_CONVEX_SITE_URL` | `<convex-site>`. Optional: by default it is derived from the cloud URL | Production |
+   | Name                          | Value                                                                                                                            | Environments    |
+   | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+   | `CONVEX_DEPLOY_KEY`           | In the Convex dashboard, open the production deployment's **Deployment Settings → General** and generate a production deploy key | Production only |
+   | `LB_PUBLIC_ORIGIN`            | `<web>`. Optional: when unset it defaults to the production Vercel domain. Set it once you use a custom domain                   | Production      |
+   | `NEXT_PUBLIC_CONVEX_SITE_URL` | `<convex-site>`. Optional: by default it is derived from the cloud URL                                                           | Production      |
 
    `NEXT_PUBLIC_CONVEX_URL` needs no setting. `convex deploy` injects it into the build. If you build some other way, set it to `https://<name>.convex.cloud`.
 5. Click **Deploy**. Then check:
@@ -107,7 +106,6 @@ The plugin installs straight from this GitHub repo: `.claude-plugin/marketplace.
 ## Part B: connect a laptop (each teammate)
 
 Requirements: macOS or Linux, Node 20 or newer, git, and Claude Code.
-
 1. **Sign in** at `<web>` with GitHub and open the connect page. It shows a one-time connect token (`lbc_…`). Tokens are single-use and expire after 24 hours.
 
 2. **Install and join** in one command. Copy it from the page:
@@ -150,12 +148,11 @@ To uninstall, run `claude plugin uninstall little-brother@little-brother`, then 
 ## Smoke test (2 minutes)
 
 On a laptop that has finished Part B:
-
 1. `lb --version` prints `0.1.0`. `command -v lb` prints `~/.local/bin/lb`.
 2. `lb status` shows your handle, `site: <convex-site>`, `backend: reachable (HTTP 200, …)` and `outbox: 0 queued`.
 3. In any git repo, start `claude` with the flags above, then:
    - Run `/mcp`. The little-brother `lb` server shows as **connected**.
-   - Ask: *"call the little-brother status tool"*. It answers with the team's activity, not "unavailable".
+   - Ask: _"call the little-brother status tool"_. It answers with the team's activity, not "unavailable".
 4. Open `<web>/app`. Your session appears with the prompt you just typed.
 5. Optionally test with two people. Both edit the same function in the same repo on different branches. The second person gets a `[little-brother]` notice, and the dashboard shows the overlap.
 

@@ -9,3 +9,4 @@ dist
 # build artifacts of scripts/publish-connector.mjs
 apps/web/public/lb.mjs
 apps/web/public/install.sh
+.vercel
