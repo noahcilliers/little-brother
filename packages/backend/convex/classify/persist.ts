@@ -15,7 +15,7 @@ import {
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { stored } from "./load";
-import { avoidedTokens, counterpartOf, openCatch } from "./persist-parts";
+import { avoidedTokens, counterpartOf, openCatch } from "./persistParts";
 
 type Notified = "warn" | "serialize" | "block";
 
