@@ -1,17 +1,15 @@
 "use client";
 
 import { type CSSProperties, useEffect, useRef } from "react";
-import type { BoardAgent, BoardSession, SessionLine } from "@/lib/api";
-import { elapsed } from "@/lib/format";
+import type { BoardSession, SessionLine } from "@/lib/api";
+import { agentColor, elapsed } from "@/lib/format";
 
 type Props = {
-  agents: BoardAgent[];
   sessions: BoardSession[];
   t: number;
   start: number;
   selected: string | null;
   onSelect: (taskId: string) => void;
-  colorOf: (agentId: string) => string;
 };
 
 const CLASS: Partial<Record<SessionLine["kind"], string>> = {
@@ -49,16 +47,14 @@ function LineBody({ l }: { l: SessionLine }) {
 }
 
 function Pane({
-  agent,
+  session,
   lines,
   start,
   selected,
   onSelect,
-  color,
-}: Omit<Props, "agents" | "sessions" | "t" | "colorOf"> & {
-  agent: BoardAgent;
+}: Omit<Props, "sessions" | "t"> & {
+  session: BoardSession;
   lines: SessionLine[];
-  color: string;
 }) {
   const list = useRef<HTMLOListElement>(null);
   const count = useRef(0);
@@ -70,11 +66,11 @@ function Pane({
   return (
     <section className="sess">
       <header>
-        <i style={{ background: color }} />
-        <span className="sess-name" title={agent.name}>
-          {agent.name}
+        <i style={{ background: agentColor(session.color) }} />
+        <span className="sess-name" title={session.name}>
+          {session.name}
         </span>
-        <small title={agent.branch}>claude code · {agent.branch}</small>
+        <small title={session.branch}>claude code · {session.branch}</small>
       </header>
       <ol ref={list}>
         {lines.map((l, i) => (
@@ -98,19 +94,18 @@ function Pane({
   );
 }
 
-/** Each agent's Claude Code session as its developer sees it, in step with the graph's time. */
-export function Sessions({ agents, sessions, t, start, selected, onSelect, colorOf }: Props) {
+/** Each live Claude Code session as its developer sees it, in step with the graph's time. */
+export function Sessions({ sessions, t, start, selected, onSelect }: Props) {
   return (
-    <div className="sessions" style={{ "--cols": Math.min(3, agents.length) } as CSSProperties}>
-      {agents.map((a) => (
+    <div className="sessions" style={{ "--cols": Math.min(3, sessions.length) } as CSSProperties}>
+      {sessions.map((s) => (
         <Pane
-          key={a.id}
-          agent={a}
-          lines={(sessions.find((s) => s.agentId === a.id)?.lines ?? []).filter((l) => l.t <= t)}
+          key={s.agentId}
+          session={s}
+          lines={s.lines.filter((l) => l.t <= t)}
           start={start}
           selected={selected}
           onSelect={onSelect}
-          color={colorOf(a.id)}
         />
       ))}
     </div>
