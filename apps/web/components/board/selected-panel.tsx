@@ -42,9 +42,12 @@ function TaskDetail({
   const catches = board.catches.filter((c) => (c.from === k.id || c.to === k.id) && c.t <= t);
   return (
     <>
-      <div className="title">{k.subject}</div>
+      <div className="title" title={k.subject}>
+        {k.subject}
+      </div>
       <div className="meta">
-        {agent?.name ?? "agent"} · goal: {goal?.label ?? (k.inferred ? "inferred from actions" : "")}
+        {agent?.name ?? "agent"}
+        {goal ? ` · goal: ${goal.label}` : k.inferred ? " · goal inferred from actions" : ""}
       </div>
       <div>
         <span className="state" style={{ color }}>
@@ -107,7 +110,9 @@ export function SelectedPanel({ board, selected, t, start, colorOf, onOpenDecisi
   } else if (shared && shared.t <= t) {
     body = (
       <>
-        <div className="title">{shared.label}</div>
+        <div className="title" title={shared.label}>
+          {shared.label}
+        </div>
         <div className="meta">
           {shared.kind} · {elapsed(shared.t, start)}
         </div>
@@ -116,7 +121,7 @@ export function SelectedPanel({ board, selected, t, start, colorOf, onOpenDecisi
     );
   }
   return (
-    <div className="card">
+    <div className="card selected">
       <div className="h">Selected task</div>
       <div className="detail">{body}</div>
     </div>

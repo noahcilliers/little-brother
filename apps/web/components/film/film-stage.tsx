@@ -5,7 +5,7 @@ import { Sessions } from "@/components/board/sessions";
 import { TopBar } from "@/components/board/top-bar";
 import { agentColor } from "@/lib/format";
 import { boardAt, FULL_BOARD } from "./film-board";
-import { LAYOUT, STAGE_H, STAGE_W } from "./film-camera";
+import { LAYOUT, STAGE_W } from "./film-camera";
 import { at } from "./film-clock";
 import { FilmDecision } from "./film-decision";
 import { CONFLICT_AT } from "./film-decision-data";
@@ -20,7 +20,7 @@ export function FilmStage({ s, transform }: { s: number; transform: string }) {
   const board = boardAt(s);
   const t = at(s);
   return (
-    <div className="film-app" style={{ width: STAGE_W, height: STAGE_H, transform }}>
+    <div className="film-app" style={{ width: STAGE_W, transform }}>
       <TopBar
         board={board}
         t={t}

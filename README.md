@@ -11,6 +11,14 @@ Little Brother is a coordination layer for teammates who each run their own Clau
   CLAUDE_CODE_ENABLE_TODO_TOOLS=1 claude --dangerously-load-development-channels plugin:little-brother@little-brother
   ```
 
+- **Use it:** sign in on the site, create a room (or open a teammate's invite link), and create a session in it. Then, in each Claude Code session that should take part, run:
+
+  ```
+  /little-brother:join <session code>
+  ```
+
+  Only Claude sessions that joined are recorded; every other prompt on the laptop stays local. `/little-brother:leave` stops sharing, and `LB_SESSION=<code> claude` joins from the terminal.
+
 - **Design:** [docs/PLAN.md](docs/PLAN.md) covers the design and [docs/conflict-classifier-spec.md](docs/conflict-classifier-spec.md) covers the classifier.
 - **Demo:** [demo/README.md](demo/README.md).
 

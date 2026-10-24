@@ -1,11 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import type { Board } from "@/lib/api";
 import { type CatchKind, isOpen, lastBefore } from "@/lib/board-time";
 import { CATCH_STYLE } from "@/lib/catch-style";
 import { kTokens } from "@/lib/format";
-import { useTheme } from "@/lib/theme";
 import { CATCH_ICON, InlineIcon } from "./icons";
 
 const TONE = { hot: "var(--hot)", warn: "var(--warn)", faint: "var(--faint)" } as const;
@@ -18,8 +16,6 @@ type Props = {
   /** Open decisions while the modal is closed: the pill reopens it. */
   waiting: number;
   onOpenDecision: () => void;
-  /** Avatar menu, top right. */
-  account?: ReactNode;
 };
 
 function counts(board: Board, t: number) {
@@ -48,16 +44,15 @@ function counts(board: Board, t: number) {
   ].filter((x) => x.show);
 }
 
-export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecision, account }: Props) {
-  const { choice, toggle } = useTheme();
+/** The board's status strip: repo and people, catch counts (click to highlight), and the latest beat. */
+export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecision }: Props) {
   const beat = board ? lastBefore(board.beats, t) : undefined;
   const n = board?.agents.length ?? 0;
   return (
-    <header className="bar">
-      <b>little brother</b>
+    <div className="bar">
       {board ? (
-        <span className="repo">
-          {board.repo || "no repo"} · {n} agent{n === 1 ? "" : "s"}
+        <span className="repo" title={board.repo || undefined}>
+          {board.repo || "no repo"} · {n} {n === 1 ? "person" : "people"}
         </span>
       ) : null}
       {board ? (
@@ -94,14 +89,10 @@ export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecisi
       ) : null}
       <span className="caption">
         <i style={{ background: TONE[beat?.tone ?? "faint"] }} />
-        <span className="caption-text">{beat?.text ?? "Watching"}</span>
+        <span className="caption-text" title={beat?.text}>
+          {beat?.text ?? "Watching"}
+        </span>
       </span>
-      <span className="bar-end">
-        <button type="button" className="ctl" onClick={toggle} aria-label="Cycle theme: auto, light, dark">
-          theme: {choice}
-        </button>
-        {account}
-      </span>
-    </header>
+    </div>
   );
 }

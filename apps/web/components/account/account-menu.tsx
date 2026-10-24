@@ -2,11 +2,12 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { Avatar } from "./avatar";
 
-/** Top-right of the dashboard: who you are, plus the three things you do from here. */
+/** Top right of every /app page: who you are, and the places you go from here. */
 export function AccountMenu() {
   const me = useQuery(api.team.me);
   const { signOut } = useAuthActions();
@@ -37,23 +38,23 @@ export function AccountMenu() {
         className="account-btn"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={`Account: @${handle}`}
         onClick={() => setOpen(!open)}
       >
         <Avatar src={me.user.image} name={handle} />
+        <span className="account-handle">@{handle}</span>
       </button>
       {open ? (
         <div className="account-menu" role="menu">
           <div className="account-who">
             <b>{me.user.name}</b>
             <span>
-              @{handle}
-              {me.team ? ` · ${me.team.name}` : ""}
-              {me.team?.isOwner ? " · owner" : ""}
+              @{handle} · {me.rooms} room{me.rooms === 1 ? "" : "s"}
             </span>
           </div>
-          <a role="menuitem" href="/start#team">
-            Invite teammates
-          </a>
+          <Link role="menuitem" href="/app" onClick={() => setOpen(false)}>
+            Rooms
+          </Link>
           <a role="menuitem" href="/start#connect">
             Connect a laptop
           </a>

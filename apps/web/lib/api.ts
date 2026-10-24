@@ -1,5 +1,5 @@
 import { api } from "@lb/backend/api";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 
 export { api };
 
@@ -26,3 +26,11 @@ export type Room = NonNullable<FunctionReturnType<typeof api.rooms.get>>;
 export type RoomSession = Room["sessions"][number];
 export type RoomMember = Room["members"][number];
 export type SessionHead = NonNullable<FunctionReturnType<typeof api.sessions.get>>;
+
+export type RoomId = FunctionArgs<typeof api.rooms.get>["roomId"];
+export type SessionId = FunctionArgs<typeof api.sessions.get>["sessionId"];
+
+// Route params arrive as plain strings; Convex validates the id server side and the page's error
+// boundary shows "not found" when one is malformed.
+export const asRoomId = (id: string) => id as RoomId;
+export const asSessionId = (id: string) => id as SessionId;

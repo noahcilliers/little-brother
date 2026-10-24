@@ -10,3 +10,6 @@ dist
 apps/web/public/lb.mjs
 apps/web/public/install.sh
 .vercel
+
+# Local benchmark checkouts
+cooperbench-*/

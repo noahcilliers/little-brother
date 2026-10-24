@@ -3,6 +3,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { errorText } from "@/lib/error-text";
 import {
   CHANNELS_CMD,
   installCmd,
@@ -14,7 +15,7 @@ import {
 } from "../landing/commands";
 import { CopyCmd } from "../landing/copy-cmd";
 import { Devices } from "./devices";
-import { errorText, Step, type StepState } from "./step";
+import { Step, type StepState } from "./step";
 
 type Props = { state: StepState; enabled: boolean; origin: string };
 
@@ -33,8 +34,8 @@ export function StepConnect({ state, enabled, origin }: Props) {
       .finally(() => setBusy(false));
   };
   return (
-    <Step id="connect" n={3} title="Connect this laptop" state={state}>
-      {!enabled ? <p className="hint">Join the team first.</p> : null}
+    <Step id="connect" n={2} title="Connect this laptop" state={state}>
+      {!enabled ? <p className="hint">Sign in first.</p> : null}
       <div className={enabled ? "cmds" : "cmds off"}>
         <div className="cmd-group">
           <span className="label">a · connect token for this laptop</span>
@@ -59,13 +60,14 @@ export function StepConnect({ state, enabled, origin }: Props) {
           <CopyCmd text={PLUGIN_CMD} />
         </div>
         <div className="cmd-group">
-          <span className="label">d · start Claude Code</span>
+          <span className="label">d · start Claude Code (optional flags)</span>
           <CopyCmd text={TODO_TOOLS_CMD} />
           <CopyCmd text={CHANNELS_CMD} />
           <p className="hint">
             <code>CLAUDE_CODE_ENABLE_TODO_TOOLS=1</code> turns on the task-list tools, so the dashboard can
             show each agent's plan. The channels flag lets Little Brother push urgent notices into a running
-            session (research preview); without it, notices still arrive through hook responses.
+            session (research preview); without it, notices still arrive through hook responses. Nothing is
+            shared until you run <code>/little-brother:join &lt;code&gt;</code> in a session.
           </p>
         </div>
       </div>

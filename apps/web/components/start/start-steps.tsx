@@ -3,12 +3,12 @@
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { useEnsureAccount } from "@/lib/use-ensure-account";
 import { Providers } from "../providers";
 import type { StepState } from "./step";
 import { StepConnect } from "./step-connect";
-import { StepLive } from "./step-live";
+import { StepRooms } from "./step-rooms";
 import { StepSignIn } from "./step-sign-in";
-import { StepTeam } from "./step-team";
 
 const stateOf = (done: boolean, ready: boolean): StepState => (done ? "done" : ready ? "current" : "waiting");
 
@@ -16,18 +16,24 @@ function Steps({ origin }: { origin: string }) {
   const [invite] = useState(() => new URLSearchParams(window.location.search).get("invite"));
   const status = useQuery(api.team.status);
   const me = useQuery(api.team.me);
-  const progress = useQuery(api.onboarding.progress);
+  const devices = useQuery(api.devices.list);
+  const rooms = useQuery(api.rooms.mine);
+  const invited = useQuery(api.rooms.preview, invite ? { invite } : "skip");
+  useEnsureAccount(me);
   if (status === undefined || me === undefined) return <p className="start-loading">connecting…</p>;
-  const signedIn = me !== null;
   const member = me?.member ?? null;
-  const live = Boolean(progress?.sessionStart && progress.prompt && progress.edit);
-  const connected = progress?.sessionStart ?? false;
+  const connected = (devices ?? []).some((d) => d.status === "active");
+  const inRoom = invite ? (rooms ?? []).some((r) => r.id === invited?.id) : (rooms ?? []).length > 0;
   return (
     <div className="tiles start-steps">
-      <StepSignIn state={stateOf(signedIn, true)} status={status} me={me} invite={invite} />
-      <StepTeam state={stateOf(member !== null, signedIn)} me={me} invite={invite} origin={origin} />
+      <StepSignIn state={stateOf(me !== null, true)} status={status} me={me} invite={invite} />
       <StepConnect state={stateOf(connected, member !== null)} enabled={member !== null} origin={origin} />
-      <StepLive state={stateOf(live, member !== null)} progress={member ? progress : undefined} />
+      <StepRooms
+        state={stateOf(inRoom, member !== null)}
+        enabled={member !== null}
+        invite={invite}
+        handle={member?.handle ?? null}
+      />
     </div>
   );
 }

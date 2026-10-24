@@ -16,10 +16,10 @@ export default async function StartPage() {
         <div className="tiles start-head">
           <div className="tile">
             <span className="label">Get started</span>
-            <h1 className="start-title">Connect your team in four steps</h1>
+            <h1 className="start-title">Get set up in three steps</h1>
             <p className="sub">
-              Sign in, set up the team, connect each laptop, and watch the first events arrive. Every teammate
-              does steps 1, 3 and 4 on their own machine.
+              Sign in, connect this laptop, then create a room or join one from an invite. Inside a room, each
+              session has a join code you run in Claude Code.
             </p>
           </div>
         </div>

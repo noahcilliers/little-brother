@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { type ReactNode, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { useMemo, useState } from "react";
+import { api, type SessionId } from "@/lib/api";
 import { layoutBoard } from "@/lib/board-layout";
 import type { CatchKind } from "@/lib/board-time";
+import { cleanBoard } from "@/lib/clean-label";
 import { agentColor } from "@/lib/format";
 import { useDecisions } from "@/lib/use-decisions";
 import { usePlayback } from "@/lib/use-playback";
@@ -16,9 +17,10 @@ import { SelectedPanel } from "./selected-panel";
 import { Sessions } from "./sessions";
 import { TopBar } from "./top-bar";
 
-/** The whole dashboard: every agent's tasks on one time axis, agents and the selected task beside it, sessions below. */
-export function Board({ account }: { account?: ReactNode }) {
-  const board = useQuery(api.dashboard.board);
+/** One session's board: each person's tasks on one time axis, people and the selected task beside it, transcripts below. */
+export function Board({ sessionId }: { sessionId: SessionId }) {
+  const raw = useQuery(api.dashboard.board, { sessionId });
+  const board = useMemo(() => (raw ? cleanBoard(raw) : undefined), [raw]);
   const [selected, setSelected] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [highlight, setHighlight] = useState<CatchKind | null>(null);
@@ -39,7 +41,6 @@ export function Board({ account }: { account?: ReactNode }) {
         onHighlight={setHighlight}
         waiting={decisions.open ? 0 : decisions.count}
         onOpenDecision={() => decisions.show()}
-        account={account}
       />
       <div className="grid">
         {board && layout && !empty ? (
@@ -57,12 +58,9 @@ export function Board({ account }: { account?: ReactNode }) {
         ) : (
           <div className="card graph">
             {empty ? (
-              <p className="empty">
-                No agents have connected yet. Each Claude Code session with the plugin shows up here.{" "}
-                <a href="/start#connect">Connect a laptop →</a>
-              </p>
+              <p className="empty">No Claude Code session has joined yet.</p>
             ) : (
-              <p className="empty">Connecting…</p>
+              <p className="empty">{raw === null ? "This session isn't visible to you." : "Connecting…"}</p>
             )}
           </div>
         )}

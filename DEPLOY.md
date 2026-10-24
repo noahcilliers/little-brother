@@ -139,6 +139,8 @@ Requirements: macOS or Linux, Node 20 or newer, git, and Claude Code.
 
    On first launch, choose **I am using this for local development** in the channel warning. The channel is a research preview, so it needs this flag. Without the flag everything still works except pushes into idle sessions; hook responses remain the guaranteed delivery path.
 
+5. **Join a session.** On the site, create a room (or open a teammate's invite link) and create a session in it. In each Claude Code session that should take part, run `/little-brother:join <session code>`. Claude sessions that haven't joined are never recorded; `/little-brother:leave` stops sharing. From a terminal, `LB_SESSION=<code> claude …` joins at launch.
+
 To update later, re-run the `curl … | sh` line for the connector, then run `claude plugin marketplace update little-brother`.
 
 To uninstall, run `claude plugin uninstall little-brother@little-brother`, then `rm -r ~/.little-brother ~/.local/bin/lb`.
@@ -152,8 +154,9 @@ On a laptop that has finished Part B:
 2. `lb status` shows your handle, `site: <convex-site>`, `backend: reachable (HTTP 200, …)` and `outbox: 0 queued`.
 3. In any git repo, start `claude` with the flags above, then:
    - Run `/mcp`. The little-brother `lb` server shows as **connected**.
-   - Ask: _"call the little-brother status tool"_. It answers with the team's activity, not "unavailable".
-4. Open `<web>/app`. Your session appears with the prompt you just typed.
+   - Run `/little-brother:join <code>` with a session code from the site. Claude confirms the session and room in one line.
+   - Ask: _"call the little-brother status tool"_. It answers with the session's activity, not "unavailable".
+4. Open the session on `<web>/app`. Your lane appears with the prompt you just typed.
 5. Optionally test with two people. Both edit the same function in the same repo on different branches. The second person gets a `[little-brother]` notice, and the dashboard shows the overlap.
 
 ---
