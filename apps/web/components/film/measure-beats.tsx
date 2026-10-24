@@ -38,7 +38,8 @@ export function PrecisionBeat({ t }: { t: number }) {
   );
 }
 
-const KINDS = ["duplicate", "stale", "conflict"];
+// The measured run planted duplicates and stale paths; conflicts weren't in that suite.
+const KINDS = ["duplicate", "stale"];
 
 export function CatchesBeat({ t }: { t: number }) {
   const b = BENCH.catches;

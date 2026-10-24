@@ -20,11 +20,12 @@ export type Benchmark = {
 
 export const BENCH = {
   precision: {
-    label: "Precision on blocking verdicts",
-    value: 90,
+    // Live off/on eval, 5 planted cases × 2 runs: 10 catches, 0 false positives. Small sample; target stays >90%.
+    label: "Precision on blocking verdicts · planted suite",
+    value: 100,
     unit: "%",
-    bound: ">",
-    status: "target",
+    bound: "",
+    status: "measured",
     baselines: [
       { name: "LLM judges every event", value: 70 },
       { name: "Embedding similarity only", value: 55 },
@@ -32,7 +33,7 @@ export const BENCH = {
     ],
     baselineStatus: "placeholder",
   },
-  catches: { label: "Demo catches fire", value: 3, unit: "/ 3", status: "target" },
+  catches: { label: "Clashes caught before the first edit", value: 10, unit: "/ 10", status: "measured" },
   latency: {
     label: "PreToolUse p95 · 3 agents active",
     value: 150,
@@ -60,11 +61,12 @@ export const BENCH = {
     baselineStatus: "placeholder",
   },
   tokensReplay: {
-    label: "Saved by catches · 6-agent replay",
+    // Per-catch estimate; the off/on eval showed it overcounting, so it stays pending until measured.
+    label: "Saved by catches · estimate",
     value: 8.5,
     unit: "k tokens",
     bound: "≈",
-    status: "measured",
+    status: "placeholder",
   },
   cost: {
     label: "$ per run · off vs on",
