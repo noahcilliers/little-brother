@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as access from "../access.js";
 import type * as admin from "../admin.js";
 import type * as agents from "../agents.js";
 import type * as auth from "../auth.js";
@@ -45,6 +46,7 @@ import type * as devSeedExtra from "../devSeedExtra.js";
 import type * as devSeedRows from "../devSeedRows.js";
 import type * as devSeedStory from "../devSeedStory.js";
 import type * as devSeedWrite from "../devSeedWrite.js";
+import type * as devices from "../devices.js";
 import type * as digest from "../digest.js";
 import type * as events from "../events.js";
 import type * as git from "../git.js";
@@ -59,16 +61,22 @@ import type * as hooks_stop from "../hooks/stop.js";
 import type * as hooks_task from "../hooks/task.js";
 import type * as hooks_types from "../hooks/types.js";
 import type * as http from "../http.js";
+import type * as httpJoin from "../httpJoin.js";
 import type * as inbox from "../inbox.js";
 import type * as knowledge from "../knowledge.js";
 import type * as mcp from "../mcp.js";
 import type * as members from "../members.js";
 import type * as nodes from "../nodes.js";
+import type * as onboarding from "../onboarding.js";
 import type * as resolve from "../resolve.js";
 import type * as savings from "../savings.js";
+import type * as schemaTeam from "../schemaTeam.js";
 import type * as seed from "../seed.js";
 import type * as taskAttribution from "../taskAttribution.js";
 import type * as tasks from "../tasks.js";
+import type * as team from "../team.js";
+import type * as teamMembers from "../teamMembers.js";
+import type * as tokenAuth from "../tokenAuth.js";
 import type * as tokens from "../tokens.js";
 import type * as verify from "../verify.js";
 
@@ -79,6 +87,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  access: typeof access;
   admin: typeof admin;
   agents: typeof agents;
   auth: typeof auth;
@@ -116,6 +125,7 @@ declare const fullApi: ApiFromModules<{
   devSeedRows: typeof devSeedRows;
   devSeedStory: typeof devSeedStory;
   devSeedWrite: typeof devSeedWrite;
+  devices: typeof devices;
   digest: typeof digest;
   events: typeof events;
   git: typeof git;
@@ -130,16 +140,22 @@ declare const fullApi: ApiFromModules<{
   "hooks/task": typeof hooks_task;
   "hooks/types": typeof hooks_types;
   http: typeof http;
+  httpJoin: typeof httpJoin;
   inbox: typeof inbox;
   knowledge: typeof knowledge;
   mcp: typeof mcp;
   members: typeof members;
   nodes: typeof nodes;
+  onboarding: typeof onboarding;
   resolve: typeof resolve;
   savings: typeof savings;
+  schemaTeam: typeof schemaTeam;
   seed: typeof seed;
   taskAttribution: typeof taskAttribution;
   tasks: typeof tasks;
+  team: typeof team;
+  teamMembers: typeof teamMembers;
+  tokenAuth: typeof tokenAuth;
   tokens: typeof tokens;
   verify: typeof verify;
 }>;

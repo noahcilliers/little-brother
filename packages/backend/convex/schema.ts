@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { members, teamTables } from "./schemaTeam";
 
 export const typeKey = v.union(
   v.literal("conflict"),
@@ -23,14 +24,8 @@ export const touch = v.object({
 });
 
 export default defineSchema({
-  members: defineTable({
-    name: v.string(),
-    handle: v.string(),
-    tokenHash: v.string(),
-    revoked: v.boolean(),
-  })
-    .index("by_token", ["tokenHash"])
-    .index("by_handle", ["handle"]),
+  ...teamTables,
+  members,
 
   agents: defineTable({
     memberId: v.id("members"),

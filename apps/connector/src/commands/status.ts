@@ -26,7 +26,7 @@ export async function statusCommand(): Promise<void> {
   const cfg = loadConfig();
   const p = activeProfile();
   if (!p) {
-    console.log("not joined — run: lb join --url <siteUrl> --as <handle>");
+    console.log("not joined — run: lb join --url <siteUrl> --token <connectToken>");
     return;
   }
   console.log(

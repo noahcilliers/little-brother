@@ -146,7 +146,7 @@ export const clear = internalMutation({
       if (row.value?.[TAG] === true) await ctx.db.delete(row._id);
     }
     for (const m of await ctx.db.query("members").take(200)) {
-      if (m.tokenHash.startsWith(`${TAG}:`)) await ctx.db.delete(m._id);
+      if (m.tokenHash?.startsWith(`${TAG}:`)) await ctx.db.delete(m._id);
     }
     return { agents: agents.length, rows };
   },

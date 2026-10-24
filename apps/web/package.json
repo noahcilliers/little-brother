@@ -10,6 +10,7 @@
     "test": "echo 'no web tests'"
   },
   "dependencies": {
+    "@convex-dev/auth": "^0.0.96",
     "@lb/backend": "workspace:*",
     "@lb/core": "workspace:*",
     "@xyflow/react": "^12.8.0",

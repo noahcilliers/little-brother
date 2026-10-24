@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
 import { agentBySession } from "./agents";
-import { memberByToken } from "./auth";
+import { memberByToken } from "./tokenAuth";
 
 type Action = Doc<"inbox">["action"];
 const URGENT: Action[] = ["serialize", "block"];

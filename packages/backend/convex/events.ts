@@ -2,7 +2,7 @@ import { type HookOutput, IngestEnvelope, TASK_TOOLS } from "@lb/core";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { upsertAgent } from "./agents";
-import { memberByTokenHash } from "./auth";
+import { memberByTokenHash } from "./tokenAuth";
 import { onPreCompact, onSessionEnd } from "./hooks/end";
 import { onPostToolUse } from "./hooks/post";
 import { onPreToolUse } from "./hooks/pre";

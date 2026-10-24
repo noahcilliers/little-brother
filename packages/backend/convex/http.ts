@@ -3,18 +3,12 @@ import { httpRouter } from "convex/server";
 import { z } from "zod";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
-import { bearerToken } from "./auth";
-import { randomToken, sha256Hex } from "./hash";
+import { bearerToken } from "./tokenAuth";
+import { auth } from "./auth";
+import { sha256Hex } from "./hash";
+import { join } from "./httpJoin";
 import { VerifyBody } from "./verify";
 
-// Convex injects env vars at runtime; the convex tsconfig deliberately omits node types.
-declare const process: { env: Record<string, string | undefined> };
-
-const JoinBody = z.object({
-  invite: z.string(),
-  handle: z.string().min(1).max(40),
-  name: z.string().max(80).optional(),
-});
 const McpBody = z.object({ claudeSessionId: z.string().default(""), args: z.unknown().default({}) });
 
 const json = (status: number, body: unknown) =>
@@ -32,20 +26,6 @@ async function tokenHashOf(req: Request): Promise<string | null> {
   const token = bearerToken(req);
   return token ? sha256Hex(token) : null;
 }
-
-const join = httpAction(async (ctx, req) => {
-  const body = JoinBody.safeParse(await readJson(req));
-  if (!body.success) return json(400, { error: body.error.message });
-  if (body.data.invite !== (process.env.LB_INVITE_CODE ?? "calhacks"))
-    return json(403, { error: "bad invite" });
-  const token = randomToken();
-  await ctx.runMutation(internal.members.join, {
-    handle: body.data.handle,
-    name: body.data.name,
-    tokenHash: await sha256Hex(token),
-  });
-  return json(200, { token, convexUrl: process.env.CONVEX_CLOUD_URL, siteUrl: process.env.CONVEX_SITE_URL });
-});
 
 const hook = httpAction(async (ctx, req) => {
   const tokenHash = await tokenHashOf(req);
@@ -86,6 +66,7 @@ const verify = httpAction(async (ctx, req) => {
 });
 
 const http = httpRouter();
+auth.addHttpRoutes(http);
 http.route({ path: "/join", method: "POST", handler: join });
 http.route({ pathPrefix: "/hook/", method: "POST", handler: hook });
 http.route({ pathPrefix: "/mcp/", method: "POST", handler: mcp });

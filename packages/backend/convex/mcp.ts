@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { resolveAgent } from "./agents";
-import { memberByTokenHash } from "./auth";
+import { memberByTokenHash } from "./tokenAuth";
 import { teamDigest } from "./digest";
 import { markDeliveredIds } from "./inbox";
 import { answer, ask, type Posted, postDecision, postKnowledge, reportFailure } from "./knowledge";

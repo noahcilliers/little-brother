@@ -16,10 +16,11 @@ program
   .command("join")
   .description("join a team and save a profile")
   .requiredOption("--url <siteUrl>", "backend site URL (Convex HTTP actions)")
-  .requiredOption("--as <handle>", "your member handle")
-  .option("--name <name>", "display name")
-  .option("--invite <code>", "invite code", "calhacks")
-  .action(async (o: { url: string; as: string; name?: string; invite: string }) => {
+  .option("--token <connectToken>", "one-time connect token from the website")
+  .option("--invite <code>", "shared invite code (local dev only; needs --as)")
+  .option("--as <handle>", "member handle (with --invite)")
+  .option("--name <name>", "display name (with --invite)")
+  .action(async (o: { url: string; token?: string; invite?: string; as?: string; name?: string }) => {
     const { joinCommand } = await import("./commands/join");
     await joinCommand(o);
   });

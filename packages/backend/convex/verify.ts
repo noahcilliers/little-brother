@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { resolveAgent } from "./agents";
-import { memberByTokenHash } from "./auth";
+import { memberByTokenHash } from "./tokenAuth";
 import {
   agentsOnBranch,
   type GitConflict,
