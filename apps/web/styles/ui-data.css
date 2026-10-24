@@ -1,0 +1,136 @@
+/* Tables, sections, empty and loading states. */
+
+/* list tables: a header row, then rows as grids so they can stack on phones */
+.data-table {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+.dt-head,
+.dt-row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+}
+.dt-head {
+  height: 40px;
+  border-bottom: 1px solid var(--line);
+  background: var(--subtle);
+  font-size: 13px;
+  color: var(--muted);
+}
+.dt-body {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dt-row {
+  position: relative;
+  min-height: 56px;
+  font-size: 14px;
+}
+.dt-row + .dt-row {
+  border-top: 1px solid var(--line);
+}
+.dt-row:hover {
+  background: var(--subtle);
+}
+.cell-name {
+  min-width: 0;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.dt-row.ended .cell-name {
+  color: var(--muted);
+}
+.stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.right {
+  text-align: right;
+  justify-self: end;
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 64px 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  text-align: center;
+  color: var(--muted);
+}
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.section {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+.section-body {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+}
+.section-body h2 {
+  font: 600 16px var(--sans);
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--muted);
+}
+.section-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--subtle);
+}
+.section.danger {
+  border-color: color-mix(in srgb, var(--hot) 35%, var(--line));
+}
+.section.danger .section-foot {
+  background: color-mix(in srgb, var(--hot) 5%, var(--panel));
+  border-color: color-mix(in srgb, var(--hot) 25%, var(--line));
+}
+
+.page-state {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 50vh;
+  padding: 48px 24px;
+  text-align: center;
+}
+.page-state b {
+  font: 500 14px var(--sans);
+}
+.page-state p {
+  max-width: 420px;
+  color: var(--muted);
+}
+.page-state[aria-busy="true"] b {
+  color: var(--muted);
+  font-weight: 400;
+}

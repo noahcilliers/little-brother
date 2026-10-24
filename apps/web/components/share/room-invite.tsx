@@ -7,7 +7,10 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAction } from "@/lib/use-action";
 import { useEnsureAccount } from "@/lib/use-ensure-account";
+import { GithubMark } from "../auth/github-mark";
 import { WaitingForHost } from "../rooms/waiting-for-host";
+import { Button } from "../ui/button";
+import { FormError } from "../ui/field";
 
 type Props = { invite: string; sessionId: string | null; here: string };
 
@@ -27,7 +30,7 @@ function Joining({ invite, sessionId }: Omit<Props, "here">) {
   }, [status, next, router]);
   if (room === undefined || me === undefined) return <p className="muted">Checking the invite…</p>;
   if (room === null)
-    return <p className="form-error">This invite is no longer valid. Ask the host for a new QR code.</p>;
+    return <FormError error="This invite is no longer valid. Ask the host for a new QR code." />;
   if (status === "member") return <p className="muted">You're in. Opening {room.name}…</p>;
   if (asked || status === "pending" || status === "denied")
     return <WaitingForHost roomId={room.id} name={room.name} next={next} />;
@@ -36,15 +39,16 @@ function Joining({ invite, sessionId }: Omit<Props, "here">) {
       <p>
         Signed in as <b>@{me?.member?.handle ?? me?.user.login ?? "you"}</b>.
       </p>
-      <button
-        type="button"
-        className="btn-solid wide"
+      <Button
+        variant="primary"
+        size="lg"
+        block
         disabled={busy || !me?.member}
         onClick={() => void run(() => join({ invite })).then((r) => r && setAsked(true))}
       >
         {busy ? "Asking…" : `Join ${room.name}`}
-      </button>
-      {error ? <p className="form-error">{error}</p> : null}
+      </Button>
+      <FormError error={error} />
     </>
   );
 }
@@ -61,10 +65,7 @@ export function RoomInvite({ invite, sessionId, here }: Props) {
         little brother<i aria-hidden="true">▍</i>
       </span>
       <h1>{room ? `Join ${room.name}` : "Join a room"}</h1>
-      <p className="muted small">
-        Little Brother coordinates this team's Claude Code agents. Join to watch the live board and decide
-        conflicts with them.
-      </p>
+      <p className="muted">Watch the live board and decide conflicts with the team.</p>
       {isLoading ? (
         <p className="muted">Connecting…</p>
       ) : isAuthenticated ? (
@@ -72,14 +73,15 @@ export function RoomInvite({ invite, sessionId, here }: Props) {
       ) : (
         <button
           type="button"
-          className="btn-solid wide"
+          className="oauth-btn"
           disabled={busy}
           onClick={() => {
             setBusy(true);
             void signIn("github", { redirectTo: here }).catch(() => setBusy(false));
           }}
         >
-          {busy ? "Opening GitHub…" : "Sign in with GitHub"}
+          <GithubMark />
+          <span>{busy ? "Opening GitHub…" : "Continue with GitHub"}</span>
         </button>
       )}
     </main>

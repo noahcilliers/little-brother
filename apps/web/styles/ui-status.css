@@ -1,0 +1,103 @@
+/* Status: badges, dots, spinners and live checks. */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: 500 12px var(--sans);
+  color: var(--muted);
+  background: var(--subtle);
+  white-space: nowrap;
+}
+.badge-solid {
+  background: var(--ink);
+  color: var(--ink-fg);
+  border-color: var(--ink);
+}
+.badge-ok {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+.badge-warn {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
+}
+.badge-danger {
+  color: var(--hot);
+  border-color: color-mix(in srgb, var(--hot) 35%, transparent);
+  background: color-mix(in srgb, var(--hot) 8%, transparent);
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--faint);
+  color: var(--faint);
+}
+.dot-ok {
+  background: var(--ok);
+  color: var(--ok);
+}
+.dot-warn {
+  background: var(--warn);
+  color: var(--warn);
+}
+.dot-danger {
+  background: var(--hot);
+  color: var(--hot);
+}
+.dot-solid {
+  background: var(--ink);
+}
+.dot-pulse {
+  animation: dot-pulse 1.8s ease-out infinite;
+}
+@keyframes dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 1.5px solid var(--line-strong);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.live-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.live-check.done {
+  color: var(--ok);
+  font-weight: 500;
+}

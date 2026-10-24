@@ -9,7 +9,7 @@ export function ShareQrCard({ title, hint, link, children }: Props) {
   return (
     <section className="share-card">
       <h3>{title}</h3>
-      <p className="muted small">{hint}</p>
+      <p className="muted">{hint}</p>
       {link ? (
         <>
           <QrCode text={link} label={title} />

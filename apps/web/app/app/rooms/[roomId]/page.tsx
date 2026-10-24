@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { RoomView } from "@/components/rooms/room-view";
+import { SessionsPage } from "@/components/sessions/sessions-page";
 
-export const metadata: Metadata = { title: "Room · Little Brother" };
+export const metadata: Metadata = { title: "Sessions · Little Brother" };
 
 export default async function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = await params;
-  return <RoomView roomId={roomId} />;
+  return <SessionsPage roomId={roomId} />;
 }

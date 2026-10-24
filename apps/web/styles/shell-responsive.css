@@ -1,0 +1,89 @@
+/* The sidebar collapsed to icons, and on phones folded into a top bar with a sheet. */
+
+.sidebar.collapsed .side-top,
+.sidebar.collapsed .side-nav,
+.sidebar.collapsed .side-foot {
+  padding-inline: 12px;
+}
+.sidebar.collapsed .wordmark {
+  padding: 4px 0 0;
+  text-align: center;
+}
+.sidebar.collapsed .room-switch {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar.collapsed .side-link {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar.collapsed .side-label {
+  display: none;
+}
+.sidebar.collapsed .side-badge {
+  position: absolute;
+  transform: translate(10px, -9px);
+  min-width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+.sidebar.collapsed .side-link {
+  position: relative;
+}
+.sidebar.collapsed .who {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar.collapsed .side-tools {
+  flex-direction: column;
+}
+.sidebar.collapsed .side-tools .theme-toggle {
+  margin: 0;
+}
+
+.mobile-bar {
+  display: none;
+}
+@media (max-width: 768px) {
+  .shell,
+  .shell.collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shell > .sidebar {
+    display: none;
+  }
+  .mobile-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 56px;
+    padding: 0 8px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .mobile-room {
+    margin-left: auto;
+    padding-right: 8px;
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .page-header {
+    padding: 16px 16px 12px;
+  }
+  .page-header.has-tabs {
+    padding-bottom: 0;
+  }
+  .page-title h1 {
+    font-size: 20px;
+  }
+  .page {
+    padding: 16px 16px 32px;
+  }
+}

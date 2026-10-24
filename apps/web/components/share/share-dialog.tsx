@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { api, type SessionHead } from "@/lib/api";
 import { joinLink, watchLink } from "@/lib/share-links";
 import { useAction } from "@/lib/use-action";
+import { Button, IconButton } from "../ui/button";
+import { FormError } from "../ui/field";
 import { ShareQrCard } from "./share-qr-card";
 
 function WatchToggle({ session }: { session: SessionHead }) {
@@ -13,15 +15,14 @@ function WatchToggle({ session }: { session: SessionHead }) {
   const on = session.watchToken !== null;
   return (
     <>
-      <button
-        type="button"
-        className={on ? "btn-ghost" : "btn-solid"}
+      <Button
+        variant={on ? "secondary" : "primary"}
         disabled={busy}
         onClick={() => void run(() => setWatch({ sessionId: session.id, on: !on }))}
       >
         {on ? "Turn live view off" : "Turn on live view"}
-      </button>
-      {error ? <p className="form-error">{error}</p> : null}
+      </Button>
+      <FormError error={error} />
     </>
   );
 }
@@ -49,27 +50,25 @@ export function ShareDialog({ session, onClose }: { session: SessionHead; onClos
         <header className="share-head">
           <div>
             <b>{session.name}</b>
-            <span className="muted small">
-              {session.room.name} · code <span className="mono">{session.code}</span>
+            <span className="muted">
+              {session.room.name} · <span className="mono">{session.code}</span>
             </span>
           </div>
-          <button type="button" className="btn-ghost" onClick={() => setBig(!big)}>
+          <Button size="sm" onClick={() => setBig(!big)}>
             {big ? "Exit present" : "Present"}
-          </button>
-          <button type="button" className="btn-ghost" onClick={onClose} aria-label="Close">
-            Esc
-          </button>
+          </Button>
+          <IconButton icon="x" label="Close" onClick={onClose} />
         </header>
         <div className="share-grid">
           <ShareQrCard
             title="Join from a phone"
-            hint="Scan, sign in with GitHub, and you're let in from the waiting room. The phone lands on this board."
+            hint="Scan, sign in, and wait to be admitted."
             link={session.inviteCode ? joinLink(origin, session.inviteCode, session.id) : null}
           />
           {session.isHost ? (
             <ShareQrCard
               title="Watch live"
-              hint="Read-only, no sign-in: anyone with the link sees the board and classifier log until you turn it off."
+              hint="Read-only, no sign-in, until you turn it off."
               link={session.watchToken ? watchLink(origin, session.watchToken) : null}
             >
               <WatchToggle session={session} />

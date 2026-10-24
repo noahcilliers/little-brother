@@ -1,4 +1,4 @@
-// The real per-laptop commands, shared by the landing page and /start. `origin` is this site's URL.
+// The real per-laptop commands, shared by the landing page and onboarding. `origin` is this site's URL.
 
 export const installCmd = (origin: string) => `curl -fsSL ${origin}/install.sh | sh`;
 export const joinCmd = (origin: string, token: string) => `lb join --url ${origin} --token ${token}`;

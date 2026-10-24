@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Button, IconButton } from "../ui/button";
 
 export type ToastTone = "conflict" | "warn" | "info" | "ok";
 export type Toast = {
@@ -33,20 +34,18 @@ function ToastCard({ t, onClose }: { t: Toast; onClose: () => void }) {
       </div>
       <div className="toast-actions">
         {t.action ? (
-          <button
-            type="button"
-            className="btn-solid"
+          <Button
+            size="sm"
+            variant="primary"
             onClick={() => {
               t.action?.run();
               onClose();
             }}
           >
             {t.action.label}
-          </button>
+          </Button>
         ) : null}
-        <button type="button" className="toast-x" aria-label="Dismiss" onClick={onClose}>
-          ×
-        </button>
+        <IconButton icon="x" label="Dismiss" className="toast-x" onClick={onClose} />
       </div>
     </li>
   );

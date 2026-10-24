@@ -1,0 +1,114 @@
+/* Copyable commands and codes, avatars and room marks. */
+
+.copy {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--subtle);
+}
+.copy-lg {
+  height: 48px;
+}
+.copy-lg code {
+  font-size: 14px;
+  font-weight: 500;
+}
+.copy-prompt {
+  padding-left: 12px;
+  font: 400 13px var(--mono);
+  color: var(--faint);
+}
+.copy code {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px 0 10px;
+  font: 400 13px var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.copy button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  margin-right: 4px;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+}
+.copy button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.code-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--subtle);
+  color: var(--muted);
+}
+.code-chip code {
+  font: 500 12px var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.code-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--subtle);
+  color: var(--muted);
+  font: 600 11px var(--sans);
+  object-fit: cover;
+}
+.room-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--ink-fg);
+  font: 600 12px var(--sans);
+}
+.room-mark.sm {
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+.room-mark.lg {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  border-radius: var(--r-md);
+}
+.subtle-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.subtle-link:hover {
+  color: var(--ink);
+}

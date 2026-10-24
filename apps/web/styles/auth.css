@@ -1,0 +1,157 @@
+/* /login: the form on the left, a monochrome grain panel on the right; the panel drops away on phones. */
+
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.auth-side {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 32px 40px;
+}
+.auth-form {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  width: min(360px, 100%);
+  margin: 0 auto;
+}
+.auth-form h1 {
+  font: 600 24px / 1.25 var(--sans);
+  letter-spacing: -0.02em;
+}
+.auth-sub {
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+.auth-note {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--subtle);
+  font-size: 13px;
+  color: var(--muted);
+}
+.auth-note a {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+.auth-foot {
+  text-align: center;
+  font-size: 12px;
+  color: var(--faint);
+}
+.auth-art {
+  padding: 12px;
+}
+
+/* Black to white in both themes: it's artwork, not chrome. */
+.grain-panel {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(90% 70% at 78% 18%, white 0%, color-mix(in srgb, white 70%, black) 22%, transparent 62%),
+    radial-gradient(70% 60% at 12% 92%, color-mix(in srgb, white 35%, black) 0%, transparent 70%),
+    linear-gradient(160deg, color-mix(in srgb, white 18%, black) 0%, black 72%);
+}
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+}
+.ghost-board {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 34%;
+  display: grid;
+  gap: 18px;
+  opacity: 0.55;
+}
+.ghost-lane {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 14px;
+}
+.ghost-who {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, white 70%, transparent);
+}
+.ghost-bar {
+  position: absolute;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, white 55%, transparent);
+  background: color-mix(in srgb, white 10%, transparent);
+}
+.g0a {
+  left: 8%;
+  width: 34%;
+}
+.g0b {
+  left: 50%;
+  width: 22%;
+}
+.g1a {
+  left: 18%;
+  width: 26%;
+}
+.g1b {
+  left: 56%;
+  width: 36%;
+}
+.g2a {
+  left: 6%;
+  width: 18%;
+}
+.g2b {
+  left: 34%;
+  width: 40%;
+}
+.g3a {
+  left: 28%;
+  width: 30%;
+}
+.g3b {
+  left: 66%;
+  width: 20%;
+}
+.ghost-link {
+  position: absolute;
+  left: 60%;
+  top: 5px;
+  width: 1px;
+  height: 64px;
+  border-left: 1px dashed color-mix(in srgb, white 70%, transparent);
+}
+.grain-caption {
+  position: absolute;
+  left: 40px;
+  bottom: 40px;
+  font: 500 15px / 1.5 var(--mono);
+  color: color-mix(in srgb, white 85%, transparent);
+}
+@media (max-width: 860px) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .auth-art {
+    display: none;
+  }
+  .auth-side {
+    padding: 24px 16px;
+  }
+}

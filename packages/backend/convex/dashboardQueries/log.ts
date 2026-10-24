@@ -24,6 +24,8 @@ export type LogVerdict = {
 };
 export type LogStep = {
   nodeId: string;
+  /** The agent that took the step; the room-wide log maps it to its session. */
+  agentId: string;
   at: number;
   handle: string;
   kind: string;
@@ -34,7 +36,11 @@ export type LogStep = {
 const tidy = (text: string) => cleanPrompt(text.replace(/^\[little-brother\]\s*/, ""));
 
 export async function verdictLog(ctx: QueryCtx, sessionId: Id<"sessions">): Promise<LogStep[]> {
-  const agents = await sessionAgents(ctx, sessionId);
+  return verdictLogFor(ctx, await sessionAgents(ctx, sessionId));
+}
+
+/** The same record for any set of agents, e.g. every agent in a room's recent sessions. */
+export async function verdictLogFor(ctx: QueryCtx, agents: Doc<"agents">[]): Promise<LogStep[]> {
   const mine = new Set<string>(agents.map((a) => a._id));
   const handles = new Map<string, string>();
   for (const a of agents) handles.set(a._id, (await ctx.db.get(a.memberId))?.handle ?? "agent");
@@ -59,6 +65,7 @@ export async function verdictLog(ctx: QueryCtx, sessionId: Id<"sessions">): Prom
       if (!node) continue;
       step = {
         nodeId: c.nodeId,
+        agentId: node.agentId,
         at: node.at,
         handle: await handleOf(node.agentId),
         kind: node.kind,

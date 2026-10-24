@@ -2,7 +2,7 @@ import { ThemeButton } from "./theme-button";
 
 type Props = { signedIn: boolean; links?: boolean };
 
-/** Sticky top bar shared by the landing page and /start. */
+/** Sticky top bar of the landing page. */
 export function LandingNav({ signedIn, links = true }: Props) {
   return (
     <nav className="nav">
@@ -29,10 +29,10 @@ export function LandingNav({ signedIn, links = true }: Props) {
           </a>
         ) : (
           <>
-            <a className="nav-signin" href="/start">
+            <a className="nav-signin" href="/login">
               Sign in
             </a>
-            <a className="btn inv" href="/start">
+            <a className="btn inv" href="/login">
               Get started
             </a>
           </>

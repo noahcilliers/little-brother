@@ -2,6 +2,7 @@ import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import "./board.css";
 
 export const metadata: Metadata = {
   title: "Little Brother",

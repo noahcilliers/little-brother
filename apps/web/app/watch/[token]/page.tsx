@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "@/app/app/app.css";
+import "@/styles/app.css";
 import { PublicApp } from "@/components/public-app";
 import { WatchView } from "@/components/share/watch-view";
 
@@ -9,9 +9,7 @@ export default async function WatchPage({ params }: { params: Promise<{ token: s
   const { token } = await params;
   return (
     <PublicApp>
-      <div className="shell">
-        <WatchView token={decodeURIComponent(token)} />
-      </div>
+      <WatchView token={decodeURIComponent(token)} />
     </PublicApp>
   );
 }

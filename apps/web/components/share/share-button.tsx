@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import type { SessionHead } from "@/lib/api";
+import { Button } from "../ui/button";
 import { ShareDialog } from "./share-dialog";
 
 export function ShareButton({ session }: { session: SessionHead }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="btn-ghost" onClick={() => setOpen(true)}>
-        Share · QR
-      </button>
+      <Button icon="share" onClick={() => setOpen(true)}>
+        Share
+      </Button>
       {open ? <ShareDialog session={session} onClose={() => setOpen(false)} /> : null}
     </>
   );

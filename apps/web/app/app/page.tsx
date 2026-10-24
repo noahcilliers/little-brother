@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { RoomsHome } from "@/components/rooms/rooms-home";
+import { AppIndex } from "@/components/app/app-index";
 
-export const metadata: Metadata = { title: "Rooms · Little Brother" };
+export const metadata: Metadata = { title: "Little Brother" };
 
-export default function RoomsPage() {
-  return <RoomsHome />;
+export default function AppPage() {
+  return <AppIndex />;
 }

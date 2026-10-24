@@ -1,13 +1,12 @@
-import {
-  convexAuthNextjsMiddleware,
-  createRouteMatcher,
-  nextjsMiddlewareRedirect,
-} from "@convex-dev/auth/nextjs/server";
+import { convexAuthNextjsMiddleware, createRouteMatcher } from "@convex-dev/auth/nextjs/server";
 import { api } from "@lb/backend/api";
 import { fetchQuery } from "convex/nextjs";
+import { type NextRequest, NextResponse } from "next/server";
+import { afterLogin, loginHref } from "./lib/after-login";
 
-// `/` and the installer stay public; `/start` renders its own signed-out step; the dashboard needs sign-in.
-const isProtectedRoute = createRouteMatcher(["/app(.*)"]);
+// `/` and the installer stay public; the app and onboarding need sign-in; /login sends signed-in people on.
+const isProtectedRoute = createRouteMatcher(["/app(.*)", "/onboarding(.*)"]);
+const isLogin = createRouteMatcher(["/login"]);
 
 /** Local e2e deployments (LB_ALLOW_INVITE=1 on Convex) keep the dashboard open without sign-in. */
 async function openMode(): Promise<boolean> {
@@ -18,11 +17,17 @@ async function openMode(): Promise<boolean> {
   }
 }
 
+const go = (request: NextRequest, to: string) => NextResponse.redirect(new URL(to, request.url));
+
 export default convexAuthNextjsMiddleware(
   async (request, { convexAuth }) => {
-    if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated()) && !(await openMode())) {
-      return nextjsMiddlewareRedirect(request, "/start");
-    }
+    const login = isLogin(request);
+    if (!login && !isProtectedRoute(request)) return;
+    const authed = await convexAuth.isAuthenticated();
+    const q = request.nextUrl.searchParams;
+    if (login && authed) return go(request, afterLogin(q.get("next"), q.get("invite")));
+    if (!login && !authed && !(await openMode()))
+      return go(request, loginHref(request.nextUrl.pathname + request.nextUrl.search));
   },
   { cookieConfig: { maxAge: 60 * 60 * 24 * 30 } },
 );

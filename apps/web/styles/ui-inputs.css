@@ -1,0 +1,64 @@
+/* Form fields: label, control, one line of hint or error. */
+
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.field-label {
+  font: 500 13px var(--sans);
+  color: var(--ink);
+}
+.field-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+.field-error {
+  font-size: 13px;
+  color: var(--hot);
+}
+.input,
+.select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--panel);
+  font-size: 14px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.input.mono {
+  font: 400 13px var(--mono);
+}
+.input::placeholder {
+  color: var(--faint);
+}
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.input[readonly] {
+  background: var(--subtle);
+  color: var(--muted);
+}
+.select {
+  width: auto;
+  height: 32px;
+  padding: 0 28px 0 10px;
+  font-size: 13px;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 14px,
+    calc(100% - 10px) 14px;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}

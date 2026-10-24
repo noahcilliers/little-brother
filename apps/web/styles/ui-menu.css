@@ -1,0 +1,82 @@
+/* Dropdown menus. */
+
+.menu-anchor {
+  position: relative;
+  min-width: 0;
+}
+.menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  min-width: 200px;
+  max-width: min(320px, calc(100vw - 32px));
+  max-height: min(420px, 70vh);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 0.12s ease-out;
+}
+.menu-wide {
+  min-width: 240px;
+}
+.menu-start {
+  left: 0;
+}
+.menu-end {
+  right: 0;
+}
+.menu-top {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+}
+.menu-item .icon {
+  color: var(--muted);
+}
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
+.menu-item.danger,
+.menu-item.danger .icon {
+  color: var(--hot);
+}
+.menu-item-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-check {
+  color: var(--ink);
+}
+.menu-label {
+  padding: 8px 8px 4px;
+  font: 500 12px var(--sans);
+  color: var(--muted);
+}
+.menu-sep {
+  margin: 4px -4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+}

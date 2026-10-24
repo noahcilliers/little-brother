@@ -20,7 +20,7 @@ export function Hero({ origin }: { origin: string }) {
           </p>
           <div className="cta">
             <CopyCmd text={installCmd(origin)} />
-            <a className="btn inv" href="/start">
+            <a className="btn inv" href="/login">
               Get started
             </a>
             <a className="btn" href="#features">

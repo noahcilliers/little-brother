@@ -4,15 +4,18 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { Board } from "../board/board";
-import { ClassifierLog } from "../session/classifier-log";
+import { ClassifierLogs } from "../logs/session-logs";
+import { PageHeader } from "../shell/page-header";
 import { PageState } from "../shell/page-state";
 import { ThemeToggle } from "../shell/theme-toggle";
+import { Badge, Dot } from "../ui/badge";
+import { Tabs } from "../ui/tabs";
 
 /** /watch/<token>: the host's shared, read-only live board, for judges' phones and projectors. */
 export function WatchView({ token }: { token: string }) {
   const session = useQuery(api.watch.session, { token });
   const [tab, setTab] = useState<"board" | "log">("board");
-  if (session === undefined) return <PageState title="Connecting…" />;
+  if (session === undefined) return <PageState title="Loading" loading />;
   if (session === null)
     return (
       <PageState title="This live view is off">
@@ -20,37 +23,40 @@ export function WatchView({ token }: { token: string }) {
       </PageState>
     );
   return (
-    <>
-      <header className="topnav">
-        <span className="wordmark">
+    <div className="watch">
+      <div className="watch-bar">
+        <a className="wordmark" href="/">
           little brother<i aria-hidden="true">▍</i>
-        </span>
-        <nav className="crumbs" aria-label="Session">
-          <span className="crumb-sep">/</span>
-          <span>{session.room}</span>
-          <span className="crumb-sep">/</span>
-          <span className="crumb-here">{session.name}</span>
-        </nav>
-        <div className="topnav-end">
-          <span className="row-tag">{session.endedAt ? "ended" : "live · read-only"}</span>
-          <div className="seg" role="tablist" aria-label="View">
-            {(["board", "log"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={tab === t}
-                className={tab === t ? "on" : undefined}
-                onClick={() => setTab(t)}
-              >
-                {t === "board" ? "Board" : "Classifier log"}
-              </button>
-            ))}
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
-      {tab === "board" ? <Board watchToken={token} /> : <ClassifierLog watchToken={token} />}
-    </>
+        </a>
+        <span className="muted">{session.room}</span>
+        <ThemeToggle compact />
+      </div>
+      <PageHeader
+        title={session.name}
+        meta={
+          session.endedAt ? (
+            <Badge>Ended</Badge>
+          ) : (
+            <span className="status">
+              <Dot tone="ok" pulse /> Live · read-only
+            </span>
+          )
+        }
+        tabs={
+          <Tabs
+            label="View"
+            active={tab}
+            onSelect={setTab}
+            tabs={[
+              { id: "board", label: "Board" },
+              { id: "log", label: "Classifier log" },
+            ]}
+          />
+        }
+      />
+      <main className={tab === "board" ? "page page-full page-board" : "page page-full"}>
+        {tab === "board" ? <Board watchToken={token} /> : <ClassifierLogs watchToken={token} />}
+      </main>
+    </div>
   );
 }

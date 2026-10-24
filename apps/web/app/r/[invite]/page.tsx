@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import "@/app/app/app.css";
+import "@/styles/ui.css";
+import "@/styles/session.css";
 import { PublicApp } from "@/components/public-app";
 import { RoomInvite } from "@/components/share/room-invite";
 

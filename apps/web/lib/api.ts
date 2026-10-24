@@ -1,5 +1,5 @@
 import { api } from "@lb/backend/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import type { FunctionReturnType } from "convex/server";
 
 export { api };
 
@@ -38,3 +38,5 @@ export type LogStep = NonNullable<FunctionReturnType<typeof api.dashboard.log>>[
 export type LogVerdict = LogStep["verdicts"][number];
 export type JoinRequest = FunctionReturnType<typeof api.roomAdmin.requests>[number];
 export type ServerRow = NonNullable<FunctionReturnType<typeof api.dashboard.serverLog>>[number];
+export type RoomLog = NonNullable<FunctionReturnType<typeof api.logs.room>>;
+export type Device = FunctionReturnType<typeof api.devices.list>[number];

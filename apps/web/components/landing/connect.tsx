@@ -33,7 +33,7 @@ export function Connect({ origin }: { origin: string }) {
             <li>
               <CopyCmd text={joinCmd(origin, "<token>")} />
               <small>
-                Join your team's workspace. <a href="/start">Get started</a> gives you a token for this
+                Join your team's workspace. <a href="/login">Get started</a> gives you a token for this
                 laptop.
               </small>
             </li>

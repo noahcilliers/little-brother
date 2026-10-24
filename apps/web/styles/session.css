@@ -1,0 +1,159 @@
+/* The session page (board, join card, share dialog), the read-only watch view and the phone join card. */
+
+.page-board {
+  padding-top: 16px;
+}
+/* The board's side column sticks below the page top, not below the old top bar. */
+.page-board .side {
+  top: 16px;
+}
+.session-empty {
+  display: grid;
+  place-items: start center;
+  padding: 48px 0;
+}
+.join-card {
+  display: grid;
+  gap: 16px;
+  width: min(560px, 100%);
+  padding: 24px;
+}
+.join-card h2 {
+  font: 600 16px var(--sans);
+}
+.invite-room {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: 15px;
+}
+
+/* share dialog (Present mode fills the screen for a projector) */
+.share-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--scrim);
+}
+.share {
+  width: min(860px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+}
+.share.present {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+.share-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 16px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.share-head > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+.share-head b {
+  font: 600 16px var(--sans);
+}
+.share-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+.share-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+.share-card h3 {
+  font: 600 15px var(--sans);
+}
+.share-card p {
+  font-size: 13px;
+}
+.qr {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  justify-self: center;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.qr-bg {
+  fill: var(--panel);
+}
+.qr-off {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--subtle),
+    var(--subtle) 8px,
+    var(--panel) 8px,
+    var(--panel) 16px
+  );
+}
+.present .qr {
+  max-width: min(46vh, 520px);
+}
+.present .share-card h3 {
+  font-size: 22px;
+}
+
+/* /watch/<token> */
+.watch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.watch-bar .icon-btn {
+  margin-left: auto;
+}
+
+/* /r/<invite>: the page a phone opens from the Join QR */
+.mobile-card {
+  display: grid;
+  gap: 16px;
+  width: min(420px, calc(100% - 32px));
+  margin: 12vh auto 0;
+  padding: 32px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--panel);
+}
+.mobile-card h1 {
+  font: 600 22px / 1.25 var(--sans);
+  letter-spacing: -0.02em;
+}
+@media (max-width: 768px) {
+  .watch-bar {
+    padding: 0 16px;
+  }
+  .session-empty {
+    padding: 16px 0;
+  }
+  .join-card {
+    padding: 16px;
+  }
+}

@@ -1,35 +1,65 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "../ui/button";
+import { Dialog } from "../ui/dialog";
 
-type Props = { label: string; confirm: string; busy?: boolean; danger?: boolean; onConfirm: () => void };
+type Props = {
+  label: string;
+  title: string;
+  confirm: string;
+  action?: string;
+  busy?: boolean;
+  danger?: boolean;
+  size?: "sm" | "md";
+  onConfirm: () => void;
+};
 
-/** Two clicks for anything destructive; the second click is the only one that acts. */
-export function ConfirmButton({ label, confirm, busy, danger, onConfirm }: Props) {
+/** Anything destructive asks once in a small dialog; only its confirm button acts. */
+export function ConfirmButton({
+  label,
+  title,
+  confirm,
+  action,
+  busy,
+  danger,
+  size = "md",
+  onConfirm,
+}: Props) {
   const [asking, setAsking] = useState(false);
-  if (!asking)
-    return (
-      <button type="button" className="btn-ghost" onClick={() => setAsking(true)} disabled={busy}>
-        {label}
-      </button>
-    );
   return (
-    <span className="confirm">
-      <span>{confirm}</span>
-      <button
-        type="button"
-        className={danger ? "btn-ghost danger" : "btn-ghost"}
+    <>
+      <Button
+        variant={danger ? "danger" : "secondary"}
+        size={size}
+        onClick={() => setAsking(true)}
         disabled={busy}
-        onClick={() => {
-          setAsking(false);
-          onConfirm();
-        }}
       >
-        Yes
-      </button>
-      <button type="button" className="btn-ghost" onClick={() => setAsking(false)}>
-        Cancel
-      </button>
-    </span>
+        {label}
+      </Button>
+      <Dialog
+        open={asking}
+        onClose={() => setAsking(false)}
+        title={title}
+        size="sm"
+        footer={
+          <>
+            <Button onClick={() => setAsking(false)}>Cancel</Button>
+            <Button
+              variant={danger ? "danger" : "primary"}
+              disabled={busy}
+              onClick={() => {
+                setAsking(false);
+                onConfirm();
+              }}
+            >
+              {action ?? label}
+            </Button>
+          </>
+        }
+      >
+        <p className="muted">{confirm}</p>
+      </Dialog>
+    </>
   );
 }

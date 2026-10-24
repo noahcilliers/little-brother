@@ -1,0 +1,204 @@
+/* The signed-in frame: a fixed left sidebar (collapsible to icons, a sheet on phones) and the main column. */
+
+.shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.shell.collapsed {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  background: var(--subtle);
+}
+.shell > .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+.shell-main {
+  min-width: 0;
+}
+.sheet .sidebar {
+  height: 100%;
+  border-right: 0;
+}
+.side-top {
+  display: grid;
+  gap: 16px;
+  padding: 16px 12px 8px;
+}
+.side-top .wordmark {
+  padding: 4px 8px 0;
+}
+.room-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  text-align: left;
+}
+.room-switch:hover {
+  border-color: var(--line-strong);
+}
+.room-name {
+  flex: 1;
+  min-width: 0;
+  font: 500 14px var(--sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-caret {
+  color: var(--muted);
+}
+
+.side-nav {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 8px 12px;
+  overflow-y: auto;
+}
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.side-link:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+.side-link[aria-current="page"] {
+  background: var(--hover);
+  color: var(--ink);
+  font-weight: 500;
+}
+.side-link.off {
+  opacity: 0.45;
+}
+.side-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ink-fg);
+  font: 600 11px var(--sans);
+}
+.side-sessions {
+  margin: 2px 0 8px 16px;
+  padding: 0 0 0 8px;
+  border-left: 1px solid var(--line);
+  list-style: none;
+}
+.side-sessions a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+.side-sessions a:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+.side-sessions a[aria-current="page"] {
+  background: var(--hover);
+  color: var(--ink);
+  font-weight: 500;
+}
+.side-more {
+  font-size: 12px;
+}
+
+.side-foot {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 4px;
+}
+.who-text {
+  display: grid;
+  min-width: 0;
+}
+.who-text b,
+.who-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.who-text b {
+  font: 500 13px var(--sans);
+}
+.who-text small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.side-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.theme-toggle {
+  display: inline-flex;
+  margin: 0;
+  min-width: 0;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+}
+.side-tools .theme-toggle {
+  margin-right: auto;
+}
+.theme-toggle button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+.theme-toggle button:hover,
+.theme-toggle button[aria-pressed="true"] {
+  background: var(--hover);
+  color: var(--ink);
+}

@@ -1,73 +1,84 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api, asSessionId } from "@/lib/api";
 import { Board } from "../board/board";
+import { ClassifierLogs, ServerLogs } from "../logs/session-logs";
 import { WaitingRoom } from "../rooms/waiting-room";
 import { ShareButton } from "../share/share-button";
-import { AppHeader } from "../shell/app-header";
 import { CodeChip } from "../shell/code-chip";
+import { PageHeader } from "../shell/page-header";
 import { PageState } from "../shell/page-state";
-import { ClassifierLog } from "./classifier-log";
-import { ConnectPanel } from "./connect-panel";
-import { JoinPopover } from "./join-popover";
+import { ButtonLink } from "../ui/button";
+import { type Tab, Tabs } from "../ui/tabs";
 import { ServerAlerts } from "./server-alerts";
-import { ServerLog } from "./server-log";
-import { SessionActions } from "./session-actions";
-import { type SessionTab, ViewSwitch } from "./view-switch";
+import { SessionEmpty } from "./session-empty";
+import { SessionMenu } from "./session-menu";
+import { SessionStatus } from "./session-status";
 
-/** /app/sessions/[sessionId]: the connect steps until someone joins, then the live board. */
+type SessionTab = "board" | "classifier" | "server";
+const TABS: Tab<SessionTab>[] = [
+  { id: "board", label: "Board" },
+  { id: "classifier", label: "Classifier log" },
+  { id: "server", label: "Server log" },
+];
+const isTab = (t: string | null): t is SessionTab => t === "board" || t === "classifier" || t === "server";
+
+/** /app/sessions/[sessionId]: the live board, with the classifier and (host) server logs as tabs. */
 export function SessionView({ sessionId }: { sessionId: string }) {
   const id = asSessionId(sessionId);
   const session = useQuery(api.sessions.get, { sessionId: id });
   // Same subscription the Board opens; Convex shares it, so this costs nothing extra.
   const board = useQuery(api.dashboard.board, { sessionId: id });
-  const [tab, setTab] = useState<SessionTab>("board");
-  const rooms = { label: "Rooms", href: "/app" };
-  if (session === undefined)
-    return (
-      <>
-        <AppHeader crumbs={[rooms]} />
-        <PageState title="Loading session…" />
-      </>
-    );
+  const params = useSearchParams();
+  const router = useRouter();
+  const asked = params.get("tab");
+  if (session === undefined) return <PageState title="Loading" loading />;
   if (session === null)
     return (
-      <>
-        <AppHeader crumbs={[rooms]} />
-        <PageState title="Session not found">
-          <p>It doesn't exist, or you're not in its room.</p>
-        </PageState>
-      </>
+      <PageState title="Session not found">
+        <p>It doesn't exist, or you're not in its room.</p>
+        <ButtonLink href="/app">Back to your rooms</ButtonLink>
+      </PageState>
     );
+  const tabs = TABS.filter((t) => session.isHost || t.id !== "server");
+  const tab: SessionTab = isTab(asked) && tabs.some((t) => t.id === asked) ? asked : "board";
   const empty = board !== undefined && (board === null || board.agents.length === 0);
+  const href = (t: SessionTab) => (t === "board" ? `/app/sessions/${id}` : `/app/sessions/${id}?tab=${t}`);
   return (
     <>
-      <AppHeader
-        crumbs={[
-          { label: session.room.name, href: `/app/rooms/${session.room.id}` },
-          { label: session.name },
-        ]}
-      >
-        {session.endedAt !== null ? <span className="row-tag">ended</span> : null}
-        <CodeChip code={session.code} />
-        <ShareButton session={session} />
-        {empty ? null : <ViewSwitch tab={tab} onChange={setTab} host={session.isHost} />}
-        {empty ? null : <JoinPopover code={session.code} />}
-        <SessionActions session={session} />
-      </AppHeader>
+      <PageHeader
+        title={session.name}
+        meta={
+          <>
+            <SessionStatus session={session} />
+            <CodeChip code={session.code} />
+          </>
+        }
+        actions={
+          <>
+            <ShareButton session={session} />
+            <SessionMenu session={session} />
+          </>
+        }
+        tabs={<Tabs tabs={tabs} active={tab} label="Session views" href={href} />}
+      />
       <WaitingRoom roomId={session.room.id} floating />
-      {session.isHost ? <ServerAlerts sessionId={id} onOpenLog={() => setTab("server")} /> : null}
-      {empty ? (
-        <ConnectPanel session={session} />
-      ) : tab === "log" ? (
-        <ClassifierLog sessionId={id} />
-      ) : tab === "server" ? (
-        <ServerLog sessionId={id} />
-      ) : (
-        <Board sessionId={id} />
-      )}
+      {session.isHost ? (
+        <ServerAlerts sessionId={id} onOpenLog={() => router.replace(href("server"))} />
+      ) : null}
+      <main className={tab === "board" ? "page page-full page-board" : "page page-full"}>
+        {tab === "classifier" ? (
+          <ClassifierLogs sessionId={id} />
+        ) : tab === "server" ? (
+          <ServerLogs sessionId={id} />
+        ) : empty ? (
+          <SessionEmpty session={session} />
+        ) : (
+          <Board sessionId={id} />
+        )}
+      </main>
     </>
   );
 }

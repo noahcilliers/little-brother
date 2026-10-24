@@ -1,0 +1,58 @@
+/* The log details drawer: badges, full text, metadata and the classifier's reasoning. */
+
+.log-details {
+  display: grid;
+  gap: 24px;
+}
+.detail-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.detail-block {
+  display: grid;
+  gap: 8px;
+}
+.detail-text {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.detail-pre {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--subtle);
+  font: 400 12px / 1.6 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.meta-list {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  padding: 16px 0;
+  border-block: 1px solid var(--line);
+  font-size: 13px;
+}
+.meta-list dt {
+  color: var(--muted);
+}
+.meta-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.evidence {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 16px;
+  font: 400 12px / 1.6 var(--mono);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

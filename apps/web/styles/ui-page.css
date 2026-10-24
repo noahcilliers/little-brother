@@ -1,0 +1,131 @@
+/* Page furniture: the thin header, the content column, tabs and segmented controls. */
+
+.page-header {
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.page-header.has-tabs {
+  padding-bottom: 0;
+}
+.page-header-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 36px;
+}
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.page-title h1 {
+  font: 600 22px / 1.25 var(--sans);
+  letter-spacing: -0.02em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px 48px;
+  min-width: 0;
+}
+.page-narrow {
+  max-width: 760px;
+}
+.page-full {
+  max-width: none;
+}
+
+/* sub-navigation under a header */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 12px -8px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 12px;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tab:hover {
+  color: var(--ink);
+}
+.tab[aria-current="page"] {
+  color: var(--ink);
+}
+.tab[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+.tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--muted);
+  font: 500 11px var(--sans);
+}
+.seg {
+  display: inline-flex;
+  margin: 0;
+  min-width: 0;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--subtle);
+}
+.seg button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.seg button:hover {
+  color: var(--ink);
+}
+.seg button.on {
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--shadow-sm);
+}
