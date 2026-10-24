@@ -2,6 +2,7 @@ import { blockStop, renderDigest } from "@lb/core";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { classifyPool } from "../classify/pool";
 import { unackedUrgent } from "../inbox";
 import { closeOpenTasks } from "../tasks";
 import { applyToolTokens } from "../tokens";
@@ -33,7 +34,7 @@ async function closeIntent(ctx: MutationCtx, agent: Doc<"agents">): Promise<stri
   const outcome = await trajectoryOutcome(ctx, intent);
   const text = `${intent.text.replace(/ → (OK|FAIL)$/, "")} → ${outcome === "failed" ? "FAIL" : "OK"}`;
   await ctx.db.patch(intent._id, { outcome, text });
-  await ctx.scheduler.runAfter(0, internal.classify.run.onTrajectoryEnd, { intentId: intent._id });
+  await classifyPool.enqueueAction(ctx, internal.classify.run.onTrajectoryEnd, { intentId: intent._id });
   return `stopped, intent ${outcome}`;
 }
 

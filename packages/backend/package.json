@@ -14,6 +14,8 @@
     "@anthropic-ai/sdk": "^0.65.0",
     "@auth/core": "0.41.1",
     "@convex-dev/auth": "^0.0.96",
+    "@convex-dev/rate-limiter": "^0.4.2",
+    "@convex-dev/workpool": "^0.4.14",
     "@google/genai": "^1.21.0",
     "@lb/core": "workspace:*",
     "convex": "^1.27.3",
@@ -21,6 +23,6 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
-    "convex-test": "^0.0.38"
+    "convex-test": "^0.0.65"
   }
 }

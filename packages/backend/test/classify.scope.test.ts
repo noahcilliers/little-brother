@@ -1,14 +1,11 @@
-import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { Id } from "../convex/_generated/dataModel";
 import type { MutationCtx } from "../convex/_generated/server";
 import { loadStructural } from "../convex/classify/load";
 import { runSyncChecks } from "../convex/classify/sync";
 import { insertNode } from "../convex/nodes";
-import schema from "../convex/schema";
+import { makeT, type T } from "./platformHelpers";
 
-const modules = import.meta.glob("../convex/**/*.ts");
-type T = ReturnType<typeof convexTest>;
 type Room = { teamId: Id<"teams">; sessionId: Id<"sessions"> };
 
 async function room(ctx: MutationCtx, name: string): Promise<Room> {
@@ -58,7 +55,7 @@ let t: T;
 beforeEach(() => {
   vi.stubEnv("GEMINI_API_KEY", "");
   vi.stubEnv("ANTHROPIC_API_KEY", "");
-  t = convexTest(schema, modules);
+  t = makeT();
 });
 afterEach(() => vi.unstubAllEnvs());
 

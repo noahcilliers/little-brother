@@ -1,12 +1,9 @@
-import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { internal } from "../convex/_generated/api";
 import type { Doc, Id } from "../convex/_generated/dataModel";
 import { runSyncChecks } from "../convex/classify/sync";
-import schema from "../convex/schema";
+import { makeT, type T } from "./platformHelpers";
 
-const modules = import.meta.glob("../convex/**/*.ts");
-type T = ReturnType<typeof convexTest>;
 type NodeIn = Partial<Omit<Doc<"nodes">, "_id" | "_creationTime">> & { agentId: Id<"agents"> };
 
 const DEMO_TOPICS = {
@@ -76,7 +73,7 @@ let ash: Id<"agents">;
 beforeEach(async () => {
   vi.stubEnv("GEMINI_API_KEY", "");
   vi.stubEnv("ANTHROPIC_API_KEY", "");
-  t = convexTest(schema, modules);
+  t = makeT();
   noah = await agent(t, "noah");
   joshua = await agent(t, "joshua");
   ash = await agent(t, "ash");

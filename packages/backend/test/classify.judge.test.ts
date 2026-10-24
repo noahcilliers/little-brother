@@ -1,8 +1,7 @@
 import type { Judge } from "@lb/core";
-import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { internal } from "../convex/_generated/api";
-import schema from "../convex/schema";
+import { makeT } from "./platformHelpers";
 
 const fakeJudge: Judge & { distill: () => Promise<string | null> } = {
   async judge(pair) {
@@ -23,10 +22,8 @@ vi.mock("../convex/classify/adapters/select", () => ({
   selectJudge: () => fakeJudge,
 }));
 
-const modules = import.meta.glob("../convex/**/*.ts");
-
 test("intent similar to a failure lesson → judge verdict → stale warn queued for the planner", async () => {
-  const t = convexTest(schema, modules);
+  const t = makeT();
   const [noah, ash] = await t.run(async (ctx) => {
     const ids = [];
     for (const handle of ["noah", "ash"]) {

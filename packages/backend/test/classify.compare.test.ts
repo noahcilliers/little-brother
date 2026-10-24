@@ -1,8 +1,7 @@
-import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { internal } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
-import schema from "../convex/schema";
+import { makeT } from "./platformHelpers";
 
 const distill = vi.fn(
   async (_prompt: string) => "noah: JWT bearer\njoshua: session cookie\nmatches: no decision yet",
@@ -13,10 +12,8 @@ vi.mock("../convex/classify/adapters/select", () => ({
   selectJudge: () => ({ judge: async () => null, distill }),
 }));
 
-const modules = import.meta.glob("../convex/**/*.ts");
-
 test("an open escalation gets one side-by-side comparison once both sides have working code", async () => {
-  const t = convexTest(schema, modules);
+  const t = makeT();
   const ids: Id<"agents">[] = await t.run(async (ctx) => {
     const out = [];
     for (const handle of ["noah", "joshua"]) {

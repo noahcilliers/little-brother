@@ -3,6 +3,7 @@ import type { z } from "zod";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import { classifyPool } from "./classify/pool";
 import { resolveByDecision } from "./decisions";
 import { sha1Hex } from "./hash";
 import { insertNode, latestActions, topicFor } from "./nodes";
@@ -11,7 +12,7 @@ type Args<K extends keyof typeof McpArgs> = z.infer<(typeof McpArgs)[K]>;
 export type Posted = { text: string; nodeId?: Id<"nodes"> };
 
 const classify = (ctx: MutationCtx, nodeId: Id<"nodes">) =>
-  ctx.scheduler.runAfter(0, internal.classify.run.classifyNode, { nodeId });
+  classifyPool.enqueueAction(ctx, internal.classify.run.classifyNode, { nodeId });
 
 async function intentContext(ctx: MutationCtx, agent: Doc<"agents">) {
   const intent = agent.intentId ? await ctx.db.get(agent.intentId) : null;
