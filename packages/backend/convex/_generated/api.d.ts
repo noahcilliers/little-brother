@@ -34,6 +34,7 @@ import type * as dashboardQueries_decisions from "../dashboardQueries/decisions.
 import type * as dashboardQueries_goals from "../dashboardQueries/goals.js";
 import type * as dashboardQueries_labels from "../dashboardQueries/labels.js";
 import type * as dashboardQueries_lanes from "../dashboardQueries/lanes.js";
+import type * as dashboardQueries_log from "../dashboardQueries/log.js";
 import type * as dashboardQueries_routine from "../dashboardQueries/routine.js";
 import type * as dashboardQueries_sessions from "../dashboardQueries/sessions.js";
 import type * as dashboardQueries_shared from "../dashboardQueries/shared.js";
@@ -118,6 +119,7 @@ declare const fullApi: ApiFromModules<{
   "dashboardQueries/goals": typeof dashboardQueries_goals;
   "dashboardQueries/labels": typeof dashboardQueries_labels;
   "dashboardQueries/lanes": typeof dashboardQueries_lanes;
+  "dashboardQueries/log": typeof dashboardQueries_log;
   "dashboardQueries/routine": typeof dashboardQueries_routine;
   "dashboardQueries/sessions": typeof dashboardQueries_sessions;
   "dashboardQueries/shared": typeof dashboardQueries_shared;

@@ -1,14 +1,17 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useState } from "react";
 import { api, asSessionId } from "@/lib/api";
 import { Board } from "../board/board";
 import { AppHeader } from "../shell/app-header";
 import { CodeChip } from "../shell/code-chip";
 import { PageState } from "../shell/page-state";
+import { ClassifierLog } from "./classifier-log";
 import { ConnectPanel } from "./connect-panel";
 import { JoinPopover } from "./join-popover";
 import { SessionActions } from "./session-actions";
+import { type SessionTab, ViewSwitch } from "./view-switch";
 
 /** /app/sessions/[sessionId]: the connect steps until someone joins, then the live board. */
 export function SessionView({ sessionId }: { sessionId: string }) {
@@ -16,6 +19,7 @@ export function SessionView({ sessionId }: { sessionId: string }) {
   const session = useQuery(api.sessions.get, { sessionId: id });
   // Same subscription the Board opens; Convex shares it, so this costs nothing extra.
   const board = useQuery(api.dashboard.board, { sessionId: id });
+  const [tab, setTab] = useState<SessionTab>("board");
   const rooms = { label: "Rooms", href: "/app" };
   if (session === undefined)
     return (
@@ -44,10 +48,17 @@ export function SessionView({ sessionId }: { sessionId: string }) {
       >
         {session.endedAt !== null ? <span className="row-tag">ended</span> : null}
         <CodeChip code={session.code} />
+        {empty ? null : <ViewSwitch tab={tab} onChange={setTab} />}
         {empty ? null : <JoinPopover code={session.code} />}
         <SessionActions session={session} />
       </AppHeader>
-      {empty ? <ConnectPanel session={session} /> : <Board sessionId={id} />}
+      {empty ? (
+        <ConnectPanel session={session} />
+      ) : tab === "log" ? (
+        <ClassifierLog sessionId={id} />
+      ) : (
+        <Board sessionId={id} />
+      )}
     </>
   );
 }
