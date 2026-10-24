@@ -98,12 +98,20 @@ const additional = (output: unknown): string => {
 async function joinOrLeave(input: HookInput, opts: HookRunOptions): Promise<HookResult | null> {
   const cmd = await handleSessionCommand(input, opts.as);
   if (!cmd) return null;
-  const synthetic = (hook: string) => ({ ...input, hook_event_name: hook, source: "resume", reason: "other" });
+  const synthetic = (hook: string) => ({
+    ...input,
+    hook_event_name: hook,
+    source: "resume",
+    reason: "other",
+  });
   if (cmd.left) await runHook("SessionEnd", synthetic("SessionEnd"), { ...opts, session: cmd.left });
   if (!cmd.joined) return { output: cmd.output, delivered: false };
   const start = await runHook("SessionStart", synthetic("SessionStart"), { ...opts, session: cmd.joined });
   const text = [additional(cmd.output), additional(start.output)].filter(Boolean).join("\n\n");
-  return { output: { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: text } }, delivered: start.delivered };
+  return {
+    output: { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: text } },
+    delivered: start.delivered,
+  };
 }
 
 /**
@@ -121,7 +129,8 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
     const command = await joinOrLeave(input, opts);
     if (command) return command;
     const code = sessionCodeFor(input.session_id, opts.session);
-    if (!code) return { output: null, delivered: false, error: "this Claude session has not joined a session" };
+    if (!code)
+      return { output: null, delivered: false, error: "this Claude session has not joined a session" };
     const repo = repoInfo(input.cwd);
     envelope = buildEnvelope(input, {
       repo: repo.repo,

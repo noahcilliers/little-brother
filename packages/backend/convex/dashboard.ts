@@ -7,9 +7,10 @@ import { board as boardView } from "./dashboardQueries/board";
 // The handler lives in dashboardQueries/ so each piece stays small; this file only fixes the public API name.
 
 export const board = query({
-  args: { sessionId: v.id("sessions") },
-  handler: async (ctx, { sessionId }) => {
-    if (!(await viewSession(ctx, sessionId))) return null;
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    const sessionId = ctx.db.normalizeId("sessions", args.sessionId);
+    if (!sessionId || !(await viewSession(ctx, sessionId))) return null;
     return boardView(ctx, sessionId);
   },
 });

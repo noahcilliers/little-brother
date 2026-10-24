@@ -9,6 +9,7 @@
       "!**/.next",
       "!**/dist",
       "!demo",
+      "!cooperbench-*",
       "!apps/web/public/lb.mjs"
     ]
   },

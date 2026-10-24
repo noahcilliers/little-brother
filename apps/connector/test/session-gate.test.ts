@@ -38,11 +38,17 @@ async function backend(): Promise<string> {
 
 const prompt = (text: string) => JSON.stringify({ ...fx.userPrompt, prompt: text });
 const contextOf = (out: unknown) =>
-  (out as { hookSpecificOutput?: { additionalContext?: string } } | null)?.hookSpecificOutput?.additionalContext ?? "";
+  (out as { hookSpecificOutput?: { additionalContext?: string } } | null)?.hookSpecificOutput
+    ?.additionalContext ?? "";
 
 beforeEach(async () => {
   const siteUrl = await backend();
-  process.env.LB_HOME = tempHome({ siteUrl, convexUrl: "", current: "ash", profiles: { ash: { token: "t" } } });
+  process.env.LB_HOME = tempHome({
+    siteUrl,
+    convexUrl: "",
+    current: "ash",
+    profiles: { ash: { token: "t" } },
+  });
   process.env.LB_SESSION_DIR = `${process.env.LB_HOME}/sessions`;
   delete process.env.LB_SESSION;
 });

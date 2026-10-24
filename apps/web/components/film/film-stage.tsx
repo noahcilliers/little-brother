@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import { Graph } from "@/components/board/graph";
 import { Sessions } from "@/components/board/sessions";
 import { TopBar } from "@/components/board/top-bar";
@@ -15,12 +16,14 @@ const COLORS = new Map(FULL_BOARD.agents.map((a) => [a.id, a.color]));
 const colorOf = (agentId: string) => agentColor(COLORS.get(agentId));
 const noop = () => undefined;
 
+type Props = { s: number; transform: string; appRef: Ref<HTMLDivElement> };
+
 /** The real dashboard (top bar, timeline, session panes) drawn from the scripted board at story second s. */
-export function FilmStage({ s, transform }: { s: number; transform: string }) {
+export function FilmStage({ s, transform, appRef }: Props) {
   const board = boardAt(s);
   const t = at(s);
   return (
-    <div className="film-app" style={{ width: STAGE_W, transform }}>
+    <div className="film-app" ref={appRef} style={{ width: STAGE_W, transform }}>
       <TopBar
         board={board}
         t={t}

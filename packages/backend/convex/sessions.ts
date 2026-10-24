@@ -22,9 +22,11 @@ export const create = mutation({
 
 /** Header for the session page: its name, join code and room. */
 export const get = query({
-  args: { sessionId: v.id("sessions") },
-  handler: async (ctx, { sessionId }) => {
-    const s = await viewSession(ctx, sessionId);
+  // A plain string: the id comes from the URL, and a malformed one should read as "not found", not throw.
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    const sessionId = ctx.db.normalizeId("sessions", args.sessionId);
+    const s = sessionId ? await viewSession(ctx, sessionId) : null;
     if (!s) return null;
     const team = await ctx.db.get(s.teamId);
     return {

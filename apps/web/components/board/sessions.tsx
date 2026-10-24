@@ -71,8 +71,10 @@ function Pane({
     <section className="sess">
       <header>
         <i style={{ background: color }} />
-        {agent.name}
-        <small>claude code · {agent.branch}</small>
+        <span className="sess-name" title={agent.name}>
+          {agent.name}
+        </span>
+        <small title={agent.branch}>claude code · {agent.branch}</small>
       </header>
       <ol ref={list}>
         {lines.map((l, i) => (

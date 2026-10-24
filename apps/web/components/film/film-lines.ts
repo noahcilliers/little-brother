@@ -88,7 +88,7 @@ const LINES: Record<string, Line[]> = {
     [34.4, "tool", "Edit(web/src/api-client.ts) · Authorization: Bearer"],
     [37.4, "ok", "Bash(npm test) ⎿ ✓ 6 passed"],
     [38.2, "done", "☑ Bearer token login"],
-    [40.6, "ok", "Bash(lb verify) ⎿ ✓ merged 3 branches · 14 passed"],
+    [41.2, "ok", "Bash(lb verify) ⎿ ✓ merged 3 branches · 14 passed"],
   ],
 };
 

@@ -56,7 +56,7 @@ const BEATS: [s: number, text: string, tone: "hot" | "warn" | "faint"][] = [
   [0.3, "Three agents start on lb-demo-shop", "faint"], [8.4, "Noah's CORS attempt fails", "warn"],
   [10.9, "It becomes a lesson", "faint"], [11, "Joshua stopped: Noah already built the users table", "warn"],
   [17, "Ash steered off a failed path: use the Vite proxy", "warn"], [CONFLICT_AT, "Conflict: Ash vs Noah on auth.mechanism", "hot"],
-  [RESOLVE_AT, "Noah decides: JWT bearer", "faint"], [40.6, "lb verify: merged clean, 14 passed", "faint"],
+  [RESOLVE_AT, "Noah decides: JWT bearer", "faint"], [41.2, "lb verify: merged clean, 14 passed", "faint"],
 ];
 
 const BOARD: Board = {
@@ -135,7 +135,7 @@ const BOARD: Board = {
   ],
   catches: CATCHES,
   sessions: SESSIONS,
-  verifies: [{ id: "v1", t: at(40.6), ok: true, text: "merged · 14/14" }],
+  verifies: [{ id: "v1", t: at(41.2), ok: true, text: "merged clean · 14/14" }],
   beats: BEATS.map(([s, text, tone]) => ({ t: at(s), text, tone })),
   counts: { caught: 3, missed: 0, saved: 0 },
 };

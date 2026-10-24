@@ -18,14 +18,16 @@ export function StoryList({ lines, start }: { lines: SessionLine[]; start: numbe
           {l.kind === "lb" || l.kind === "lbwarn" ? (
             <>
               <b>little brother · {l.head}</b>
-              <small>{l.text}</small>
+              <small className="clamp" title={l.text}>
+                {l.text}
+              </small>
             </>
           ) : l.kind === "task" ? (
             "started"
-          ) : l.kind === "done" ? (
-            l.text.replace(/^[☑☒] /, "ended: ")
           ) : (
-            l.text
+            <span className="clamp" title={l.text}>
+              {l.kind === "done" ? l.text.replace(/^[☑☒] /, "ended: ") : l.text}
+            </span>
           )}
         </li>
       ))}

@@ -13,7 +13,10 @@ export type SessionCommandResult = { output: HookOutput; joined?: string; left?:
  * `/little-brother:join <code>` and `/little-brother:leave`, answered from the prompt hook (the only place
  * that knows this Claude session's id). Returns null for every other prompt.
  */
-export async function handleSessionCommand(input: HookInput, as?: string): Promise<SessionCommandResult | null> {
+export async function handleSessionCommand(
+  input: HookInput,
+  as?: string,
+): Promise<SessionCommandResult | null> {
   if (input.hook_event_name !== "UserPromptSubmit") return null;
   const cmd = sessionCommand(input.prompt);
   if (!cmd) return null;
@@ -31,10 +34,16 @@ export async function handleSessionCommand(input: HookInput, as?: string): Promi
   }
   const profile = activeProfile(as);
   if (!profile)
-    return { output: say("This laptop is not connected yet. Tell the user to run the install line from /start.") };
+    return {
+      output: say("This laptop is not connected yet. Tell the user to run the install line from /start."),
+    };
   try {
     const res = Attached.parse(
-      await postJson(`${profile.siteUrl}/session/attach`, { code: cmd.code }, { token: profile.token, timeoutMs: 4000 }),
+      await postJson(
+        `${profile.siteUrl}/session/attach`,
+        { code: cmd.code },
+        { token: profile.token, timeoutMs: 4000 },
+      ),
     );
     writeAttachment(input.session_id, res);
     return {

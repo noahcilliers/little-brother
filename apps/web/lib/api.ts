@@ -27,10 +27,10 @@ export type RoomSession = Room["sessions"][number];
 export type RoomMember = Room["members"][number];
 export type SessionHead = NonNullable<FunctionReturnType<typeof api.sessions.get>>;
 
-export type RoomId = FunctionArgs<typeof api.rooms.get>["roomId"];
-export type SessionId = FunctionArgs<typeof api.sessions.get>["sessionId"];
+export type RoomId = Room["id"];
+export type SessionId = SessionHead["id"];
 
-// Route params arrive as plain strings; Convex validates the id server side and the page's error
-// boundary shows "not found" when one is malformed.
+// Route params arrive as plain strings. The reads take strings and return null for a malformed id;
+// mutations validate ids server side.
 export const asRoomId = (id: string) => id as RoomId;
 export const asSessionId = (id: string) => id as SessionId;

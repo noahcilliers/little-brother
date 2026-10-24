@@ -49,10 +49,12 @@ export const mine = query({
 
 /** One room: its people, sessions, and (for members) the invite code. */
 export const get = query({
-  args: { roomId: v.id("teams") },
-  handler: async (ctx, { roomId }) => {
-    const room = await viewRoom(ctx, roomId);
-    if (!room) return null;
+  // A plain string: the id comes from the URL, and a malformed one should read as "not found", not throw.
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    const roomId = ctx.db.normalizeId("teams", args.roomId);
+    const room = roomId ? await viewRoom(ctx, roomId) : null;
+    if (!roomId || !room) return null;
     const rows = await ctx.db
       .query("roomMembers")
       .withIndex("by_team", (q) => q.eq("teamId", roomId))

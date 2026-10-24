@@ -884,7 +884,18 @@ a.ctl {
   overflow-wrap: anywhere;
 }
 .story li {
-  white-space: pre-wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+.story li > :not(time) {
+  grid-column: 2;
+}
+.story .clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 @media (min-width: 961px) {
   .side {
@@ -910,4 +921,16 @@ a.ctl {
 .sess li > div {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.sess-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sess header i,
+.sess header small {
+  flex: none;
+}
+.sess header small {
+  flex: 0 1 auto;
 }

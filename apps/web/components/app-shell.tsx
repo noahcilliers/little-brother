@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { api } from "@/lib/api";
 import { useEnsureAccount } from "@/lib/use-ensure-account";
+import { AppHeader } from "./shell/app-header";
 import { ErrorBoundary } from "./shell/error-boundary";
 import { PageState } from "./shell/page-state";
 
@@ -37,12 +38,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     );
   const missing = (
-    <PageState title="Not found">
-      <p>This room or session doesn't exist, or you're not in it.</p>
-      <a className="btn-ghost" href="/app">
-        Back to rooms
-      </a>
-    </PageState>
+    <>
+      <AppHeader crumbs={[{ label: "Rooms", href: "/app" }]} />
+      <PageState title="Not found">
+        <p>This room or session doesn't exist, or you're not in it.</p>
+        <a className="btn-ghost" href="/app">
+          Back to rooms
+        </a>
+      </PageState>
+    </>
   );
   return (
     <div className="shell">

@@ -5,10 +5,5 @@
   "author": {
     "name": "Little Brother team"
   },
-  "keywords": [
-    "coordination",
-    "multi-agent",
-    "hooks",
-    "mcp"
-  ]
+  "keywords": ["coordination", "multi-agent", "hooks", "mcp"]
 }

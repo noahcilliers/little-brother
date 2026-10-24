@@ -234,3 +234,18 @@
     font-size: 13.5px;
   }
 }
+/* The landing spaces its <section>s apart; session panes and decision sides are sections too. */
+.lp .film-app section {
+  margin-top: 0;
+}
+/* The stage is a fixed-size desktop dashboard at every viewport; the board's narrow-screen stacking stays off. */
+.lp .film-app .sessions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.lp .film-app .dcols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.lp .film-app .bar .caption {
+  margin-left: auto;
+  width: auto;
+}
