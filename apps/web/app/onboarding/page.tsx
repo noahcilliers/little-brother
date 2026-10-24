@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "@/styles/ui.css";
-import "@/styles/pages.css";
 import "@/styles/onboarding.css";
 import { Suspense } from "react";
 import { Onboarding } from "@/components/onboarding/onboarding";

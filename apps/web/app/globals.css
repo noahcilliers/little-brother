@@ -6,6 +6,7 @@
   --bg: #ffffff;
   --panel: #ffffff;
   --subtle: #fafafa;
+  --canvas: #fafafa;
   --hover: #f2f2f2;
   --line: #ebebeb;
   --line-strong: #d4d4d4;
@@ -39,6 +40,7 @@
     --bg: #000000;
     --panel: #0a0a0a;
     --subtle: #0f0f0f;
+    --canvas: #000000;
     --hover: #1a1a1a;
     --line: #242424;
     --line-strong: #3d3d3d;
@@ -65,6 +67,7 @@
   --bg: #000000;
   --panel: #0a0a0a;
   --subtle: #0f0f0f;
+  --canvas: #000000;
   --hover: #1a1a1a;
   --line: #242424;
   --line-strong: #3d3d3d;

@@ -6,7 +6,8 @@ type Props = {
   description: string;
   children: ReactNode;
   back: string | null;
-  skip: string;
+  /** Where "I'll do this later" goes; none on the last step, where Continue already leaves. */
+  skip: string | null;
   /** The primary action: a link onward, or nothing when the step's own form moves on. */
   next?: { href: string; label: string; disabled?: boolean } | null;
 };
@@ -29,9 +30,11 @@ export function WizardCard({ title, description, children, back, skip, next }: P
           <span />
         )}
         <div className="wizard-foot-end">
-          <ButtonLink href={skip} variant="ghost">
-            I'll do this later
-          </ButtonLink>
+          {skip ? (
+            <ButtonLink href={skip} variant="ghost">
+              I'll do this later
+            </ButtonLink>
+          ) : null}
           {next ? (
             next.disabled ? (
               <Button variant="primary" disabled>

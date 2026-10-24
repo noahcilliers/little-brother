@@ -96,7 +96,7 @@ export function Onboarding() {
           title={s.title}
           description={s.description}
           back={before ? stepHref(before, carry) : null}
-          skip={onward}
+          skip={after ? onward : null}
           next={s.next}
         >
           {s.body}

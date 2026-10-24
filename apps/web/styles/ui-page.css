@@ -45,7 +45,6 @@
 }
 .page {
   max-width: 1200px;
-  margin: 0 auto;
   padding: 24px 32px 48px;
   min-width: 0;
 }
@@ -104,6 +103,8 @@
 }
 .seg {
   display: inline-flex;
+  justify-self: start;
+  width: fit-content;
   margin: 0;
   min-width: 0;
   padding: 2px;

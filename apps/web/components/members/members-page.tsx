@@ -6,6 +6,7 @@ import { WaitingRoom } from "../rooms/waiting-room";
 import { PageHeader } from "../shell/page-header";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
+import { EmptyState } from "../ui/empty-state";
 import { InviteLink } from "./invite-link";
 import { MemberList } from "./member-list";
 
@@ -27,7 +28,11 @@ export function MembersPage({ roomId }: { roomId: string }) {
           />
           <main className="page stack">
             <WaitingRoom roomId={room.id} />
-            <MemberList room={room} />
+            {room.members.length > 0 ? (
+              <MemberList room={room} />
+            ) : (
+              <EmptyState icon="members" title="Nobody has joined this room yet." />
+            )}
           </main>
           <Dialog open={invite} onClose={() => setInvite(false)} title={`Invite to ${room.name}`} size="sm">
             <InviteLink room={room} />

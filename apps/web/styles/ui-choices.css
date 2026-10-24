@@ -1,0 +1,83 @@
+/* Radio cards and disclosures (folded-away detail). */
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.choices-grid.one {
+  grid-template-columns: minmax(0, 1fr);
+}
+.choice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.choice-card:hover {
+  border-color: var(--line-strong);
+}
+.choice-card:has(input:checked) {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.choice-card input {
+  margin: 3px 0 0;
+  accent-color: var(--ink);
+}
+.choice-card span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.choice-card b {
+  font: 500 14px var(--sans);
+}
+.choice-card small {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.disclosure {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure > summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+.disclosure[open] > summary::before {
+  transform: rotate(45deg);
+}
+.disclosure > summary:hover {
+  color: var(--ink);
+}
+.disclosure > div {
+  padding: 0 12px 12px;
+}
+@media (max-width: 768px) {
+  .choices-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

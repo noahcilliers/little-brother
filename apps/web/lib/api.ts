@@ -17,11 +17,9 @@ export type VerifyBadge = Board["verifies"][number];
 export type BoardDecision = Board["decisions"][number];
 export type LooseAction = Board["loose"][number];
 
-export type TeamStatus = FunctionReturnType<typeof api.team.status>;
 export type Me = FunctionReturnType<typeof api.team.me>;
 export type Progress = FunctionReturnType<typeof api.onboarding.progress>;
 
-export type RoomSummary = FunctionReturnType<typeof api.rooms.mine>[number];
 export type Room = NonNullable<FunctionReturnType<typeof api.rooms.get>>;
 export type RoomSession = Room["sessions"][number];
 export type RoomMember = Room["members"][number];
@@ -32,11 +30,8 @@ export type SessionId = SessionHead["id"];
 
 // Route params arrive as plain strings. The reads take strings and return null for a malformed id;
 // mutations validate ids server side.
-export const asRoomId = (id: string) => id as RoomId;
 export const asSessionId = (id: string) => id as SessionId;
 export type LogStep = NonNullable<FunctionReturnType<typeof api.dashboard.log>>[number];
 export type LogVerdict = LogStep["verdicts"][number];
 export type JoinRequest = FunctionReturnType<typeof api.roomAdmin.requests>[number];
 export type ServerRow = NonNullable<FunctionReturnType<typeof api.dashboard.serverLog>>[number];
-export type RoomLog = NonNullable<FunctionReturnType<typeof api.logs.room>>;
-export type Device = FunctionReturnType<typeof api.devices.list>[number];

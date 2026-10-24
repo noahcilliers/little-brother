@@ -2,7 +2,7 @@
 
 .onboarding {
   min-height: 100dvh;
-  background: var(--subtle);
+  background: var(--canvas);
 }
 .onb-top {
   display: grid;

@@ -162,3 +162,7 @@
   color: var(--muted);
   font: 500 11px var(--sans);
 }
+.stack > .button,
+.stack-sm > .button {
+  justify-self: start;
+}
