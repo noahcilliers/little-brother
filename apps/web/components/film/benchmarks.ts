@@ -82,6 +82,9 @@ export const BENCH = {
   },
 } satisfies Record<string, Benchmark>;
 
+/** Placeholders stay out of the film until a real number replaces them; measured numbers and targets show. */
+export const isReal = (status: Status) => status !== "placeholder";
+
 export const TAG: Record<Status, string | null> = {
   measured: null,
   target: "target",

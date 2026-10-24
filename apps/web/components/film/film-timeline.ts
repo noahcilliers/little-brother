@@ -15,42 +15,37 @@ export const SCENES: Record<SceneId, [start: number, end: number, enter: Transit
   why: [44.6, 53.6, "wipe"],
   how: [53, 60, "wipe"],
   learn: [59.4, 66.4, "iris"],
-  measure: [65.8, 80.4, "zoom"],
-  impact: [79.8, 83.8, "iris"],
-  close: [83.2, 88, "zoom"],
+  measure: [65.8, 76.4, "zoom"],
+  impact: [75.8, 79.8, "iris"],
+  close: [79.2, 84, "zoom"],
 };
 export const TRANSITION_S = 0.6;
 
 // biome-ignore format: tabular scenario data
 export const CHAPTERS: [s: number, name: string][] = [
   [0, "Hook"], [ST + 5.5, "Connect"], [ST + 18.8, "Duplicate"], [ST + 23.2, "Stale"], [ST + 28.4, "Conflict"],
-  [44.8, "Why not git"], [53.2, "How it works"], [59.6, "Learning"], [66, "Measure"], [80, "Impact"], [83.4, "Close"],
+  [44.8, "Why not git"], [53.2, "How it works"], [59.6, "Learning"], [66, "Measure"], [76, "Impact"], [79.4, "Close"],
 ];
 
+// One short caption per beat: the picture carries the detail, so a caption only says what to watch. Scenes with
+// their own title on screen get none, so the same words never show twice.
 // biome-ignore format: one subtitle per row
 export const SUBS: [s: number, text: string][] = [
-  [0, "AI writes more of the code, and burns more tokens doing it."],
-  [5.2, "Put several agents on one repo and they do worse, not better."],
-  [7.6, "Each agent works blind to the others."],
-  [ST + 5.6, "Ash hosts a session. Teammates join with a QR code or one command in Claude Code."],
-  [ST + 8.8, "Noah asks to join from his phone. Ash admits him from the waiting room."],
-  [ST + 10.4, "Each laptop joins with one slash command, and its agent appears as a lane."],
-  [ST + 13.6, "Joshua drives his agent from his phone with Remote Control."],
-  [ST + 16.2, "Every goal, task and tool call lands on one shared timeline."],
-  [ST + 19.6, "Joshua's agent starts a users table that Noah's agent already built."],
-  [ST + 21.6, "Denied in the PreToolUse hook. It imports Noah's User instead."],
-  [ST + 23.4, "Ash's agent plans CORS middleware, the path Noah's agent proved fails."],
-  [ST + 24.6, "Warned before the first edit, with what worked. Straight to the proxy."],
-  [ST + 28.6, "Noah moves auth to JWT bearer while Ash builds cookie sessions."],
-  [ST + 32.2, "Conflict. Edits on auth.mechanism pause and the owner sees both sides."],
-  [ST + 35, "Noah decides from his phone."],
-  [ST + 36.8, "The decision lands in Ash's session. Only the superseded step is redone."],
-  [44.8, "Merges and instruction files can't see what teammates are doing right now."],
-  [53.2, "A check on every tool call, without slowing the agent down."],
-  [59.6, "Failures become lessons, decisions become labels, and the next verdict uses both."],
-  [66, "What we measure, and what we're aiming for."],
-  [80, "Fewer tokens burned, fewer failures repeated."],
-  [83.4, "Little Brother. Your agents, finally on the same page."],
+  [0, ""],
+  [ST + 5.6, "Ash shares a session with the team."],
+  [ST + 8.8, "Noah joins from his phone."],
+  [ST + 10.4, "Each laptop joins with one command."],
+  [ST + 13.6, "Joshua gives his agent a task from his phone."],
+  [ST + 16.2, "Every agent's work, on one live board."],
+  [ST + 19.6, "Joshua's agent starts a users table…"],
+  [ST + 21.6, "…but Noah's agent already built one. Blocked."],
+  [ST + 23.4, "Ash's agent is about to retry a fix that failed."],
+  [ST + 24.6, "Warned first, with what worked instead."],
+  [ST + 28.6, "Noah and Ash build login two different ways."],
+  [ST + 32.2, "Conflict. Both sides go to Noah."],
+  [ST + 35, "He picks one from his phone."],
+  [ST + 36.8, "Ash's agent switches over."],
+  [44.8, ""],
 ];
 
 /** Story beats shared by the dashboard, phones and terminals, on the story's clock. */

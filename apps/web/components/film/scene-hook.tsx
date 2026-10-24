@@ -5,9 +5,9 @@ import { HookStat, type Stat } from "./hook-stat";
 
 // biome-ignore format: one stat per row
 const STATS: Stat[] = [
-  { from: 0.15, to: 2.4, value: 42, unit: "%", text: "of committed code is now written by AI", src: "Sonar State of Code 2026" },
-  { from: 2.6, to: 5, lead: "Agents burn", pre: "~", value: 5, unit: "×", text: "the tokens a human does, 70–85% of it re-reading context already seen", src: "OpenRouter / Futurum 2026 · a16z × OpenRouter" },
-  { from: 5.2, to: 7.5, lead: "Teams of coding agents succeed", pre: "~", value: 30, unit: "% less", text: "often than one agent working alone", note: "42% of their failures: misjudging what the partner is doing", src: "CooperBench, Jan 2026" },
+  { from: 0.15, to: 2.4, value: 42, unit: "%", text: "of committed code is written by AI", src: "Sonar State of Code 2026" },
+  { from: 2.6, to: 5, lead: "Agents burn", pre: "~", value: 5, unit: "×", text: "the tokens a human does", src: "OpenRouter / Futurum 2026 · a16z × OpenRouter" },
+  { from: 5.2, to: 7.5, lead: "Agent teams succeed", pre: "~", value: 30, unit: "% less", text: "often than one agent alone", src: "CooperBench, Jan 2026" },
 ];
 const PROBLEMS = [
   ["redo work", CATCH_ICON.duplicate],

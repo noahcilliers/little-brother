@@ -62,9 +62,9 @@ export function WaitingCard({ s }: { s: number }) {
 type ToastRow = [from: number, to: number, tone: string, title: string, body: string, action: string];
 // biome-ignore format: tabular scenario data
 const TOASTS: ToastRow[] = [
-  [BEAT.dup + 0.1, 24.2, "warn", "Duplicate caught · Joshua ↔ Noah", "Joshua's users table duplicates Noah's db.users. Denied before the write.", "Show"],
-  [BEAT.stale + 0.1, 27.8, "warn", "Stale path avoided · Ash ↔ Noah", "Ash heads into Noah's failed CORS path. Warned with what worked.", "Show"],
-  [BEAT.conflict + 0.2, BEAT.popup, "conflict", "Conflict · Ash ↔ Noah", "JWT bearer tokens vs cookie session on auth.mechanism.", "Decide"],
+  [BEAT.dup + 0.1, 24.2, "warn", "Duplicate · Joshua ↔ Noah", "The users table already exists. Blocked.", "Show"],
+  [BEAT.stale + 0.1, 27.8, "warn", "Failed path · Ash ↔ Noah", "That CORS fix already failed. Use the proxy.", "Show"],
+  [BEAT.conflict + 0.2, BEAT.popup, "conflict", "Conflict · Ash ↔ Noah", "JWT tokens vs cookie sessions.", "Decide"],
 ];
 
 export function Toasts({ s }: { s: number }) {

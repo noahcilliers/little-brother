@@ -89,10 +89,10 @@
   align-items: baseline;
   justify-content: center;
   gap: 12px;
-  min-height: 46px;
-  padding: 12px 20px;
+  min-height: 56px;
+  padding: 14px 20px;
   border-top: 1px solid var(--line);
-  font: 400 14px / 1.45 var(--sans);
+  font: 500 17px / 1.45 var(--sans);
   letter-spacing: -0.005em;
   color: var(--fg);
   text-align: center;

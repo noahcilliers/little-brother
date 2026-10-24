@@ -5,13 +5,11 @@ import { countUp } from "./film-fx";
 
 // Building blocks for the full-screen benchmark beats: the zoom in and out, the big number, the status tag, bars.
 
-export const BEAT_S = 2.85;
-
-/** One full-screen beat on its own clock t: zooms in from close, holds, zooms out and away. */
-export function Beat({ t, children }: { t: number; children: ReactNode }) {
-  if (t < 0 || t > BEAT_S) return null;
+/** One full-screen beat on its own clock t, `len` seconds long: zooms in from close, holds, zooms out and away. */
+export function Beat({ t, len, children }: { t: number; len: number; children: ReactNode }) {
+  if (t < 0 || t > len) return null;
   const pin = easeOut(clamp01(t / 0.45));
-  const pout = easeOut(clamp01((t - BEAT_S + 0.4) / 0.4));
+  const pout = easeOut(clamp01((t - len + 0.4) / 0.4));
   const scale = lerp(1.4, 1, pin) * lerp(1, 0.82, pout);
   return (
     <div

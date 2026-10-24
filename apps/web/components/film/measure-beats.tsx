@@ -1,4 +1,4 @@
-import { BENCH } from "./benchmarks";
+import { BENCH, isReal } from "./benchmarks";
 import { prog } from "./film-clock";
 import { countUp } from "./film-fx";
 import { BigNumber, MBar, Tag } from "./measure-parts";
@@ -11,29 +11,32 @@ export function PrecisionBeat({ t }: { t: number }) {
     <>
       <h3 className="ms-label">{b.label}</h3>
       <BigNumber t={t} bound={b.bound} value={b.value} unit={b.unit} status={b.status} />
-      <div className="ms-bars">
-        <MBar
-          t={t}
-          delay={0.7}
-          name="Little Brother"
-          value={b.value}
-          max={100}
-          shown={`${b.bound}${b.value}%`}
-          accent
-        />
-        {b.baselines.map((x, i) => (
+      {/* Our bar alone says nothing, so the comparison shows only once the baselines are measured. */}
+      {isReal(b.baselineStatus) ? (
+        <div className="ms-bars">
           <MBar
-            key={x.name}
             t={t}
-            delay={0.9 + i * 0.15}
-            name={x.name}
-            value={x.value}
+            delay={0.7}
+            name="Little Brother"
+            value={b.value}
             max={100}
-            shown={`${x.value}%`}
+            shown={`${b.bound}${b.value}%`}
+            accent
           />
-        ))}
-        <Tag status={b.baselineStatus} />
-      </div>
+          {b.baselines.map((x, i) => (
+            <MBar
+              key={x.name}
+              t={t}
+              delay={0.9 + i * 0.15}
+              name={x.name}
+              value={x.value}
+              max={100}
+              shown={`${x.value}%`}
+            />
+          ))}
+          <Tag status={b.baselineStatus} />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -67,7 +70,7 @@ export function CatchesBeat({ t }: { t: number }) {
 
 export function LatencyBeat({ t }: { t: number }) {
   const b = BENCH.latency;
-  const llm = b.baselines[0];
+  const llm = isReal(b.baselineStatus) ? b.baselines[0] : undefined;
   return (
     <>
       <h3 className="ms-label">{b.label}</h3>

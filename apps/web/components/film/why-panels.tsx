@@ -1,5 +1,4 @@
 import { prog } from "./film-clock";
-import { countUp } from "./film-fx";
 
 // The two things teams try first, each with what it can't see, and the sourced numbers behind it.
 
@@ -19,7 +18,7 @@ export function GitPanel({ s }: { s: number }) {
   return (
     <section className="wy-panel" style={{ opacity: prog(s, 0.2, 0.4) }}>
       <span className="wy-chip">git</span>
-      <h3>Sees conflicts only at merge, and only textual ones.</h3>
+      <h3>Sees clashes only at merge.</h3>
       <svg viewBox="0 0 600 200" className="wy-svg" aria-hidden="true">
         <path d="M20 100 H580" className="wy-main" />
         <path
@@ -51,12 +50,7 @@ export function GitPanel({ s }: { s: number }) {
         </g>
       </svg>
       <div className="wy-row">
-        <Big
-          value={`${countUp(16, prog(s, 2.4, 0.8))}%`}
-          label="of merges hit textual conflicts"
-          p={prog(s, 2.4, 0.4)}
-        />
-        <Big value="4–31%" label="merged clean, then broke the build or tests" p={prog(s, 2.8, 0.4)} />
+        <Big value="4–31%" label="of clean merges still broke the build" p={prog(s, 2.4, 0.4)} />
       </div>
       <small className="wy-src" style={{ opacity: prog(s, 3, 0.4) }}>
         Brun et al., ESEC/FSE 2011
@@ -70,7 +64,7 @@ export function MdPanel({ s }: { s: number }) {
   return (
     <section className="wy-panel" style={{ opacity: prog(s, 1, 0.4) }}>
       <span className="wy-chip">CLAUDE.md · AGENTS.md</span>
-      <h3>Advisory and static. Followed unevenly, and blind to what a teammate is doing now.</h3>
+      <h3>Static. Blind to what a teammate is doing now.</h3>
       <svg viewBox="0 0 600 200" className="wy-svg" aria-hidden="true">
         <rect x={40} y={30} width={150} height={140} rx={10} className="wy-doc" />
         {[60, 82, 104, 126, 148].map((y) => (
@@ -99,13 +93,6 @@ export function MdPanel({ s }: { s: number }) {
           </text>
         </g>
       </svg>
-      <blockquote style={{ opacity: prog(s, 2.8, 0.4) }}>
-        Hooks give “deterministic control … rather than relying on the LLM to choose.”
-        <cite>Claude Code docs</cite>
-      </blockquote>
-      <small className="wy-src" style={{ opacity: prog(s, 3.2, 0.4) }}>
-        Compliance varies by task and over a session · arXiv 2605.10039
-      </small>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { BENCH } from "./benchmarks";
+import { BENCH, isReal } from "./benchmarks";
 import { prog } from "./film-clock";
 import { countUp, rise } from "./film-fx";
 
@@ -7,7 +7,7 @@ const LINES = [
   "Every stale path pruned is a failure not repeated.",
 ];
 
-/** The impact beat before the close: the point, restated, with the measured saving counting up. Local clock. */
+/** The impact beat before the close: the point, restated, with the saving counting up once it is measured. */
 export function SceneImpact({ s }: { s: number }) {
   const r = BENCH.tokensReplay;
   const n = prog(s, 1.2, 1.4);
@@ -20,12 +20,14 @@ export function SceneImpact({ s }: { s: number }) {
           </span>
         </span>
       ))}
-      <div className="im-num" style={{ opacity: prog(s, 1.1, 0.3) }}>
-        <b>
-          {r.bound} {countUp(r.value, n, 1)}k
-        </b>
-        <span>tokens saved by catches in one run · 6-agent replay</span>
-      </div>
+      {isReal(r.status) ? (
+        <div className="im-num" style={{ opacity: prog(s, 1.1, 0.3) }}>
+          <b>
+            {r.bound} {countUp(r.value, n, 1)}k
+          </b>
+          <span>tokens saved by catches in one run · 6-agent replay</span>
+        </div>
+      ) : null}
     </div>
   );
 }
