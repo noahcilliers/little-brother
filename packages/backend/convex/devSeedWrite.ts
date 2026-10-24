@@ -1,6 +1,6 @@
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { BRANCH, HANDLES, type Handle, type SeedAct, type SeedTask } from "./devSeedStory";
+import { BRANCH, type Handle, type SeedAct, type SeedTask } from "./devSeedStory";
 
 // Dev only: row writers for devSeed. Every row hangs off an agent whose session id starts with TAG.
 
@@ -14,6 +14,7 @@ export type Story = {
   now: number;
   at: number;
   agent: Record<Handle, Id<"agents">>;
+  handles: Handle[];
   /** Story seconds → wall-clock ms. */
   T: (s: number) => number;
   seen: (s: number | undefined) => boolean;
@@ -28,11 +29,11 @@ export async function memberFor(ctx: MutationCtx, handle: string): Promise<Id<"m
   return ctx.db.insert("members", { name: handle, handle, tokenHash: `${TAG}:${handle}`, revoked: false });
 }
 
-export async function startStory(ctx: MutationCtx, at: number): Promise<Story> {
+export async function startStory(ctx: MutationCtx, at: number, handles: Handle[]): Promise<Story> {
   const now = Date.now();
   const base = now - at * UNIT_MS - 500;
   const agent = {} as Record<Handle, Id<"agents">>;
-  for (const h of HANDLES) {
+  for (const h of handles) {
     agent[h] = await ctx.db.insert("agents", {
       memberId: await memberFor(ctx, h),
       claudeSessionId: `${TAG}-${h}-${now}`,
@@ -48,6 +49,7 @@ export async function startStory(ctx: MutationCtx, at: number): Promise<Story> {
     now,
     at,
     agent,
+    handles,
     T: (s) => Math.round(base + s * UNIT_MS),
     seen: (s) => s !== undefined && s <= at,
   };
@@ -79,7 +81,7 @@ export async function writeNode(
   s: Story,
   a: Handle,
   t: number,
-  row: { kind: "intent" | "knowledge"; text: string; parentId?: Id<"nodes"> },
+  row: { kind: "intent" | "knowledge" | "action"; text: string; parentId?: Id<"nodes"> },
 ) {
   const [verb = "PLAN", topic] = row.text.split(" ");
   return s.ctx.db.insert("nodes", {
@@ -88,7 +90,7 @@ export async function writeNode(
     kind: row.kind,
     verb,
     text: row.text,
-    topic,
+    topic: row.kind === "action" ? undefined : topic,
     parentId: row.parentId,
     outcome: row.kind === "intent" ? "open" : "succeeded",
     at: s.T(t),
@@ -105,7 +107,8 @@ async function writeAct(
 ) {
   const bash = x.tool === "Bash";
   const files = bash ? [] : [x.target];
-  const verb = x.label.split(" ")[0]?.toUpperCase() ?? "EDIT";
+  const first = x.label.split(" ")[0]?.toUpperCase() ?? "EDIT";
+  const verb = first === "READ" ? "EXPLORE" : first;
   const nodeId = await s.ctx.db.insert("nodes", {
     ...EMPTY,
     agentId: s.agent[k.a],
@@ -118,6 +121,7 @@ async function writeAct(
     outcome: x.outcome,
     taskId,
     label: x.label,
+    preview: x.preview,
     at: s.T(x.t),
   });
   const envelope = { tool: x.tool, files, command: bash ? x.target : undefined, outputTail: x.tail };
@@ -163,6 +167,10 @@ export async function writeTask(s: Story, k: SeedTask, goalId: Id<"nodes"> | und
     endedAt: done ? s.T(k.t1) : undefined,
     note: done ? k.note : undefined,
   });
+  // The agent marks the step in progress on its task list: a routine tick at the bar's start.
+  const payload = { envelope: { tool: "TaskUpdate" }, output: null };
+  const summary = `TaskUpdate "${k.subject}" in_progress`;
+  await writeEvent(s, k.a, k.t0 + 0.05, "PostToolUse", { tool: "TaskUpdate", summary, payload });
   const acts: Id<"nodes">[] = [];
   for (const x of k.acts) if (s.seen(x.t)) acts.push(await writeAct(s, k, x, taskId, goalId));
   return acts;

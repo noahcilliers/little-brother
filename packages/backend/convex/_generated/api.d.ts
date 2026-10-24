@@ -40,6 +40,8 @@ import type * as dashboardQueries_tasks from "../dashboardQueries/tasks.js";
 import type * as debugPairs from "../debugPairs.js";
 import type * as decisions from "../decisions.js";
 import type * as devSeed from "../devSeed.js";
+import type * as devSeedExtra from "../devSeedExtra.js";
+import type * as devSeedRows from "../devSeedRows.js";
 import type * as devSeedStory from "../devSeedStory.js";
 import type * as devSeedWrite from "../devSeedWrite.js";
 import type * as digest from "../digest.js";
@@ -106,6 +108,8 @@ declare const fullApi: ApiFromModules<{
   debugPairs: typeof debugPairs;
   decisions: typeof decisions;
   devSeed: typeof devSeed;
+  devSeedExtra: typeof devSeedExtra;
+  devSeedRows: typeof devSeedRows;
   devSeedStory: typeof devSeedStory;
   devSeedWrite: typeof devSeedWrite;
   digest: typeof digest;

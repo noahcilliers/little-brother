@@ -1,5 +1,9 @@
+import { agentStatus, STATUS_LABEL } from "@/lib/agent-status";
 import type { Board } from "@/lib/api";
 import { isRunning, lastBefore } from "@/lib/board-time";
+import { InlineIcon } from "./icons";
+
+const STATUS_ICON = { decision: "bolt", working: "pulse", blocked: "wall", idle: "idle" } as const;
 
 type Props = {
   board: Board;
@@ -23,6 +27,7 @@ export function AgentsPanel({ board, t, focus, onFocus, colorOf }: Props) {
           );
           const live = now !== undefined && isRunning(now, t);
           const color = colorOf(a.id);
+          const status = agentStatus(board, a.id, t);
           return (
             <button
               key={a.id}
@@ -34,8 +39,11 @@ export function AgentsPanel({ board, t, focus, onFocus, colorOf }: Props) {
               <span className={live ? "dot live" : "dot"} style={{ background: color, color }} />
               <span>
                 <b>{a.name}</b>
-                <small>{live ? now.subject : goal ? `${goal.label} · idle` : "not started"}</small>
+                <small>
+                  {live ? now.subject : goal ? `${goal.label} · ${STATUS_LABEL[status]}` : "not started"}
+                </small>
               </span>
+              <InlineIcon name={STATUS_ICON[status]} color={status === "decision" ? "var(--hot)" : status === "blocked" ? "var(--warn)" : status === "working" ? color : "var(--faint)"} size={13} />
             </button>
           );
         })}

@@ -1,25 +1,37 @@
 import { createHash } from "node:crypto";
 import { shop } from "./snippets";
 
-export type Handle = "noah" | "joshua" | "ash";
+export type Handle = string;
 
 /** One line of scenario.jsonl: a hook payload, or an MCP tool call made by that agent's session. */
 export type ScenarioLine = { step: string; delayMs: number; as: Handle; cwd: string } & (
   | { input: Record<string, unknown> }
   | { mcp: string; args: Record<string, unknown> }
 );
+type Body = { input: Record<string, unknown> } | { mcp: string; args: Record<string, unknown> };
 
-const SESSIONS: Record<Handle, string> = {
+const SESSIONS: Record<string, string> = {
   noah: "7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d",
   joshua: "9f1c2a64-8d0e-4b7f-a315-6e2c9b4d7f10",
   ash: "c4d8e2f0-1a6b-4c3d-8e9f-5b7a2d0c6e81",
+  maya: "2d9a7c41-6b3e-4f0a-8d15-3c7e9b2a4f60",
+  leo: "5e1b8d72-0c4f-4a9e-b267-8f3d1a6c9e04",
+  priya: "8a4f2e19-7d6c-4b1a-9e53-0b8c5d7f2a31",
 };
+
+/** Fixed ids for the demo cast; any other handle (swarm agents) gets a stable id derived from its name. */
+export function sessionOf(as: Handle): string {
+  const known = SESSIONS[as];
+  if (known) return known;
+  const h = createHash("sha256").update(`lb-session:${as}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
 
 export const cwdOf = (as: Handle) => `/tmp/lb-demo/${as}`;
 
 const common = (as: Handle, hook_event_name: string) => ({
-  session_id: SESSIONS[as],
-  transcript_path: `/Users/${as}/.claude/projects/-tmp-lb-demo-${as}/${SESSIONS[as]}.jsonl`,
+  session_id: sessionOf(as),
+  transcript_path: `/Users/${as}/.claude/projects/-tmp-lb-demo-${as}/${sessionOf(as)}.jsonl`,
   cwd: cwdOf(as),
   hook_event_name,
 });
@@ -31,25 +43,67 @@ const toolUseId = (step: string) =>
     .replace(/[^A-Za-z0-9]/g, "")
     .slice(0, 22)}`;
 
-/** Per-agent worktree contents, so every Edit's old_string is checked against what that agent really has. */
-const worktrees = new Map<Handle, Map<string, string>>();
-function readFile(as: Handle, rel: string): string {
-  const tree = worktrees.get(as) ?? new Map<string, string>();
-  worktrees.set(as, tree);
-  return tree.get(rel) ?? shop(rel);
-}
-function writeFile(as: Handle, rel: string, content: string): void {
-  const tree = worktrees.get(as) ?? new Map<string, string>();
-  worktrees.set(as, tree);
-  tree.set(rel, content);
-}
-
+/**
+ * A multi-agent story. Each agent has its own clock: `delayMs` is the time since that agent's previous line,
+ * as in a real session. `after` pins an agent's next line to another agent's step, for cross-agent beats.
+ * `lines` merges all agents by time and rewrites `delayMs` as the gap to the previous line of the whole file,
+ * so sequential and `--parallel` replay both play the same timeline.
+ */
 export class Story {
-  readonly lines: ScenarioLine[] = [];
+  /** Multiplies every agent's own delays (think time), not the `after` gaps that pin cross-agent beats. */
+  constructor(private readonly pace = 1) {}
+
+  private readonly entries: { at: number; seq: number; line: ScenarioLine }[] = [];
+  private readonly clocks = new Map<Handle, number>();
   private readonly taskIds = new Map<Handle, number>();
+  /** Per-agent worktree contents, so every Edit's old_string is checked against what that agent really has. */
+  private readonly worktrees = new Map<Handle, Map<string, string>>();
+
+  get lines(): ScenarioLine[] {
+    const sorted = [...this.entries].sort((a, b) => a.at - b.at || a.seq - b.seq);
+    let prev = 0;
+    return sorted.map(({ at, line }) => {
+      const out = { ...line, delayMs: at - prev };
+      prev = at;
+      return out;
+    });
+  }
+
+  /** When a step happens on the shared timeline (ms from the start). */
+  atOf(step: string): number {
+    const hit = this.entries.find((e) => e.line.step === step);
+    if (!hit) throw new Error(`no step ${step}`);
+    return hit.at;
+  }
+
+  /** When this agent's next line would happen after `delayMs` of its own time. */
+  nextAt(as: Handle, delayMs: number): number {
+    return (this.clocks.get(as) ?? 0) + Math.round(delayMs * this.pace);
+  }
+
+  /** The agent's next line comes no earlier than `gapMs` after another agent's step. */
+  after(as: Handle, step: string, gapMs: number): void {
+    this.clocks.set(as, Math.max(this.clocks.get(as) ?? 0, this.atOf(step) + gapMs));
+  }
+
+  readFile(as: Handle, rel: string): string {
+    return this.tree(as).get(rel) ?? shop(rel);
+  }
+
+  private tree(as: Handle): Map<string, string> {
+    const tree = this.worktrees.get(as) ?? new Map<string, string>();
+    this.worktrees.set(as, tree);
+    return tree;
+  }
+
+  private add(step: string, delayMs: number, as: Handle, body: Body): void {
+    const at = (this.clocks.get(as) ?? 0) + Math.round(delayMs * this.pace);
+    this.clocks.set(as, at);
+    this.entries.push({ at, seq: this.entries.length, line: { step, delayMs, as, cwd: cwdOf(as), ...body } });
+  }
 
   private push(step: string, delayMs: number, as: Handle, input: Record<string, unknown>) {
-    this.lines.push({ step, delayMs, as, cwd: cwdOf(as), input });
+    this.add(step, delayMs, as, { input });
   }
 
   sessionStart(step: string, delayMs: number, as: Handle) {
@@ -83,7 +137,7 @@ export class Story {
     const file_path = `${cwdOf(as)}/${rel}`;
     const post = this.tool(step, delayMs, as, "Write", { file_path, content });
     if (denied) return;
-    writeFile(as, rel, content);
+    this.tree(as).set(rel, content);
     post({ tool_response: { type: "create", filePath: file_path, content, structuredPatch: [] } });
   }
 
@@ -96,7 +150,7 @@ export class Story {
     new_string: string,
     denied = false,
   ) {
-    const before = readFile(as, rel);
+    const before = this.readFile(as, rel);
     if (before.split(old_string).length !== 2)
       throw new Error(`${step}: old_string not unique in ${as}:${rel}`);
     const file_path = `${cwdOf(as)}/${rel}`;
@@ -107,7 +161,7 @@ export class Story {
       replace_all: false,
     });
     if (denied) return;
-    writeFile(as, rel, before.replace(old_string, new_string));
+    this.tree(as).set(rel, before.replace(old_string, new_string));
     post({
       tool_response: {
         filePath: file_path,
@@ -134,32 +188,16 @@ export class Story {
     else post({ error: `Exit code 1\n${output}`, is_interrupt: false }, "PostToolUseFailure");
   }
 
-  stop(step: string, delayMs: number, as: Handle, last_assistant_message: string) {
-    this.push(step, delayMs, as, {
-      ...common(as, "Stop"),
-      permission_mode: "default",
-      stop_hook_active: false,
-      last_assistant_message,
-    });
-  }
-
-  sessionEnd(step: string, delayMs: number, as: Handle) {
-    this.push(step, delayMs, as, { ...common(as, "SessionEnd"), reason: "prompt_input_exit" });
-  }
-
   /** Reads only reach PostToolUse: the plugin's PreToolUse matcher covers writes and commands. */
   read(step: string, delayMs: number, as: Handle, rel: string) {
     const file_path = `${cwdOf(as)}/${rel}`;
-    const content = readFile(as, rel);
+    const content = this.readFile(as, rel);
     this.push(step, delayMs, as, {
       ...common(as, "PostToolUse"),
       permission_mode: "default",
       tool_name: "Read",
       tool_input: { file_path },
-      tool_response: {
-        type: "text",
-        file: { filePath: file_path, content, numLines: content.split("\n").length },
-      },
+      tool_response: { type: "text", file: { filePath: file_path, content, numLines: content.split("\n").length } },
       tool_use_id: toolUseId(step),
     });
   }
@@ -195,7 +233,20 @@ export class Story {
       });
   }
 
+  stop(step: string, delayMs: number, as: Handle, last_assistant_message: string) {
+    this.push(step, delayMs, as, {
+      ...common(as, "Stop"),
+      permission_mode: "default",
+      stop_hook_active: false,
+      last_assistant_message,
+    });
+  }
+
+  sessionEnd(step: string, delayMs: number, as: Handle) {
+    this.push(step, delayMs, as, { ...common(as, "SessionEnd"), reason: "prompt_input_exit" });
+  }
+
   mcp(step: string, delayMs: number, as: Handle, tool: string, args: Record<string, unknown>) {
-    this.lines.push({ step, delayMs, as, cwd: cwdOf(as), mcp: tool, args });
+    this.add(step, delayMs, as, { mcp: tool, args });
   }
 }

@@ -13,7 +13,7 @@ function hexagon(x: number, y: number): string {
   return [0, 1, 2, 3, 4, 5]
     .map((i) => {
       const a = (Math.PI / 3) * i + Math.PI / 6;
-      return `${x + 11 * Math.cos(a)},${y + 11 * Math.sin(a)}`;
+      return `${x + 9 * Math.cos(a)},${y + 9 * Math.sin(a)}`;
     })
     .join(" ");
 }
@@ -55,22 +55,22 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect }: Props) {
                 <>
                   <polygon points={hexagon(x, y)} fill="var(--panel)" stroke="var(--ink)" strokeWidth={1.5} />
                   <path
-                    d={`M${x - 4} ${y - 2} h8 M${x - 4} ${y + 2} h6`}
+                    d={`M${x - 3.5} ${y - 2} h7 M${x - 3.5} ${y + 2} h5`}
                     stroke="var(--ink)"
                     strokeWidth={1.3}
                   />
-                  <text x={x + 18} y={y + 4} fontFamily="var(--mono)" fontSize={10.5} fill="var(--muted)">
+                  <text x={x + 15} y={y + 4} fontFamily="var(--mono)" fontSize={10.5} fill="var(--muted)">
                     {n.label}
                   </text>
                 </>
               ) : (
                 <>
                   <path
-                    d={`M${x} ${y - 12} L${x + 12} ${y} L${x} ${y + 12} L${x - 12} ${y} Z`}
+                    d={`M${x} ${y - 10} L${x + 10} ${y} L${x} ${y + 10} L${x - 10} ${y} Z`}
                     fill={colorOf(n.agentId)}
                   />
                   <text
-                    x={x + 18}
+                    x={x + 15}
                     y={y + 4}
                     fontFamily="var(--mono)"
                     fontSize={11}
@@ -100,7 +100,7 @@ export function VerifyBadges({
   lookup: Lookup;
   t: number;
 }) {
-  const y = lookup.layout.bands.lessons + 28;
+  const y = lookup.layout.height - 22 - 34;
   return (
     <g>
       {verifies.map((v) => {

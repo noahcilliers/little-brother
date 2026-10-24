@@ -1,19 +1,29 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
-import { BRANCH, CATCHES, DECISION, GOALS, INBOX, LESSON, TASKS, VERIFY_AT } from "./devSeedStory";
-import { memberFor, REPO, startStory, TAG, writeEvent, writeNode, writeTask } from "./devSeedWrite";
+import { EXTRA_GOALS, EXTRA_TASKS, INBOX } from "./devSeedExtra";
+import { writeLoose, writeOrdering, writeVerdict, writeVerify } from "./devSeedRows";
+import { CATCHES, DECISION, EXTRA_HANDLES, GOALS, HANDLES, LESSON, TASKS, VERIFY_AT } from "./devSeedStory";
+import { startStory, TAG, writeEvent, writeNode, writeTask } from "./devSeedWrite";
 
 // Dev only: inserts the dashboard prototype's story with timestamps relative to now, tagged so `clear` removes it.
-// Run from packages/backend: `npx convex run devSeed:story` (or '{"at": 16}' to stop the story mid-way).
+// Run from packages/backend: `npx convex run devSeed:story` (or '{"at": 16}' to stop the story mid-way,
+// '{"agents": 6}' to add three more teammates).
 
 export const story = internalMutation({
-  args: { at: v.optional(v.number()) },
+  args: { at: v.optional(v.number()), agents: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const s = await startStory(ctx, args.at ?? 24);
+    const extra = Math.max(0, Math.min(EXTRA_HANDLES.length, (args.agents ?? 3) - HANDLES.length));
+    const handles = [...HANDLES, ...EXTRA_HANDLES.slice(0, extra)];
+    const s = await startStory(ctx, args.at ?? 24, handles);
+    const present = (t: { a: (typeof handles)[number] }) => handles.includes(t.a);
 
     const goals: Id<"nodes">[] = [];
-    for (const g of GOALS) {
+    for (const g of [...GOALS, ...EXTRA_GOALS]) {
+      if (!present(g)) {
+        goals.push(goals[0] as Id<"nodes">);
+        continue;
+      }
       goals.push(await writeNode(s, g.a, g.t, { kind: "intent", text: `PLAN ${g.topic} ${g.prompt}` }));
       if (!s.seen(g.t)) continue;
       await ctx.db.patch(s.agent[g.a], { intentId: goals[goals.length - 1] });
@@ -22,8 +32,8 @@ export const story = internalMutation({
     }
 
     const firstAct = new Map<string, Id<"nodes">>();
-    for (const k of TASKS) {
-      if (!s.seen(k.t0)) continue;
+    for (const k of [...TASKS, ...EXTRA_TASKS]) {
+      if (!s.seen(k.t0) || !present(k)) continue;
       const [first] = await writeTask(s, k, goals[k.goal]);
       if (first) firstAct.set(k.key, first);
     }
@@ -47,24 +57,16 @@ export const story = internalMutation({
       const resolved = s.seen(c.resolvedAt);
       const id =
         s.seen(c.t) && nodeId && againstNodeId
-          ? await ctx.db.insert("classifications", {
+          ? await writeVerdict(s, c.t, {
               nodeId,
               againstNodeId,
               type: c.type,
               relation: c.relation,
-              direction: "new_needs_other",
               action: c.action,
               agentIds: Object.values(s.agent),
               reason: c.reason,
-              evidence: [],
-              confidence: 0.9,
-              retrievalScore: 0.9,
-              source: "rule",
               status: resolved ? "resolved" : "open",
               comparison: c.comparison,
-              winnerAgentId: c.type === "conflict" ? s.agent.noah : undefined,
-              latencyMs: 40,
-              at: s.T(c.t),
             })
           : undefined;
       klass.push(id);
@@ -77,6 +79,8 @@ export const story = internalMutation({
         });
       }
     }
+    await writeLoose(s);
+    await writeOrdering(s, firstAct);
     for (const i of INBOX) {
       const classificationId = klass[i.catch];
       if (!s.seen(i.t) || !classificationId) continue;
@@ -91,27 +95,7 @@ export const story = internalMutation({
       });
     }
 
-    if (s.seen(VERIFY_AT)) {
-      const verifier = await ctx.db.insert("agents", {
-        memberId: await memberFor(ctx, "noah"),
-        claudeSessionId: `${TAG}-verify-${s.now}`,
-        machine: "verify",
-        repo: REPO,
-        branch: "main",
-        status: "offline",
-        lastSeenAt: s.now,
-      });
-      await ctx.db.insert("events", {
-        agentId: verifier,
-        eventKey: `${TAG}:${s.now}:verify`,
-        source: "verify",
-        hook: "verify",
-        files: [],
-        summary: "verify: tests passed, 0 merge conflict(s)",
-        payload: { branches: Object.values(BRANCH), passed: true, outputTail: "14 passed", conflicts: [] },
-        at: s.T(VERIFY_AT),
-      });
-    }
+    if (s.seen(VERIFY_AT)) await writeVerify(s, VERIFY_AT);
     return { at: s.at, tasks: firstAct.size };
   },
 });

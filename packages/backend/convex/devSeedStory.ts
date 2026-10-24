@@ -1,3 +1,5 @@
+import { JWT_DIFF, SESSION_DIFF } from "./devSeedExtra";
+
 // Dev only: the §8 demo story as data, in story seconds (devSeed scales them to wall time).
 // Mirrors the approved dashboard prototype so the board can be built and checked before real task data exists.
 
@@ -95,6 +97,7 @@ export const TASKS: SeedTask[] = [
     ok([1.8, "Edit", "db/schema/users.ts", "create findUserByEmail()"]),
   ]]),
   task(["n2", "noah", 0, 2.6, 5.2, "Allow storefront CORS", "abandoned", "api.cors", [
+    ok([2.8, "Read", "src/server.ts", "read server.ts"]),
     ok([3.0, "Edit", "src/server.ts", "edit app.use(cors)"]),
     fail([4.2, "Bash", TEST, "run npm test", "browsers reject * with credentials"]),
     ok([5.0, "Edit", "src/server.ts", "revert app.use(cors)"]),
@@ -104,7 +107,7 @@ export const TASKS: SeedTask[] = [
     ok([6.6, "Bash", TEST, "run npm test", "9 passed"]),
   ]]),
   task(["n4", "noah", 1, 13.4, 15.2, "Issue JWT tokens", "completed", "auth.mechanism", [
-    ok([14.2, "Edit", "src/auth/issue-token.ts", "edit issueToken()"]),
+    { ...ok([14.2, "Edit", "src/auth/issue-token.ts", "edit issueToken()"]), preview: JWT_DIFF },
     ok([14.9, "Bash", TEST, "run npm test", "11 passed"]),
   ]]),
   task(["a1", "ash", 2, 0.9, 2.9, "Build pages", "completed", "web.pages", [
@@ -128,7 +131,8 @@ export const TASKS: SeedTask[] = [
   ]]),
   {
     ...task(["j3", "joshua", 4, 11.0, 12.6, "Session handling", "superseded", "auth.mechanism", [
-      ok([11.6, "Write", "src/checkout/session.ts", "create currentUser() via req.session"]),
+      { ...ok([11.6, "Write", "src/checkout/session.ts", "create currentUser() via req.session"]), preview: SESSION_DIFF },
+      ok([12.2, "Read", "src/checkout/cart.ts", "read cart.ts"]),
     ], "Built on cookie sessions; superseded when the owner chose JWT."]),
     supersededAt: 18.4,
   },
@@ -150,7 +154,12 @@ export const LESSON = {
   goal: 0,
   text: "LEARN api.cors Tried wildcard CORS → failed (browsers reject * with credentials) → worked: Vite proxy.",
 };
-export const DECISION = { a: "noah" as Handle, t: 18.4, from: "n4", text: "DECIDE auth.mechanism = JWT" };
+export const DECISION = {
+  a: "noah" as Handle,
+  t: 18.4,
+  from: "n4",
+  text: "DECIDE auth.mechanism = JWT tokens",
+};
 
 export type SeedCatch = {
   t: number;
@@ -169,25 +178,13 @@ export const CATCHES: SeedCatch[] = [
     reason: "[little-brother] duplicate · Joshua's users table duplicates Noah's db.users." },
   { t: 11.6, type: "stale", from: "a3", against: "lesson", relation: "repeats_failure", action: "block",
     reason: "[little-brother] stale · Ash heads into Noah's failed CORS path." },
-  { t: 14.6, type: "conflict", from: "j3", against: "n4", relation: "contradicts", action: "warn", resolvedAt: 18.4,
-    reason: "[little-brother] conflict · JWT tokens vs cookie session on auth.mechanism.",
+  { t: 14.6, type: "conflict", from: "j3", against: "n4", relation: "intent_contradiction", action: "block", resolvedAt: 18.4,
+    reason: "[little-brother] conflict · judge: issueToken() moves auth to JWT bearer tokens while currentUser() reads a cookie session; checkout would never see a logged-in user.",
     comparison: [
       "Noah: issueToken() signs a JWT; requireAuth() reads the Authorization header.",
       "Joshua: currentUser() reads req.session.userId from a cookie session.",
       "Each passes its own tests; merged, checkout never sees a logged-in user.",
     ].join("\n") },
-];
-
-// biome-ignore format: one story row per line reads as a table
-export const INBOX: { a: Handle; t: number; catch: number; text: string; action: "warn" | "block" }[] = [
-  { a: "ash", t: 11.6, catch: 1, action: "warn",
-    text: "[little-brother] Noah's agent tried wildcard CORS: browsers reject * with credentials. What worked: Vite proxy." },
-  { a: "noah", t: 14.6, catch: 2, action: "warn",
-    text: "[little-brother] Joshua's checkout reads a cookie session. You own auth.mechanism: decide." },
-  { a: "joshua", t: 14.6, catch: 2, action: "warn",
-    text: "[little-brother] Noah switched auth to JWT; your session reads a cookie. Noah decides." },
-  { a: "joshua", t: 18.4, catch: 2, action: "block",
-    text: "Owner resolved auth.mechanism: Noah set auth.mechanism = JWT. Session handling is superseded." },
 ];
 
 export const VERIFY_AT = 22.4;

@@ -1,71 +1,66 @@
 import type { ReactNode } from "react";
+import { CATCH_STYLE } from "@/lib/catch-style";
+import { type IconName, InlineIcon } from "./icons";
 
 const SAMPLE = "var(--agent-1)";
 const SAMPLE_FILL = "color-mix(in srgb, var(--agent-1) 16%, transparent)";
 
-function Bar({ stroke, fill, dash }: { stroke: string; fill: string; dash?: string }) {
+function Svg({ children }: { children: ReactNode }) {
   return (
-    <rect
-      x={1}
-      y={2}
-      width={26}
-      height={10}
-      rx={4}
-      fill={fill}
-      stroke={stroke}
-      strokeWidth={1.4}
-      strokeDasharray={dash}
-    />
+    <svg viewBox="0 0 28 14" aria-hidden="true">
+      {children}
+    </svg>
   );
 }
 
+const icon = (name: IconName, color: string) => <InlineIcon name={name} color={color} size={14} />;
+const edge = (kind: keyof typeof CATCH_STYLE) => (
+  <Svg>
+    <path d="M2 10 Q14 0 26 10" fill="none" stroke={CATCH_STYLE[kind].color} strokeWidth={2} strokeDasharray={CATCH_STYLE[kind].dash} />
+  </Svg>
+);
+
 const ITEMS: [ReactNode, string][] = [
-  [<Bar key="b" stroke={SAMPLE} fill={SAMPLE_FILL} />, "task (agent's own plan step)"],
+  [icon("flag", SAMPLE), "goal"],
   [
-    <g key="a">
-      <rect x={1} y={2} width={26} height={9} rx={4} fill={SAMPLE_FILL} stroke={SAMPLE} strokeWidth={1.2} />
-      <circle cx={8} cy={11} r={2.6} fill={SAMPLE} />
-      <circle cx={18} cy={11} r={2.6} fill={SAMPLE} />
-    </g>,
-    "actions",
+    <Svg key="b">
+      <rect x={1} y={2} width={26} height={10} rx={4} fill={SAMPLE_FILL} stroke={SAMPLE} strokeWidth={1.4} />
+    </Svg>,
+    "task",
   ],
   [
-    <Bar key="g" stroke="var(--faint)" fill="color-mix(in srgb, var(--faint) 18%, transparent)" dash="4 3" />,
-    "abandoned / superseded",
+    <Svg key="r">
+      <line x1={2} y1={7} x2={26} y2={7} stroke="var(--line)" />
+      <circle cx={8} cy={7} r={2.2} fill="var(--faint)" />
+      <circle cx={18} cy={7} r={2.2} fill="var(--faint)" />
+    </Svg>,
+    "routine action",
   ],
   [
-    <g key="s">
-      <rect x={1} y={2} width={16} height={10} rx={4} fill="none" stroke="var(--agent-2)" strokeWidth={1.4} />
-      <path d="M21 0 V14" stroke="var(--warn)" strokeWidth={3} />
-    </g>,
-    "stopped",
+    <Svg key="a">
+      <rect x={1} y={1} width={26} height={9} rx={4} fill={SAMPLE_FILL} stroke={SAMPLE} strokeWidth={1.2} />
+      <circle cx={9} cy={10} r={2.8} fill={SAMPLE} />
+      <circle cx={19} cy={10} r={2.8} fill={SAMPLE} />
+    </Svg>,
+    "action",
   ],
-  [
-    <path
-      key="c"
-      d="M2 12 Q14 -4 26 12"
-      fill="none"
-      stroke="var(--hot)"
-      strokeWidth={2}
-      strokeDasharray="4 3"
-    />,
-    "conflict",
-  ],
-  [
-    <path key="d" d="M2 7 H26" stroke="var(--warn)" strokeWidth={2} strokeDasharray="2 3" />,
-    "duplicate / stale",
-  ],
-  [<path key="x" d="M14 1 L20 7 L14 13 L8 7 Z" fill={SAMPLE} />, "decision"],
+  [icon("wall", "var(--warn)"), "stopped"],
+  [<span key="c">{icon("bolt", "var(--hot)")}{edge("conflict")}</span>, "conflict"],
+  [<span key="d">{icon("squares", "var(--warn)")}{edge("duplicate")}</span>, "duplicate"],
+  [<span key="s">{icon("retry", "var(--warn)")}{edge("stale")}</span>, "stale (already failed)"],
+  [<span key="o">{icon("arrowBar", "var(--muted)")}{edge("ordering")}</span>, "ordering"],
+  [icon("diamond", SAMPLE), "decision"],
+  [icon("hexagon", "var(--ink)"), "lesson"],
 ];
 
+/** How to read the board, with exactly the icons it draws. */
 export function Legend() {
   return (
     <div className="legend">
+      <b>How to read</b>
       {ITEMS.map(([svg, label]) => (
         <span key={label}>
-          <svg viewBox="0 0 28 14" aria-hidden="true">
-            {svg}
-          </svg>
+          {svg}
           {label}
         </span>
       ))}

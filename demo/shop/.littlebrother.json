@@ -77,6 +77,13 @@
         "src/notify/**"
       ],
       "consumers": []
+    },
+    "tooling.test-env": {
+      "owner": "priya",
+      "files": [
+        "vitest.config.ts"
+      ],
+      "consumers": []
     }
   },
   "verify": "npm run test:integration"

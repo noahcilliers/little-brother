@@ -13,3 +13,5 @@ export type BoardSession = Board["sessions"][number];
 export type SessionLine = BoardSession["lines"][number];
 export type Beat = Board["beats"][number];
 export type VerifyBadge = Board["verifies"][number];
+export type BoardDecision = Board["decisions"][number];
+export type LooseAction = Board["loose"][number];
