@@ -65,7 +65,7 @@ Only `topic` needs the classifier.
 Verbs are never deleted or renamed in place, because old signatures keep pointing to them. Retire one by lowering its priority.
 
 **Why it matters:**
-- Tier-0 rules match on fields. For example, "same topic, an `EDIT` like one that ended in `FAIL`" is a stale check with no embedding call.
+- Exact rules match on fields. For example, "same topic, an `EDIT` like one that ended in `FAIL`" is a stale check with no embedding call.
 - Embedding normalized signatures instead of raw prompts makes similar intents phrased differently land closer together.
 - A failed trajectory injects as about three short lines instead of a paragraph.
 - Graph nodes read at a glance.
@@ -79,6 +79,8 @@ Verbs are never deleted or renamed in place, because old signatures keep pointin
 | `duplicate` | The same task or change is already done or in progress by another agent | **Block** the duplicating edit; point to the existing work |
 | `stale` | The agent is following a reasoning path that has already been classified as failed, by any agent including itself | **Warn**: inject the failure and what worked. Block only an exact repeat of a known-failing command. |
 | `normal` | No overlap | Silent |
+
+Internally the classifier uses eight finer relations (e.g. `textual_conflict`, `semantic_conflict`, `repeats_failure`) and four actions (`ignore`, `warn`, `serialize`, `block`) that roll up to these four types (§4). An intent-level duplicate only warns. Two agents creating the same file is a `textual_conflict` and is denied at the edit.
 
 ### The tables (Convex)
 
@@ -231,10 +233,14 @@ export default defineSchema({
 
   classifications: defineTable({
     eventId: v.id("events"), type: typeKey,
+    relation: v.string(),                                    // fine label (§4) that rolls up to `type`
+    direction: v.union(v.literal("new_needs_other"), v.literal("other_needs_new"), v.literal("none")),
+    action: v.union(v.literal("ignore"), v.literal("warn"), v.literal("serialize"), v.literal("block")),
     againstNodeId: v.optional(v.id("nodes")),                // the earlier work this collides with
     agentIds: v.array(v.id("agents")),                       // everyone affected
-    reason: v.string(), confidence: v.number(),
-    tier: v.union(v.literal("rules"), v.literal("similarity"), v.literal("llm")),
+    reason: v.string(), evidence: v.array(v.string()), confidence: v.number(), retrievalScore: v.number(),
+    source: v.union(v.literal("rule"), v.literal("pair_model"), v.literal("llm"), v.literal("fallback")),
+    outcome: v.optional(v.string()),                         // joined later: merge_conflict, clean_merge, human_override, …
     status: v.union(v.literal("open"), v.literal("resolved"), v.literal("dismissed")),
     resolution: v.optional(v.string()),
     feedback: v.optional(v.union(v.literal("confirmed"), v.literal("false_positive"), v.literal("ignored"))),
@@ -335,8 +341,8 @@ flowchart LR
   HTTP -- "3 HookOutput" --> LB
   LB -- "3 stdout" --> CC
   HTTP --> DB[("4 events · nodes · classifications")]
-  DB -- "5 ClassifyInput" --> CL["Classifier adapters"]
-  CL -- "5 Verdict" --> DB
+  DB -- "5 CandidatePair" --> CL["Classifier adapters"]
+  CL -- "5 Judgment" --> DB
   DB -- "6 InboxItem" --> MCP["lb mcp"]
   MCP -- "6 ChannelMessage" --> CC
   CC <-- "7 MCP tool args / results" --> MCP
@@ -351,7 +357,7 @@ Each contract is a zod schema in `packages/core`, the single source of truth. Co
 | 2 | `IngestEnvelope` v1 | `lb` → Convex `/hook/:event` | `core/ingest.ts` |
 | 3 | `HookOutput` | Convex → `lb` → Claude Code stdout | `core/hooks.ts` |
 | 4 | `Event`, `Node`, `Classification` | Convex tables | `convex/schema.ts` |
-| 5 | `ClassifyInput`, `Verdict` | Backend ↔ classifier adapters (LLM output parsed against `Verdict`) | `core/classify/types.ts` |
+| 5 | `CandidatePair`, `Judgment` | Backend ↔ classifier adapters (LLM output parsed against `Judgment`) | `core/classify/types.ts` |
 | 6 | `InboxItem`, `ChannelMessage` | Convex → `lb mcp` → session | `core/inbox.ts` |
 | 7 | MCP tool args and results | Agent ↔ `lb mcp` | `core/mcp.ts` |
 | 8 | Dashboard read models | Convex queries → web | `convex/*` return validators |
@@ -366,33 +372,214 @@ Rules:
 
 ---
 
-## 4. Classifier: tiered and swappable
+## 4. Classifier pipeline
 
-One interface. Each tier is a module, and the cascade stops at the first confident verdict.
+Based on the team's classifier spec (v0.1), with four changes so it fits this product:
+1. A failure-memory path for `stale`.
+2. Two-level labels.
+3. Normalization runs on the developer's machine.
+4. Actions are mapped to what Claude Code can actually do.
+
+For every new event, the classifier answers one question: *given what everyone else is doing and what has already failed, is this safe to proceed, and if not, why and with whom?* It detects and recommends. It never resolves anything automatically.
+
+```
+new event (intent or edit)
+   │
+   ▼
+1. Normalize        → structured event: agent, intent, touches (path, symbol, op, lines), references   [on the dev machine]
+2. Find candidates  → top-k related active events + matching failed knowledge
+3. Exact checks     → rules R1–R10 settle what they can
+4. Pair model       → (roadmap) fast learned labeler
+5. LLM judge        → only unsettled, low-confidence or severe pairs
+   │
+   ▼
+6. Decide & emit    → one judgment per pair + worst_action rollup → hook response / inbox / dashboard
+7. Log              → every judgment stored, later joined with real outcomes
+```
+
+Each stage can settle a pair early, so the common case stays cheap. **Similarity only retrieves candidates; it never decides a verdict**, because it can't tell "add X" from "remove X".
+
+### Labels: fine relations roll up to the four event types
+
+The classifier works with fine-grained relations internally. The dashboard, enforcement and pitch use the four event types from §2.
+
+| Relation | Meaning | Example | Direction | Type |
+| --- | --- | --- | --- | --- |
+| `independent` | No meaningful interaction | Docs edit vs DB migration | — | `normal` |
+| `overlap_compatible` | Same area, no problem | Two agents add separate functions to `utils.ts` | — | `normal` |
+| `duplicate` | Same work done twice | Both agents "add retry to the HTTP client" | — | `duplicate` |
+| `textual_conflict` | Git can't merge them | Both create `db/schema/users.ts` | — | `conflict` |
+| `semantic_conflict` | Merges cleanly, breaks behavior | A changes `pay(amount)` → `pay(amount, currency)`; B adds `pay(amount)` callers | yes | `conflict` |
+| `intent_contradiction` | Goals pull in opposite directions | A removes legacy auth; B extends it | — | `conflict` |
+| `ordering_dependency` | One must land before the other | B uses `User.role`, which A is creating | yes | `conflict` |
+| `repeats_failure` | Follows a path already recorded as failed | Ash plans CORS middleware that Noah's agent proved fails | yes | `stale` |
+
+Directional relations record `new_needs_other` or `other_needs_new`.
+
+### Actions, mapped to Claude Code
+
+| Action | Meaning | How it reaches the agent |
+| --- | --- | --- |
+| `ignore` | No signal | Nothing |
+| `warn` | Notify; work continues | `additionalContext` on the next hook, or a channel push |
+| `serialize` | One side lands first | `PreToolUse` deny: "X lands first; build on it or work on Y meanwhile" |
+| `block` | Stop until a human decides | `PreToolUse` deny on that topic + `Stop` block + dashboard resolve panel |
+
+### Step 1 · Normalize (runs in the connector)
+
+The backend never sees the code, and the agents are on different machines, so normalization runs locally in `lb hook`, where the code lives. Only names, paths and line ranges are sent.
+- **Edits:** `PreToolUse` gives the exact edit (`old_string`/`new_string` or full content) before it's written. Parse it into `touches[]` (path, symbol, op, lines). The op is one of `create`, `delete`, `write`, `rename` or `signature_change`, and `references[]` lists the symbols used in the changed region.
+  - For v0, symbols come from the TypeScript compiler API, covering exports, imports and function signatures. Other languages fall back to file-level touches.
+- **Intents:** the prompt plus any paths named in plan text. These are marked low confidence because plans are often wrong about scope.
+- Generated, lock and vendored files are dropped or tagged, using a default list plus `.littlebrother.json`.
+- An edit that follows its own intent links back to it, so the pair is re-classified instead of duplicated.
+- **Failure handling:** if symbol mapping fails, keep the file-level touch. If required fields are missing, reject with a reason; never guess.
+- **Budget:** < 50 ms, inside the 2 s hook timeout.
+
+### Step 2 · Find candidates
+
+Gather candidates from several signals, merge and score them, and keep the top-k (default 10). **Anything with a path or symbol overlap is always kept**, regardless of k.
+
+| Signal | Finds | Weight |
+| --- | --- | --- |
+| Same path mutated by both | Textual conflicts, overlaps | 1.0 |
+| Same symbol touched by both | Textual and semantic conflicts | 1.0 |
+| One mutates a symbol the other references | Semantic conflicts, ordering | 0.9 |
+| Same topic (topic map) | Contract conflicts | 0.9 |
+| Intent similarity (Convex vector index) | Duplicates, contradictions | 0.8 × similarity |
+| **Failed knowledge** matching by signature or similarity, **outside the active window** | `repeats_failure` | 0.9 |
+| Same intent / subagents of one session | Expected overlap (lowers false positives) | annotate only |
+
+Rules:
+- An agent is excluded from **conflict and duplicate** checks against itself, but **not** from failure memory. An agent repeating its own failure after context compaction should be caught.
+- "Active" means until done + 30 min.
+- Every candidate records why it was retrieved; that becomes evidence.
+- **Budget:** < 50 ms for ~100 active events. If the embedder is down, fall back to lexical match.
+
+### Step 3 · Exact checks
+
+| # | Condition | Relation | Conf. | Settles? |
+| --- | --- | --- | --- | --- |
+| R1 | Both mutate the same path with overlapping lines (same base) | `textual_conflict` | 0.95 | yes |
+| R2 | Both `create` the same path or symbol | `textual_conflict` | 0.95 | yes |
+| R3 | `git merge-tree` dry run between the branches conflicts | `textual_conflict` | 0.99 | yes, **in `lb verify` only** (branches live on different machines) |
+| R4 | One deletes or renames what the other writes or references | `semantic_conflict` | 0.90 | yes |
+| R5 | One changes the signature of a symbol the other calls | `semantic_conflict` | 0.85 | yes |
+| R6 | One creates a symbol the other references | `ordering_dependency` | 0.80 | yes |
+| R7 | Both mutate the same symbol, lines unknown | — | — | hint |
+| R8 | Same file, disjoint ranges | — | — | hint: likely compatible |
+| R9 | Only overlap is a hot or generated file | — | — | hint: low signal |
+| R10 | Exact match with a failed action's `signature` (same normalized command or edit) | `repeats_failure` | 0.95 | yes |
+
+When several settling rules fire, the most severe wins and all evidence is attached. Hints are passed on as features and evidence. **Budget:** < 20 ms per pair.
+
+### Step 4 · Pair model (roadmap)
+
+Skipped in v0: unsettled pairs go straight to the judge, and every judge verdict is logged as a label. In v1, a cross-encoder (ModernBERT / DeBERTa-v3 / UniXcoder class) is trained on those labels plus outcomes as an 8-way classifier with a direction head, running in about 10 ms on CPU. It escalates to the judge when:
+- confidence < 0.7, or
+- the relation is severe and confidence < 0.9, or
+- the top two classes are within 0.15.
+
+v2 adds graph features. This is the "distilled judge" step of the fine-tuning roadmap (§14).
+
+### Step 5 · LLM judge
+
+The `Judge` adapter (Gemini Flash by default, Claude `claude-opus-5-5` at low effort as the alternative) returns structured output, validated against the schema:
+
+```json
+{ "relation": "...", "direction": "none", "confidence": 0.0, "rationale": "1–3 sentences citing specific symbols or lines" }
+```
+
+The prompt contains:
+- label definitions with one example each
+- both events in compact signature form
+- hints and retrieval reasons
+- 3–5 nearest confirmed or dismissed past judgments (§5)
+
+**Limits:** max 5 calls per event, highest retrieval score first, plus a global rate limit and a daily cost cap. On timeout, refusal, schema failure or an exhausted budget, the pair gets a `fallback` judgment with the hints as evidence. The model's confidence is treated as a hint until it's calibrated against outcomes.
+
+**Latency:** 1–3 s, always async. Intent events are judged right after `UserPromptSubmit`, so verdicts are usually stored before the first edit. Edit verdicts that arrive later are delivered at the next hook or by channel.
+
+### Step 6 · Decide and emit
+
+| Relation | Action at ≥ threshold | Threshold | Below threshold |
+| --- | --- | --- | --- |
+| `independent`, `overlap_compatible` | ignore | — | ignore |
+| `duplicate` | warn | 0.70 | ignore |
+| `textual_conflict` | serialize | 0.80 | warn |
+| `semantic_conflict` | block | 0.85 | warn |
+| `intent_contradiction` | block | 0.80 | warn |
+| `ordering_dependency` | serialize (dependent side) | 0.70 | warn |
+| `repeats_failure` | warn (serialize for R10 exact repeats) | 0.75 | ignore |
+
+- **Fallback:** `overlap_compatible` at 0.3 if hints exist, otherwise `independent` at 0.5.
+- **Plans never block:** actions for `intent` events are capped at `serialize`.
+- **De-duplication:** an open judgment for the same pair and relation re-alerts only when severity rises.
+- **Rollup:** `worst_action` across all judgments decides the hook response.
+- **Demo mapping:** the users table is R2, so `textual_conflict` → serialize → denied at the edit, shown as `duplicate`-style work on the dashboard. CORS is `repeats_failure` → warn. JWT vs cookie is `intent_contradiction` → block → owner decides.
+
+### Step 7 · Log and learn
+
+Every judgment is logged, including `ignore`s, with both event snapshots, the hints and the source. Outcomes are joined in later:
+
+| Outcome | Detected by | Label meaning |
+| --- | --- | --- |
+| `merge_conflict` | `lb verify` merge fails | Confirms textual conflict |
+| `post_merge_test_failure` | Each branch passed alone; the merged test fails | Strong semantic-conflict label |
+| `revert` | Change reverted within the session or N days | Weak conflict label |
+| `clean_merge` | Merged and tests stayed green | Evidence for independent/compatible |
+| `human_override` / `human_confirmed` | Dashboard dismiss / act | False positive / true positive |
+| `ignored_then_failed` / `ignored_then_succeeded` | Agent ignored a stale warning | Confirms / refutes `repeats_failure` |
+
+These labels drive §5 and the training export for the v1 pair model. LLM-only labels are flagged so they can be weighted down.
+
+### Re-classification triggers
+
+Re-run steps 2–6 for an event when any of these happen:
+- an intent becomes an edit
+- the edit footprint changes materially
+- a related event finishes (a `serialize` can release)
+- the base revision changes
+- a decision is approved or superseded
+
+### Interfaces
 
 ```ts
 // packages/core/src/classify/types.ts
-export type Verdict = {
-  type: "conflict" | "stale" | "duplicate" | "normal";
-  againstNodeId?: string; confidence: number; reason: string;
-  tier: "rules" | "similarity" | "llm";
+export type Relation = "independent" | "overlap_compatible" | "duplicate" | "textual_conflict"
+  | "semantic_conflict" | "intent_contradiction" | "ordering_dependency" | "repeats_failure";
+export type Judgment = {
+  otherNodeId: string; relation: Relation; direction: "new_needs_other" | "other_needs_new" | "none";
+  confidence: number; evidence: string[]; action: "ignore" | "warn" | "serialize" | "block";
+  source: "rule" | "pair_model" | "llm" | "fallback"; retrievalScore: number; latencyMs: number;
 };
-export interface Tier { name: Verdict["tier"]; classify(input: ClassifyInput): Promise<Verdict | null> } // null = no opinion
+export interface Rule { id: string; check(pair: CandidatePair): Judgment | Hint | null }
 export interface Embedder { embed(texts: string[]): Promise<number[][]> }
-export interface Judge { judge(input: JudgeInput): Promise<Verdict> }
+export interface Judge { judge(pair: CandidatePair, hints: Hint[]): Promise<Judgment | null> }
 ```
 
-| Tier | How | Latency | Catches |
-| --- | --- | --- | --- |
-| **0 · Rules** | Pure functions over the tables: another agent's live claim on the file; a topic owner from the optional topic map; exact `signature` match with a failed action; same topic with a different value | < 10 ms, runs inside `PreToolUse` | Most duplicates, exact failed retries, obvious conflicts |
-| **1 · Similarity** | Embed the node text; Convex vector search over other agents' open intents and actions (duplicate/conflict) and over `failed` knowledge (stale). Calibrated thresholds: above `high` → decide; between `low` and `high` → hand to tier 2. | ~150–400 ms, **async**, scheduled right after the hook | Same task phrased differently; a retry of a failed approach |
-| **2 · LLM judge** | Structured verdict from the candidate pair + evidence + a few confirmed past examples | ~1–2 s, async | Ambiguous cases only |
+`CLASSIFIER_EMBEDDER` and `CLASSIFIER_JUDGE` select the adapters in `convex/classify/adapters/`. Confirm the Gemini model IDs and embedding size in M0.
 
-**Adapters** live in `packages/backend/convex/classify/adapters/`: `gemini.ts` (embedder + judge, the default) and `claude.ts` (judge). `CLASSIFIER_EMBEDDER` and `CLASSIFIER_JUDGE` env vars pick them, so swapping models is a config change.
+### Evaluation targets
 
-**Staying fast.** `PreToolUse` must answer in < 150 ms, so it runs only tier 0 plus a read of verdicts already computed. The trick is to **classify the intent early**: `UserPromptSubmit` schedules tiers 1–2 on the new intent. That finishes in a second or two, before the agent's first edit. By the time the agent tries to write a file, the answer is already stored.
+| Metric | Target |
+| --- | --- |
+| Precision of `block` + `serialize` | ≥ 0.85; `block` turns on per relation only after it clears this in warn-only shadow mode |
+| Recall on real conflicts (`lb verify` merge or test failures) | ≥ 0.80 |
+| Candidate recall (real conflicts present after step 2) | ≥ 0.95 |
+| `PreToolUse` p95, excluding async judge | < 150 ms |
+| Judge calls per event | < 1 on average |
+| Calibration error (ECE) | < 0.1 once outcomes exist |
 
-**Model IDs.** Confirm the current Gemini Flash and Gemini embedding model IDs in M0, and set the vector dimensions to match. The Claude judge uses `claude-opus-5-5` at effort `low` with `messages.parse` + `zodOutputFormat`.
+### Hackathon cut (v0)
+
+| Build now | Roadmap |
+| --- | --- |
+| Step 1: paths + TS compiler symbols (exports, imports, signatures) | tree-sitter/LSP for all languages, full call graph |
+| Step 2: path, symbol, topic, embeddings, failed knowledge | Multi-hop reference-graph neighbours |
+| Rules R1, R2, R4, R5, R6, R10 | R3 live (stays in `lb verify`) |
+| Step 5 judge, steps 6–7, re-classification | Step 4 pair model, graph features / GNN |
+| Fixture tests per relation | Mined open-source PR pairs as an eval set |
 
 ### How failed trajectories are recorded (the memory behind `stale`)
 
@@ -418,9 +605,9 @@ Every classification eventually gets a label:
 | Delivered but no change in behavior | `ignored` |
 
 Labels are used three ways, all cheap:
-1. **Threshold calibration.** A cron re-fits each type's similarity thresholds to hit a target precision (start at 0.9).
+1. **Threshold calibration.** A cron re-fits each relation's action thresholds (§4, step 6) and the retrieval cutoffs to hit a target precision (start at 0.85). `block` turns on per relation only after it clears that in warn-only shadow mode.
 2. **Few-shot memory.** The judge prompt includes the nearest confirmed and dismissed examples, retrieved with the same vector index.
-3. **Rule promotion.** A pattern the judge confirms repeatedly (same topic pair, same failing command) becomes a tier-0 rule, so it gets faster and cheaper over time.
+3. **Rule promotion.** A pattern the judge confirms repeatedly (same topic pair, same failing command) becomes an exact rule, so it gets faster and cheaper over time.
 
 ---
 
@@ -431,12 +618,14 @@ A Claude Code **plugin** installs everything on each laptop: the hooks, the `lb 
 | Hook | Writes | Classifies | Returns |
 | --- | --- | --- | --- |
 | `SessionStart` | agent row; writes `session_id` for `lb mcp` | — | Digest: who's doing what, open conflicts, relevant failures |
-| `UserPromptSubmit` | `intent` node | Schedules tiers 1–2 on the intent | Pending inbox items |
-| `PreToolUse` `Edit\|Write\|MultiEdit\|Bash` | `action` node (pending) | Tier 0 + stored verdicts | `deny` + reason for `duplicate`/`conflict` (and exact failed commands); otherwise nothing |
-| `PostToolUse` | action outcome, files, command exit code | Schedules tiers 1–2 on the action | `additionalContext` with `stale` warnings and inbox items |
+| `UserPromptSubmit` | `intent` node | Schedules steps 2–6 on the intent (judge async) | Pending inbox items |
+| `PreToolUse` `Edit\|Write\|MultiEdit\|Bash` | `action` node (pending) | Local normalize, then steps 2–3 + stored judgments | `deny` + reason when `worst_action` is `serialize` or `block`; otherwise nothing |
+| `PostToolUse` | action outcome, files, command exit code | Schedules the judge for unsettled pairs | `additionalContext` with `stale` warnings and inbox items |
 | `PostToolUseFailure` | marks a failing action | Feeds failed-trajectory detection | — |
 | `Stop` | closes the intent; schedules distillation; records token usage from the transcript | — | `decision: "block"` if blocking items are unacked (guarded by `stop_hook_active`, max 2) |
 | `SessionEnd` | agent offline | — | — |
+
+**Local normalization.** `lb hook` runs classifier step 1 on the developer's machine. It parses the pending edit into touches (path, symbol, op, lines) and references with the TypeScript compiler API, and sends only names, paths and line ranges. Code never leaves the machine, and symbols are always fresh.
 
 **MCP tools:**
 - `status` and `inbox`
@@ -501,7 +690,7 @@ Build-integrated, each doing real work:
 | **Factory: Droid SDK** ($2,000) | Repair worker: after a human approves a resolution, Droid checks out the affected branch, applies the approved contract, runs tests, and pushes a fix branch for review. Never pushes to main. | P1 (M3) |
 
 Judged on what we already build (no extra code):
-- **Overall**, **Most Technically Advanced** (cross-machine connector + tiered classifier + self-improvement), **Most Creative**, **Hacker's Choice**
+- **Overall**, **Most Technically Advanced** (cross-machine connector + seven-step classifier pipeline + self-improvement), **Most Creative**, **Hacker's Choice**
 - **Microsoft: production-minded agents.** Productivity domain. Measured usefulness (tokens saved, precision, catches before push), responsible design (human approval for conflicts, fail-open hooks, minimal data sent), and a path to production.
 - **Meta: bringing people closer.** Humans resolve conflicts together and can see each other's agent work.
 
@@ -528,7 +717,7 @@ Confirm on Devpost how many sponsor tracks one submission can select.
 
 ```
 packages/core/src/
-  classify/        types.ts · cascade.ts · rules/{claim-overlap,topic-owner,failed-signature,topic-value}.ts
+  classify/        types.ts · candidates.ts · decide.ts · rules/{r1-line-overlap,r2-same-create,r4-delete-rename,r5-signature,r6-ordering,r7-r9-hints,r10-failed-signature}.ts
   hooks.ts         zod schemas for hook stdin/stdout
   nodes.ts         node kinds, outcomes, text normalization, signatures
   digest.ts        renders inbox items into a few lines of context
@@ -536,7 +725,7 @@ packages/backend/convex/
   schema.ts · http.ts · agents.ts · events.ts · nodes.ts · inbox.ts · resolve.ts · crons.ts
   classify/        run.ts (cascade in actions) · similarity.ts · judge.ts · distill.ts · calibrate.ts
   classify/adapters/  gemini.ts · claude.ts
-apps/connector/    `lb`: hook, mcp (+ channel forwarder), join, verify, replay
+apps/connector/    `lb`: hook, normalize (TS symbols), mcp (+ channel forwarder), join, verify (incl. R3 merge-tree), replay
 apps/web/          Next.js dashboard: graph, tables, agent thoughts, resolve
 apps/repair/       Droid SDK worker (P1)
 plugin/            hooks.json · .mcp.json · skills/little-brother/SKILL.md
@@ -550,12 +739,12 @@ fixtures/          captured hook payloads, scenario.jsonl, labeled classifier ex
 | | Ash: hooks + MCP + platform | Noah: classifier logic | Joshua: dashboard + demo |
 | --- | --- | --- | --- |
 | Owns | `apps/connector`, `plugin/`, Convex `http/agents/events/nodes/inbox`, channels, `lb verify`, Droid worker (M3) | `core/classify`, Convex `classify/*`, adapters, distillation, calibration, labeled fixtures | `apps/web` (graph, tables, thoughts, resolve), demo repo, scenario recording, pitch + video |
-| First deliverable | Real hook → `events` row → hook response round trip | Tier-0 rules passing unit tests on fixtures | Tables view live from a seeded workspace |
+| First deliverable | Real hook → `events` row → hook response round trip | Rules R1, R2, R10 passing unit tests on fixtures | Tables view live from a seeded workspace |
 
 | Block | Goal | Done when |
 | --- | --- | --- |
 | **M0** Fri 22:00–Sat 01:00 | Scaffold, Convex schema, plugin skeleton, channel spike, Gemini key + model IDs, Droid SDK access check | An event from laptop A appears in laptop B's session |
-| **M1** Sat 01:00–04:00 | Events → nodes, tier 0, `PreToolUse` deny, inbox, tables view | **Duplicate** beat works across two machines |
+| **M1** Sat 01:00–04:00 | Events → nodes, local normalize, rules R1/R2/R10, `PreToolUse` deny, inbox, tables view | **Duplicate** beat works across two machines |
 | *Sleep, staggered* | | |
 | **M2** Sat 09:00–14:00 | Embeddings + vector search, intent pre-classification, failed-trajectory distillation, conflict + resolve panel, channel delivery | **Stale** and **Conflict** beats work |
 | **M3** Sat 14:00–20:00 | LLM judge, feedback + calibration, token metrics, graph + thoughts views, `lb verify`, Droid repair | Full story end to end |
@@ -574,6 +763,10 @@ fixtures/          captured hook payloads, scenario.jsonl, labeled classifier ex
 | Conflict | Same topic, different value → one `conflict` row (dedupe), both agents notified, owner resolves |
 | Normal control | Unrelated work by two agents → zero classifications |
 | Compatible control | Same topic, same value → no conflict |
+| Semantic conflict (R5) | Changing the signature of a symbol another agent calls → `semantic_conflict`, block, evidence lists the call sites |
+| Ordering (R6) | Referencing a symbol another agent is creating → `ordering_dependency` with the correct direction |
+| Candidate recall | Every pair with path or symbol overlap reaches step 3, regardless of top-k |
+| Plans never block | An intent-only event is capped at `serialize` |
 | Swappability | Switching `CLASSIFIER_JUDGE=claude` passes the same fixture suite |
 | Latency | `PreToolUse` p95 < 150 ms with 3 agents active |
 | Fail open | Backend down → hooks exit 0 in < 2 s; events land in the outbox |
@@ -583,10 +776,18 @@ fixtures/          captured hook payloads, scenario.jsonl, labeled classifier ex
 
 ## 13. Open questions
 
-1. **Topic map.** Should each repo commit a small `.littlebrother.json` that maps files to topics and owners? It makes tier 0 faster and conflicts more precise. The alternative is to rely on LLM topic extraction alone. *Recommended: yes, optional, seeded for the demo.*
+1. **Topic map.** Should each repo commit a small `.littlebrother.json` that maps files to topics and owners? It makes the exact rules faster and conflicts more precise. The alternative is to rely on LLM topic extraction alone. *Recommended: yes, optional, seeded for the demo.*
 2. **Self-stale.** Should `stale` also fire when an agent repeats its *own* failed approach, for example after context compaction? *Recommended: yes, it's free.*
 3. **Repair autonomy.** After approval, should Droid push a fix branch for review or just propose a diff? *Recommended: a fix branch, never main.*
 4. **Data sent to model providers.** For the demo repo, can prompts (≤500 chars) and diff hunks go to Gemini? *Recommended: yes for the demo; redaction is a stretch goal.*
+
+**Answered from the classifier spec's open questions:**
+- **Granularity of intents:** free text from the prompt plus paths the agent actually touches. Structured declarations cost tokens and agents fill them in unreliably.
+- **Who acts on `serialize`/`block`:** the agent, through the deny message; a human only for `block`.
+- **Same-task overlap:** subagents inside one session share an intent and aren't checked against each other.
+- **Cross-repo work:** out of scope.
+- **Index freshness:** symbols are computed locally on each edit, so they're never stale.
+- **Privacy:** diffs and symbol names may go to Gemini for the demo repo; a self-hosted judge is the privacy option later.
 
 ---
 
@@ -607,13 +808,22 @@ Each agent only sees its own session, so waste is discovered at `git push` after
 Weak spots to be ready for: the value grows with team size and overlap; semantic conflict detection depends on classifier quality (hence feedback and human approval); push into idle sessions relies on Claude Code channels, a research preview, with hooks as the fallback.
 
 **Which classifier are we using?**
-A three-tier cascade (§4). Tier 0 is plain rules with no model. Tier 1 is similarity search using the Gemini embedding model and Convex's vector index. Tier 2 is an LLM judge for borderline cases only: Gemini Flash by default, Claude (`claude-opus-5-5`, low effort) via `CLASSIFIER_JUDGE=claude`. Gemini is the default because it's cheap and fast, covers both embeddings and judging, and makes us eligible for the MLH Gemini track. Confirm the exact model IDs and embedding size in M0.
+The seven-step pipeline in §4:
+- normalize on the developer's machine
+- find candidates (paths, symbols, topics, embeddings, failed knowledge)
+- exact rules R1–R10
+- a learned pair model (roadmap)
+- an LLM judge for unsettled cases only: Gemini Flash by default, Claude (`claude-opus-5-5`, low effort) via `CLASSIFIER_JUDGE=claude`
+- decide
+- log
+
+Similarity only retrieves candidates; verdicts come from rules or the judge. Gemini is the default because it's cheap and fast, covers both embeddings and judging, and makes us eligible for the MLH Gemini track. Confirm the exact model IDs and embedding size in M0.
 
 **How does it improve itself?**
 Every verdict gets labeled from what happens next: a human confirms or dismisses it, the agent changes course or succeeds anyway, a later test passes or fails. Labels update three things:
 1. Per-type similarity thresholds, re-fit to a precision target.
 2. Examples in the judge's prompt, drawn from the team's own confirmed and dismissed cases.
-3. Rules: patterns the judge keeps confirming become tier-0 rules.
+3. Rules: patterns the judge keeps confirming become exact rules.
 
 Meanwhile every new failure adds to the memory behind `stale`. Over time more cases move from the slow, paid tier to the instant, free one. No model is fine-tuned; the improvement is calibration, retrieval and promotion. Demo it by dismissing a false alarm three times and showing the pattern stop firing.
 
@@ -636,7 +846,7 @@ It also would improve the tier that runs least, while the event types and verbs 
 
 Fine-tuning is a real roadmap item, though. Every verdict is stored with its label from day one, so the training set grows for free. In order of payoff:
 1. **A tiny trained scorer** over cheap features (similarity, same topic, same files, verb match, prior outcome), e.g. logistic regression that trains in seconds.
-2. **Fine-tuned embeddings** trained on confirmed duplicate/not-duplicate pairs, so "same work" clusters for the team's own code. This improves the similarity tier, which handles most traffic.
+2. **Fine-tuned embeddings** trained on confirmed duplicate/not-duplicate pairs, so "same work" clusters for the team's own code. This improves candidate retrieval, which every event goes through.
 3. **A distilled judge.** A small open model trained on the big judge's confirmed verdicts: fast and cheap enough for every event, and it can run locally.
 4. **Per-team adapters**, trained on each organization's own feedback.
 
@@ -653,7 +863,7 @@ Not the schema, and not the whole graph. The backend assembles a small packet fo
 | Ownership | The topic owner from `.littlebrother.json`, if any |
 | Examples | 3–5 nearest confirmed and dismissed past verdicts |
 
-It returns one `Verdict` (type, against which node, confidence, reason). Writing to the tables, fan-out and enforcement stay in our code, never in the model.
+It returns one `Judgment` per pair (relation, direction, confidence, evidence, action). Writing to the tables, fan-out and enforcement stay in our code, never in the model.
 
 **Open models or closed models?**
 Either. The `Embedder` and `Judge` interfaces don't care. We default to closed hosted models (Gemini Flash + Gemini embeddings, Claude as the alternative judge) because there's nothing to host, they're fast, and Gemini counts for the MLH track. An open-weights model, served locally or from a hosted endpoint, plugs in as another adapter when cost or privacy calls for it. Self-hosting during the hackathon is a time sink, so it's future work. Switching embedders means re-embedding stored nodes, because vectors from different models aren't comparable.
