@@ -69,8 +69,8 @@ export function LearnTree({ s }: { s: number }) {
         <PillNode key={p[2]} p={p} cls={i === 2 ? "ok" : ""} shown={prog(s, T0 + 1.4 + i * 0.25, 0.3)} />
       ))}
       <g style={{ opacity: pruned }}>
-        <rect x={430} y={176} width={420} height={44} rx={10} className="lt-lesson" />
-        <text x={450} y={204} className="lt-text left">
+        <rect x={400} y={176} width={474} height={44} rx={10} className="lt-lesson" />
+        <text x={416} y={204} className="lt-text left">
           ⬡ lesson: wildcard CORS + credentials fails → proxy
         </text>
       </g>

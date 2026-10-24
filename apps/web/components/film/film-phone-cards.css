@@ -1,0 +1,130 @@
+/* Phone cards: join, decision, Remote Control chat. */
+.lp .p-card {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.lp .p-card small {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font: 500 9.5px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lp .p-card h4 {
+  margin: 0;
+  font: 600 16px var(--sans);
+}
+.lp .p-card p {
+  margin: 0;
+  color: var(--muted);
+}
+.lp .p-btn {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-weight: 600;
+}
+.lp .p-btn.solid {
+  background: var(--ink);
+  color: var(--panel);
+  border-color: var(--ink);
+}
+.lp .p-wait {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.lp .p-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  animation: lp-blink 1.2s steps(1) infinite;
+}
+.lp .p-side {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.lp .p-side code {
+  font: 400 10px var(--mono);
+  color: var(--muted);
+}
+.lp .p-card .p-done {
+  color: var(--ink);
+  font-weight: 600;
+}
+.lp .p-bubble {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 7px 10px;
+  border-radius: 14px 14px 4px 14px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.lp .p-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 0;
+}
+.lp .p-step {
+  font: 400 10.5px var(--mono);
+  color: var(--muted);
+}
+.lp .p-deny {
+  display: flex;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid var(--hot);
+  border-radius: 8px;
+  font-size: 10.5px;
+}
+.lp .p-deny span {
+  display: grid;
+}
+.lp .p-deny b {
+  color: var(--hot);
+}
+.lp .p-saved {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: 1px solid var(--add);
+  border-radius: 999px;
+  font: 500 10px var(--mono);
+  color: var(--add);
+}
+.lp .p-input {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+}
+.lp .p-input.on {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.lp .p-send {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--panel);
+}

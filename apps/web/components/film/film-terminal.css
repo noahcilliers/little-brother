@@ -1,0 +1,104 @@
+/* Inside the devices: Claude Code terminals and the two phones. */
+.lp .m-term {
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+.lp .m-term-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px 12px;
+  font: 400 13px / 1.5 var(--mono);
+}
+.lp .t-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.lp .t-row.enter {
+  animation: film-sub-in 0.35s ease-out;
+}
+.lp .t-prompt {
+  font-weight: 600;
+}
+.lp .t-prompt span,
+.lp .t-input span {
+  color: var(--muted);
+}
+.lp .t-prompt em {
+  margin-left: 10px;
+  font: 400 11px var(--mono);
+  font-style: normal;
+  color: var(--film-accent);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.lp .t-lb {
+  color: var(--film-accent);
+}
+.lp .t-say .t-mark {
+  color: var(--ink);
+}
+.lp .t-tool .t-mark {
+  color: var(--add);
+}
+.lp .t-out,
+.lp .t-ok {
+  padding-left: 18px;
+  color: var(--muted);
+}
+.lp .t-ok {
+  color: var(--add);
+}
+.lp .t-block {
+  display: grid;
+  margin: 3px 0;
+  padding: 5px 9px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.lp .t-block b {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lp .t-block span {
+  color: var(--ink);
+}
+.lp .t-block.deny {
+  color: var(--hot);
+}
+.lp .t-block.warn {
+  color: var(--warn);
+}
+.lp .t-block.decided {
+  color: var(--ink);
+}
+.lp .t-input {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  min-height: 34px;
+}
+.lp .t-input.on {
+  border-color: var(--ink);
+}
+.lp .t-caret {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 1px;
+  vertical-align: -2px;
+  background: var(--ink);
+  animation: lp-blink 1.1s steps(1) infinite;
+}

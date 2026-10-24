@@ -1,0 +1,67 @@
+/* The closing frame: the line and a QR styled like the Share dialog. */
+.lp .fx-close {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  align-items: center;
+  gap: 80px;
+  padding: 0 120px;
+}
+.lp .fx-close-copy {
+  display: grid;
+  gap: 18px;
+}
+.lp .fx-brand {
+  font: 600 36px var(--mono);
+  letter-spacing: -0.04em;
+}
+.lp .fx-brand i {
+  font-style: normal;
+  color: var(--film-accent);
+  animation: lp-blink 1.1s steps(1) infinite;
+}
+.lp .fx-claim {
+  font: 600 72px / 1.05 var(--sans);
+  letter-spacing: -0.045em;
+  white-space: normal;
+}
+.lp .fx-close-meta {
+  font: 400 16px var(--mono);
+  color: var(--muted);
+}
+.lp .fx-qr-card {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.lp .fx-qr-card h3 {
+  margin: 0;
+  font: 600 20px var(--sans);
+}
+.lp .fx-qr-card p {
+  margin: 0;
+  color: var(--muted);
+}
+.lp .fx-qr-card code {
+  font: 400 13px var(--mono);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* The closing QR is the one people scan: dark modules on a light ground in both themes. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lp .fx-qr-card .qr {
+    color: var(--panel);
+  }
+  :root:not([data-theme="light"]) .lp .fx-qr-card .qr-bg {
+    fill: var(--ink);
+  }
+}
+:root[data-theme="dark"] .lp .fx-qr-card .qr {
+  color: var(--panel);
+}
+:root[data-theme="dark"] .lp .fx-qr-card .qr-bg {
+  fill: var(--ink);
+}

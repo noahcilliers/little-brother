@@ -1,10 +1,16 @@
 "use client";
 
 import "./film.css";
-import "./film-story.css";
-import "./film-motion.css";
-import "./film-devices.css";
+import "./film-frames.css";
+import "./film-popups.css";
+import "./film-terminal.css";
+import "./film-phone.css";
+import "./film-phone-cards.css";
+import "./film-hook.css";
+import "./film-loop.css";
 import "./film-metrics.css";
+import "./film-charts.css";
+import "./film-close.css";
 import { type ReactNode, useRef } from "react";
 import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";

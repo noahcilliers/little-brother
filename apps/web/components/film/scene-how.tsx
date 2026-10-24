@@ -55,7 +55,7 @@ export function SceneHow({ s }: { s: number }) {
           className="fx-lane"
           style={{ opacity: prog(s, T0, 0.4) }}
         />
-        <text x={130} y={276} className="fx-lane-label" style={{ opacity: prog(s, T0, 0.4) }}>
+        <text x={130} y={428} className="fx-lane-label" style={{ opacity: prog(s, T0, 0.4) }}>
           EDIT PATH · &lt; 150 ms
         </text>
         <rect
@@ -67,7 +67,7 @@ export function SceneHow({ s }: { s: number }) {
           className="fx-lane async"
           style={{ opacity: prog(s, T0 + 3.4, 0.4) }}
         />
-        <text x={490} y={586} className="fx-lane-label" style={{ opacity: prog(s, T0 + 3.4, 0.4) }}>
+        <text x={490} y={738} className="fx-lane-label" style={{ opacity: prog(s, T0 + 3.4, 0.4) }}>
           ASYNC · SCHEDULED IN THE BACKEND
         </text>
         {EDGES.map(([d, at, async]) => (

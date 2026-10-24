@@ -27,7 +27,8 @@ function Words({
   return (
     <span className="fh-line" style={{ transform: `translateY(${-out * 40}px)`, opacity: 1 - out }}>
       {text.split(" ").map((w, i) => (
-        <span key={`${w}${i}`} className="fh-mask">
+        // biome-ignore lint/suspicious/noArrayIndexKey: words of a fixed line never reorder
+        <span key={i} className="fh-mask">
           <span
             className={accent.includes(w) ? "fh-word accent" : "fh-word"}
             style={rise(prog(s, from + i * 0.07, 0.45))}

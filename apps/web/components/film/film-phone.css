@@ -1,0 +1,134 @@
+/* Phone frames and their first screens. */
+/* phones */
+.lp .m-phone {
+  border-radius: 36px;
+  border: 8px solid var(--line-2);
+  outline: 1px solid var(--line);
+}
+.lp .m-phone-screen {
+  height: 100%;
+  border-radius: 29px;
+  overflow: hidden;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+}
+.lp .m-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px 2px;
+  font: 600 10px var(--sans);
+}
+.lp .m-island {
+  width: 64px;
+  height: 18px;
+  border-radius: 10px;
+  background: var(--line-2);
+}
+.lp .m-appbar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.lp .m-appbar b {
+  font: 600 13px var(--sans);
+}
+.lp .m-appbar small {
+  margin-left: auto;
+  font: 400 10px var(--mono);
+  color: var(--muted);
+}
+.lp .m-glyph {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--film-accent);
+}
+.lp .m-phone-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.lp .p-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px;
+  font-size: 11.5px;
+  animation: film-sub-in 0.35s ease-out;
+}
+.lp .p-list,
+.lp .p-feed {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.lp .p-list small,
+.lp .p-h {
+  font: 500 9.5px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lp .p-row,
+.lp .p-person,
+.lp .p-catch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.lp .p-person i,
+.lp .p-live i,
+.lp .p-remote i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--add);
+  flex: none;
+}
+.lp .p-person small {
+  margin-left: auto;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+.lp .p-live,
+.lp .p-remote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 10.5px var(--mono);
+  color: var(--muted);
+}
+.lp .p-camera {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--ink) 85%, var(--panel));
+}
+.lp .p-viewfinder {
+  width: 130px;
+  padding: 10px;
+  border: 2px solid var(--film-accent);
+  border-radius: 14px;
+}
+.lp .p-found {
+  position: absolute;
+  bottom: 24px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--panel);
+  font: 400 9px var(--mono);
+}

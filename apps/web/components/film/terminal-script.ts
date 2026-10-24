@@ -26,7 +26,7 @@ export const TERM_A: TermLine[] = [
   [BEAT.conflict, "warn", "Noah moved auth.mechanism to JWT bearer. Edits on it pause until the owner decides.", "little-brother · conflict"],
   [BEAT.resolve, "decided", "auth.mechanism = JWT bearer (Noah). Your cookie session is superseded: send Authorization: Bearer.", "little-brother · decided"],
   [37.6, "say", "Switching login to bearer tokens."],
-  [38.2, "tool", "Edit(web/src/api-client.ts)"], [38.5, "out", "headers.Authorization = `Bearer ${token}`"],
+  [38.2, "tool", "Edit(web/src/api-client.ts)"], [38.5, "out", "headers.Authorization = Bearer <token>"],
   [40.2, "tool", "Bash(npm test)"], [40.5, "ok", "6 passed"],
 ];
 

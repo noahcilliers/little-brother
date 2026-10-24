@@ -54,7 +54,7 @@ export function SceneLearn({ s }: { s: number }) {
             const on = i === active;
             return (
               <g key={name} style={{ opacity: prog(s, T0 + 0.3 + i * 0.12, 0.3) }}>
-                <circle cx={x} cy={y} r={on ? 60 : 52} className={on ? "fx-station on" : "fx-station"} />
+                <circle cx={x} cy={y} r={on ? 70 : 60} className={on ? "fx-station on" : "fx-station"} />
                 <text x={x} y={y + 5} textAnchor="middle" className="fx-station-name">
                   {name}
                 </text>

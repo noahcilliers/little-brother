@@ -31,7 +31,7 @@ export function ReplayCard({ p }: { p: number }) {
 const LO = Math.log10(0.05);
 const HI = Math.log10(20);
 const X0 = 150;
-const XW = 300;
+const XW = 250;
 const xOf = (sec: number) => X0 + ((Math.log10(sec) - LO) / (HI - LO)) * XW;
 
 // biome-ignore format: tabular scenario data

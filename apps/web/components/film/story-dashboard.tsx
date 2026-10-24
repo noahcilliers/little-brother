@@ -69,7 +69,7 @@ export function StoryDashboard({ s }: { s: number }) {
     <Browser url="little-brother-gules.vercel.app/app/sessions/checkout-sprint" {...DASH}>
       <div className="d-head">
         <b>checkout sprint</b>
-        <span>lb-demo-shop · {ids.length} people</span>
+        <span className="d-sub">lb-demo-shop · {ids.length} people</span>
         <span className="d-tabs">
           <i className="on">Board</i>
           <i>Server log</i>

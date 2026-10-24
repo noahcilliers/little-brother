@@ -14,7 +14,7 @@ export function ShareOverlay({ s }: { s: number }) {
       <div className="f-share" style={{ transform: `translateY(${(1 - shown) * 14}px)` }}>
         <header>
           <b>checkout sprint</b>
-          <span>lb-demo-shop · code k7f2qx</span>
+          <span className="f-share-sub">lb-demo-shop · code k7f2qx</span>
           <span className="f-btn">Present</span>
           <span className="f-btn">Esc</span>
         </header>
@@ -46,7 +46,7 @@ export function WaitingCard({ s }: { s: number }) {
       </div>
       <div className="f-wait-row">
         <span className="f-avatar">N</span>
-        <span>
+        <span className="f-who">
           <b>Noah</b>
           <small>@noah · via invite link</small>
         </span>

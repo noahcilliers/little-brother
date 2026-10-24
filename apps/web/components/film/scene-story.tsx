@@ -26,6 +26,7 @@ const center = (b: { x: number; y: number; w: number; h: number }, fy = 0.5): Po
 ];
 const lookup: Lookup = {
   tasks: new Map(FULL_BOARD.tasks.map((k) => [k.id, k])),
+  goals: new Map(FULL_BOARD.goals.map((g) => [g.id, g])),
   shared: new Map(FULL_BOARD.shared.map((x) => [x.id, x])),
   layout: FULL_LAYOUT,
   bandDy: bandOffsets(FULL_BOARD.shared, FULL_LAYOUT),
