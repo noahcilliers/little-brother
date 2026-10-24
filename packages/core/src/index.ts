@@ -1,4 +1,5 @@
 export * from "./classify/index";
+export * from "./command-outcome";
 export * from "./hooks";
 export * from "./inbox";
 export * from "./ingest";
@@ -7,6 +8,7 @@ export * from "./labels";
 export * from "./mcp";
 export * from "./nodes";
 export * from "./prompt-text";
+export * from "./shell-writes";
 export * from "./tasks";
 export * from "./topics";
 export * from "./usage";

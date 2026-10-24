@@ -1,4 +1,11 @@
-import { actionLabel, context, deriveVerb, type IngestEnvelope, signatureLine } from "@lb/core";
+import {
+  actionLabel,
+  commandFailed,
+  context,
+  deriveVerb,
+  type IngestEnvelope,
+  signatureLine,
+} from "@lb/core";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
@@ -14,6 +21,7 @@ import {
   topicFor,
 } from "../nodes";
 import { taskForAction } from "../taskAttribution";
+import { failRevertedEdits } from "./revert";
 import type { HookHandler } from "./types";
 
 const sameFiles = (a: string[], b: string[]) =>
@@ -36,26 +44,34 @@ async function findOpenAction(ctx: QueryCtx, agentId: Doc<"agents">["_id"], env:
 }
 
 export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
-  const failed = hook === "PostToolUseFailure" || (env.exitCode !== undefined && env.exitCode !== 0);
-  const outcome = failed ? "failed" : "succeeded";
   const target = actionTarget(env);
   const tool = env.tool ?? "";
-  const derived = deriveVerb(await activeVerbs(ctx), { tool, input: env.command ?? env.files.join(" ") });
-  const existing = derived === "EXPLORE" ? undefined : await findOpenAction(ctx, agent._id, env);
+  const matched = deriveVerb(await activeVerbs(ctx), { tool, input: env.command ?? env.files.join(" ") });
+  const existing = matched === "EXPLORE" ? undefined : await findOpenAction(ctx, agent._id, env);
+  const base = existing?.verb ?? matched;
+  const failed = commandFailed({
+    hookFailed: hook === "PostToolUseFailure",
+    exitCode: env.exitCode,
+    verb: base,
+    output: env.outputTail,
+  });
+  const outcome = failed ? "failed" : "succeeded";
+  const reverting = !failed && (env.reverted?.length ?? 0) > 0;
+  // A restore names its own verb so it never reads as the trajectory's last command run.
+  const verb = reverting && base === "RUN" ? "REVERT" : base;
 
   let nodeId: Doc<"nodes">["_id"];
-  let verb = derived;
   const now = Date.now();
   const labelFor = (v: string) =>
     actionLabel({ verb: v, tool, touches: env.touches, files: env.files, command: env.command });
   if (existing) {
     nodeId = existing._id;
-    verb = existing.verb;
     // Nodes from before task attribution (or whose PreToolUse was not hooked) get theirs now.
     const label = existing.label ?? labelFor(verb);
     const taskId =
       existing.taskId ?? (await taskForAction(ctx, agent, { verb, topic: existing.topic, label, at: now }));
     await ctx.db.patch(nodeId, {
+      verb,
       outcome,
       text: signatureLine({ verb, topic: existing.topic, target, outcome }),
       label,
@@ -87,9 +103,10 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
     });
   }
   const landed = env.git ? await applyGitOp(ctx, agent, env.git) : "";
-  const summary = `${tool} ${target} → ${failed ? "FAIL" : "OK"}${landed}`;
-  // Reads are context, not work: recording them is enough, classifying them would only add noise.
-  if (verb === "EXPLORE") return { output: null, summary, nodeId };
+  const discarded = reverting ? await failRevertedEdits(ctx, agent, env.reverted ?? [], now) : 0;
+  const summary = `${tool} ${target} → ${failed ? "FAIL" : "OK"}${landed}${discarded ? `, ${discarded} edit(s) failed` : ""}`;
+  // Reads are context, not work, and undoing your own change can't collide with anyone: record, don't classify.
+  if (verb === "EXPLORE" || verb === "REVERT") return { output: null, summary, nodeId };
 
   await ctx.scheduler.runAfter(0, internal.classify.run.classifyNode, { nodeId });
   // Claude Code only accepts additionalContext tagged PostToolUse; failure hooks leave items queued for the next hook.

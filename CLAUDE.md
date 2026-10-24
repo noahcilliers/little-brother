@@ -8,6 +8,7 @@ Coordination layer for independent Claude Code sessions. Full plan: [docs/PLAN.m
 - `packages/backend/convex` — Convex schema, queries, mutations, actions, HTTP routes, crons; `classify/` runs the cascade, `classify/adapters/` holds model providers.
 - `apps/connector` — `lb` CLI: hook pipe, stdio MCP server, login/join, verify.
 - `apps/web` — Next.js dashboard.
+- `apps/evals` — live detection benchmark: headless Claude agents on lb-demo-shop with clashing prompts, scored against planted conflicts.
 - `plugin/` — Claude Code plugin (hooks + MCP + skill) installed on each dev machine.
 
 ## Rules
@@ -27,4 +28,5 @@ Coordination layer for independent Claude Code sessions. Full plan: [docs/PLAN.m
 
 - `pnpm dev` — Convex dev + web + connector watch
 - `pnpm test` — vitest across packages
+- `pnpm --filter @lb/evals eval` — run the live eval suite (needs local `convex dev` in open mode; see apps/evals/README.md)
 - `pnpm check` — biome lint + format + tsc
