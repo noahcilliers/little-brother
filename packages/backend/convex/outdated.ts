@@ -35,6 +35,13 @@ export async function unscoped(
         : `@${member.handle} sent events for session ${env.session.lbSession}, which is ended or not theirs`,
     });
   const asked = hook === "UserPromptSubmit" && env.prompt ? sessionCommand(env.prompt) : null;
+  // A current connector still attached to an ended session (or a room it left): say so once per prompt, so the
+  // agent can ask for a new code instead of every event vanishing silently.
+  if (!outdated && hook === "UserPromptSubmit")
+    return context(
+      "UserPromptSubmit",
+      `[little-brother] Session ${env.session.lbSession} has ended, or you're no longer in its room, so nothing from this Claude session is shared. Tell the user in one line and ask for a new code to run /little-brother:join <code> (or /little-brother:leave).`,
+    );
   if (!outdated || !asked) return null;
   return context(
     "UserPromptSubmit",

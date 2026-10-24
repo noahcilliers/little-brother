@@ -103,7 +103,10 @@ describe("rooms, sessions and connect tokens", () => {
     await ash.mutation(api.sessions.end, { sessionId });
     const late = envelope("UserPromptSubmit", "s1", { prompt: "more" });
     late.session.lbSession = code;
-    await post(t, "/hook/UserPromptSubmit", late, token);
+    const ended = (await (await post(t, "/hook/UserPromptSubmit", late, token)).json()) as {
+      output: unknown;
+    };
+    expect(JSON.stringify(ended.output)).toMatch(/has ended/);
     expect((await ash.query(api.onboarding.progress, {})).prompt).toBe(false);
   });
 
