@@ -1,7 +1,7 @@
 // One clock drives the whole film, in story seconds. The dashboard it reuses works in wall-clock ms: one story
 // second is SCALE_MS of board time, so the board's axis reads like minutes of real work.
 
-export const DURATION = 84;
+export const DURATION = 89;
 const T0 = Date.UTC(2026, 9, 24, 17, 21, 0);
 const SCALE_MS = 5000;
 

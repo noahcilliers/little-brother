@@ -15,16 +15,16 @@ export const SCENES: Record<SceneId, [start: number, end: number, enter: Transit
   why: [44.6, 53.6, "wipe"],
   how: [53, 60, "wipe"],
   learn: [59.4, 66.4, "iris"],
-  measure: [65.8, 76.4, "zoom"],
-  impact: [75.8, 79.8, "iris"],
-  close: [79.2, 84, "zoom"],
+  measure: [65.8, 81.4, "zoom"],
+  impact: [80.8, 84.8, "iris"],
+  close: [84.2, 89, "zoom"],
 };
 export const TRANSITION_S = 0.6;
 
 // biome-ignore format: tabular scenario data
 export const CHAPTERS: [s: number, name: string][] = [
   [0, "Hook"], [ST + 5.5, "Connect"], [ST + 18.8, "Duplicate"], [ST + 23.2, "Stale"], [ST + 28.4, "Conflict"],
-  [44.8, "Why not git"], [53.2, "How it works"], [59.6, "Learning"], [66, "Measure"], [76, "Impact"], [79.4, "Close"],
+  [44.8, "Why not git"], [53.2, "How it works"], [59.6, "Learning"], [66, "Results"], [81, "Impact"], [84.4, "Close"],
 ];
 
 // One short caption per beat: the picture carries the detail, so a caption only says what to watch. Scenes with

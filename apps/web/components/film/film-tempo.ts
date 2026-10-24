@@ -18,9 +18,9 @@ const TEMPO: [clock: number, rate: number][] = [
   [44.8, 0.7],      // why not git
   [53.2, 0.65],     // how it works
   [59.6, 0.65],     // learning
-  [66, 0.85],       // what we measure
-  [76, 0.7],        // impact
-  [79.4, 0.8],      // close
+  [66, 0.75],       // results
+  [81, 0.7],        // impact
+  [84.4, 0.8],      // close
 ];
 
 /** Playback second at which each stretch starts. */

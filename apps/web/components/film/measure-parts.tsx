@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
-import { type Status, TAG } from "./benchmarks";
 import { clamp01, easeOut, lerp, prog } from "./film-clock";
 import { countUp } from "./film-fx";
 
-// Building blocks for the full-screen benchmark beats: the zoom in and out, the big number, the status tag, bars.
+// Building blocks for the full-screen result beats: the zoom in and out, the big number, bars.
 
 /** One full-screen beat on its own clock t, `len` seconds long: zooms in from close, holds, zooms out and away. */
 export function Beat({ t, len, children }: { t: number; len: number; children: ReactNode }) {
@@ -25,35 +24,14 @@ export function Beat({ t, len, children }: { t: number; len: number; children: R
   );
 }
 
-export function Tag({ status }: { status: Status }) {
-  const text = TAG[status];
-  return text ? <em className={`ms-tag ${status}`}>{text}</em> : null;
-}
-
-/** The headline number, counting up; `decimals` for values like 8.5. */
-export function BigNumber({
-  t,
-  bound = "",
-  value,
-  unit,
-  status,
-  decimals = 0,
-}: {
-  t: number;
-  bound?: string;
-  value: number;
-  unit: string;
-  status: Status;
-  decimals?: number;
-}) {
+/** The headline number, counting up. */
+export function BigNumber({ t, value, unit }: { t: number; value: number; unit: string }) {
   return (
     <div className="ms-big">
       <b>
-        {bound}
-        {countUp(value, prog(t, 0.2, 1), decimals)}
+        {countUp(value, prog(t, 0.2, 1))}
         <small>{unit}</small>
       </b>
-      <Tag status={status} />
     </div>
   );
 }
