@@ -1,0 +1,332 @@
+/* Story scenes: the sketch layout. Device frames, the dashboard and its pop-ups, terminals, phones. */
+.lp .fs-world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.lp .m-phone,
+.lp .m-term,
+.lp .m-browser {
+  position: absolute;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -30px color-mix(in srgb, var(--ink) 35%, transparent);
+}
+.lp .m-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 30px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.lp .m-dots {
+  display: flex;
+  gap: 6px;
+}
+.lp .m-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+}
+.lp .m-url {
+  flex: 1;
+  text-align: center;
+  margin-right: 50px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.lp .m-browser {
+  border-radius: 12px;
+}
+.lp .m-browser-body {
+  position: relative;
+  height: calc(100% - 31px);
+  overflow: hidden;
+  background: var(--film-bg);
+}
+.lp .m-pointer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 22px;
+  z-index: 9;
+  transition: opacity 0.2s;
+  filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--ink) 30%, transparent));
+}
+.lp .m-pointer svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.lp .m-pointer path {
+  fill: var(--ink);
+  stroke: var(--panel);
+  stroke-width: 1.5;
+}
+.lp .m-tap {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 2px solid var(--film-accent);
+  background: color-mix(in srgb, var(--film-accent) 20%, transparent);
+  z-index: 5;
+}
+
+/* dashboard */
+.lp .d-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.lp .d-head b {
+  font: 600 14px var(--sans);
+}
+.lp .d-head > span:nth-child(2) {
+  font: 400 12px var(--mono);
+  color: var(--muted);
+}
+.lp .d-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  font: 400 11.5px var(--mono);
+  color: var(--muted);
+}
+.lp .d-tabs i {
+  font-style: normal;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+.lp .d-tabs i.on {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.lp .d-board {
+  position: absolute;
+  transform-origin: 0 0;
+  display: grid;
+  gap: 12px;
+}
+.lp .d-board .bar {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.lp .d-board .graph .scroll {
+  overflow: hidden;
+}
+.lp .d-board .graph > .empty {
+  padding: 40px 14px;
+}
+
+/* the board's buttons, waiting room, Share · QR and toasts, as in app.css */
+.lp .f-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  font: 500 12px var(--mono);
+  white-space: nowrap;
+}
+.lp .f-btn.solid {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--panel);
+}
+.lp .f-btn.pressed,
+.lp .p-btn.pressed {
+  transform: scale(0.94);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--film-accent) 30%, transparent);
+}
+.lp .f-scrim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  z-index: 4;
+}
+.lp .f-share {
+  width: 640px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.lp .f-share header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.lp .f-share header > span:nth-child(2) {
+  flex: 1;
+  font: 400 12px var(--mono);
+  color: var(--muted);
+}
+.lp .f-share-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 14px;
+}
+.lp .f-share-grid h3 {
+  margin: 0 0 4px;
+  font: 600 14px var(--sans);
+}
+.lp .f-share-grid p {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.lp .film-stage .qr {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.lp .film-stage .qr-bg {
+  fill: var(--panel);
+}
+.lp .f-share-grid .qr {
+  width: 190px;
+}
+.lp .f-waiting {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 380px;
+  padding: 0 12px 12px;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--ink) 18%, transparent);
+  z-index: 5;
+}
+.lp .f-panel-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 2px 8px;
+  font: 500 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.lp .f-pill {
+  font: 400 11px / 18px var(--mono);
+  padding: 0 6px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  color: var(--ink);
+}
+.lp .f-wait-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lp .f-wait-row > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+}
+.lp .f-wait-row small {
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.lp .f-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font: 600 11px var(--mono);
+}
+.lp .f-toasts {
+  position: absolute;
+  top: 52px;
+  right: 14px;
+  width: 340px;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 6;
+}
+.lp .f-toast {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warn);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 16%, transparent);
+}
+.lp .f-toast.tone-conflict {
+  border-left-color: var(--hot);
+}
+.lp .f-toast b {
+  font-size: 13px;
+}
+.lp .f-toast p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.lp .f-toast > div {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.lp .f-x {
+  color: var(--muted);
+  font-size: 18px;
+}
+
+/* decision popup, played over the board */
+.lp .film-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding-top: 40px;
+  background: color-mix(in srgb, var(--bg) 58%, transparent);
+  backdrop-filter: blur(1.5px);
+  z-index: 3;
+}
+.lp .film-modal {
+  width: 900px;
+  max-height: none;
+  overflow: visible;
+  animation: none;
+  transform-origin: 50% 0;
+}
+.lp .film-modal .diff {
+  max-height: none;
+}
+.lp .film-stage .dcols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

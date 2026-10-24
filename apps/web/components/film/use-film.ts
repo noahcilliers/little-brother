@@ -3,7 +3,7 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { DURATION } from "./film-clock";
 
-const START_AT = 28.4; // a poster frame on the decision popup until the film scrolls into view
+const START_AT = 39.2; // a poster frame on the wide story layout until the film scrolls into view
 const LOOP_HOLD = 2.5;
 
 /** Playback clock: autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
