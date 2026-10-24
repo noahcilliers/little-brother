@@ -1,0 +1,128 @@
+/* Feature bento: separate cards on a 6-column grid, each a dotted stage holding one looping scene.
+   Every scene is CSS keyframes on a shared --loop. The un-animated styles are the finished frame, so
+   reduced motion (which strips animations in landing.css) shows the end of the story, not a blank stage. */
+.lp .bento {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+.lp .feat {
+  grid-column: span 2;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.lp .feat:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow);
+}
+.lp .feat.s3 {
+  grid-column: span 3;
+}
+.lp .feat.s4 {
+  grid-column: span 4;
+}
+.lp .feat.s6 {
+  grid-column: span 6;
+}
+.lp .stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  padding: 28px 24px;
+  border-bottom: 1px solid var(--line);
+  background-color: var(--sunk);
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.lp .feat-copy {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 22px 24px 26px;
+}
+.lp .feat-copy h3 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+.lp .feat-copy p {
+  color: var(--muted);
+  font-size: 14.5px;
+  max-width: 62ch;
+}
+
+/* the loop: fade in, play, fade out, and freeze while off screen */
+.lp .sc {
+  width: 100%;
+  min-width: 0;
+  animation: lp-scene var(--loop, 9s) linear infinite both;
+}
+.lp .sc *,
+.lp .sc *::before,
+.lp .sc *::after {
+  animation-duration: var(--loop, 9s);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+.lp [data-play="off"] *,
+.lp [data-play="off"] *::before,
+.lp [data-play="off"] *::after {
+  /* biome-ignore lint/complexity/noImportantStyles: scene rules set their own animation shorthand, and an off-screen pause must still win */
+  animation-play-state: paused !important;
+}
+@keyframes lp-scene {
+  0% {
+    opacity: 0;
+  }
+  3%,
+  93% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 960px) {
+  .lp .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp .feat,
+  .lp .feat.s3 {
+    grid-column: span 1;
+  }
+  .lp .feat.s4,
+  .lp .feat.s6 {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 680px) {
+  .lp .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp .feat,
+  .lp .feat.s3,
+  .lp .feat.s4,
+  .lp .feat.s6 {
+    grid-column: auto;
+  }
+  .lp .stage {
+    padding: 22px 16px;
+    min-height: 220px;
+  }
+  .lp .feat-copy {
+    padding: 18px 18px 22px;
+  }
+}

@@ -1,0 +1,88 @@
+/* Tech stack: logo-less tiles with a one-line role and the specifics as chips. */
+.lp .stack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.lp .stack-tile {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 22px 22px 24px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+.lp .stack-tile.w2 {
+  grid-column: span 2;
+}
+.lp .stack-tile.w4 {
+  grid-column: span 4;
+}
+.lp .stack-tile h3 {
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+.lp .stack-tile p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.lp .stack-tile {
+  grid-template-rows: auto auto 1fr auto;
+}
+.lp .stack-tile .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp .stack-tile .chips li {
+  padding: 3px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--sunk);
+  font: 400 11.5px var(--mono);
+  white-space: nowrap;
+}
+.lp .stack-tile.tooling {
+  grid-template-rows: none;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+.lp .tooling .chips {
+  margin: 0;
+}
+.lp .stack-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow);
+}
+@media (max-width: 960px) {
+  .lp .stack-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp .stack-tile.w4 {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 680px) {
+  .lp .stack-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp .stack-tile.w2,
+  .lp .stack-tile.w4 {
+    grid-column: auto;
+  }
+  .lp .stack-tile.tooling {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

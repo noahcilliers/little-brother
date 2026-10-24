@@ -1,0 +1,171 @@
+/* Scene 04: git merges clean then a test fails; Little Brother asks for the decision first. */
+.lp .sc-conf {
+  --loop: 11s;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  align-items: start;
+  max-width: 600px;
+}
+.lp .cf-git,
+.lp .cf-lb {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.lp .cf-git {
+  opacity: 0.55;
+  animation-name: c-git;
+}
+.lp .cf-lb {
+  animation-name: c-lb;
+}
+.lp .cf-log {
+  display: grid;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--bg);
+  font: 400 11px var(--mono);
+}
+.lp .cf-log p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+}
+.lp .cf-log span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .cf-log i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.lp .cf-log b {
+  font-weight: 500;
+  color: var(--ok);
+}
+.lp .cf-log .red i {
+  background: var(--bad);
+}
+.lp .cf-log .red b {
+  color: var(--bad);
+}
+.lp .cf-log .g1 {
+  animation-name: c-g1;
+}
+.lp .cf-log .g2 {
+  animation-name: c-g2;
+}
+.lp .cf-log .g3 {
+  animation-name: c-g3;
+}
+.lp .cf-log .g4 {
+  animation-name: c-g4;
+}
+.lp .dec {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+.lp .dec-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11.5px var(--mono);
+}
+.lp .dec-h small {
+  margin-left: auto;
+  color: var(--accent-ink);
+  font-size: 10.5px;
+}
+.lp .dec-diff {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  animation-name: c-diff;
+}
+.lp .dec-diff > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--sunk);
+}
+.lp .dec-diff small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 10px var(--mono);
+  color: var(--faint);
+  margin-bottom: 2px;
+}
+.lp .dec-diff code {
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .dec-diff .add {
+  color: color-mix(in srgb, var(--ok) 70%, var(--fg));
+}
+.lp .dec-diff .del {
+  color: color-mix(in srgb, var(--bad) 70%, var(--fg));
+}
+.lp .dec-act {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.lp .opt {
+  padding: 6px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  font: 500 11px var(--mono);
+  white-space: nowrap;
+}
+.lp .opt.pick {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+  animation-name: c-pick;
+}
+.lp .sc-conf .cursor {
+  position: absolute;
+  right: 40px;
+  bottom: -12px;
+  width: 15px;
+  height: 19px;
+  fill: var(--fg);
+  stroke: var(--bg);
+  stroke-width: 1.2;
+  animation-name: c-cursor;
+  animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+}
+.lp .dec-done {
+  font: 500 10.5px var(--mono);
+  color: var(--accent-ink);
+  animation-name: c-done;
+}
+@media (max-width: 1100px) {
+  .lp .sc-conf {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 380px;
+  }
+}

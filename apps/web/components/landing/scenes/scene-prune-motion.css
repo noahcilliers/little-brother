@@ -1,0 +1,157 @@
+/* Keyframes for scene 03. Each runs once per --loop, so its percentages are the shared timeline. */
+@keyframes p-e1 {
+  0%,
+  4% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  12%,
+  32% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  40%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.38;
+  }
+}
+@keyframes p-pa {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  14%,
+  32% {
+    opacity: 1;
+  }
+  40%,
+  100% {
+    opacity: 0.38;
+  }
+}
+@keyframes p-e2 {
+  0%,
+  16% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  22%,
+  32% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  40%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.38;
+  }
+}
+@keyframes p-pa1 {
+  0%,
+  22% {
+    opacity: 0;
+  }
+  26%,
+  32% {
+    opacity: 1;
+  }
+  40%,
+  100% {
+    opacity: 0.38;
+  }
+}
+@keyframes p-strike {
+  0%,
+  32% {
+    stroke-dashoffset: 1;
+  }
+  40%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes p-e3 {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  44%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes p-lesson {
+  0%,
+  44% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  50%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes p-e4 {
+  0%,
+  52% {
+    opacity: 0;
+  }
+  58%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes p-cap {
+  0%,
+  54% {
+    opacity: 0;
+  }
+  58%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes p-e5 {
+  0%,
+  56% {
+    stroke-dashoffset: 1;
+  }
+  64%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes p-pb {
+  0%,
+  62% {
+    opacity: 0;
+  }
+  66%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes p-e6 {
+  0%,
+  66% {
+    stroke-dashoffset: 1;
+  }
+  72%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes p-pb1 {
+  0%,
+  72% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  77%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

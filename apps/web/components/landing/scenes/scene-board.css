@@ -1,0 +1,143 @@
+/* Scene 05: the live board in miniature, a playhead sweeping the lanes while catches pop up. */
+.lp .sc-board {
+  --loop: 10s;
+  max-width: 680px;
+}
+.lp .bd {
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.lp .bd-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  font: 400 11.5px var(--mono);
+  white-space: nowrap;
+}
+.lp .bd-h span {
+  color: var(--faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .bd-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.lp .bd-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fg);
+  animation: d-pulse 1.4s ease-in-out infinite;
+}
+.lp .bd-body {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 12px 4px;
+}
+.lp .bd-who {
+  display: grid;
+  gap: 10px;
+}
+.lp .bd-who > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  font: 400 11.5px var(--mono);
+}
+.lp .bd-tracks {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 20% 100%;
+}
+.lp .bd-track {
+  display: flex;
+  gap: 6px;
+  height: 26px;
+  align-items: center;
+  clip-path: inset(0 0 0 0);
+  animation-name: b-reveal;
+  animation-timing-function: linear;
+}
+.lp .bd-track .t {
+  display: block;
+  padding: 4px 7px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--sunk);
+  font: 400 10.5px var(--mono);
+  font-style: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .bd-track .t.on {
+  border-color: var(--fg);
+}
+.lp .bd-track .t.hit {
+  border-style: dashed;
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  animation-name: b-hit;
+}
+.lp .bd-tracks .now {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: 78%;
+  width: 1px;
+  background: var(--fg);
+  animation-name: b-now;
+  animation-timing-function: linear;
+}
+.lp .toasts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  min-height: 46px;
+}
+.lp .toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 500 10.5px var(--mono);
+  box-shadow: var(--shadow);
+}
+.lp .toast i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.lp .toast.ta {
+  animation-name: b-ta;
+}
+.lp .toast.tb {
+  animation-name: b-tb;
+}
+@media (max-width: 680px) {
+  .lp .bd-body {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+  .lp .bd-who .nm,
+  .lp .bd-h .bd-sub {
+    display: none;
+  }
+}

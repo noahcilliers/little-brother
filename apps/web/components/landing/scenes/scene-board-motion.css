@@ -1,0 +1,59 @@
+/* Keyframes for scene 05. Each runs once per --loop, so its percentages are the shared timeline. */
+@keyframes b-reveal {
+  0%,
+  4% {
+    clip-path: inset(0 100% 0 0);
+  }
+  80%,
+  100% {
+    clip-path: inset(0 22% 0 0);
+  }
+}
+@keyframes b-now {
+  0%,
+  4% {
+    left: 0;
+  }
+  80%,
+  100% {
+    left: 78%;
+  }
+}
+@keyframes b-hit {
+  0%,
+  36% {
+    border-style: solid;
+    border-color: var(--line-2);
+    background: var(--sunk);
+  }
+  40%,
+  100% {
+    border-style: dashed;
+    border-color: var(--accent);
+    background: var(--accent-wash);
+  }
+}
+@keyframes b-ta {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  42%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes b-tb {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  66%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

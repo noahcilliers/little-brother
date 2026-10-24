@@ -1,0 +1,90 @@
+/* Keyframes for scene 02. Each runs once per --loop, so its percentages are the shared timeline. */
+@keyframes d-b2 {
+  0%,
+  14% {
+    opacity: 0;
+    transform: scaleX(0.4);
+    border-color: var(--line-2);
+    background: var(--sunk);
+  }
+  22%,
+  30% {
+    opacity: 1;
+    transform: none;
+    border-color: var(--line-2);
+    background: var(--sunk);
+  }
+  36%,
+  100% {
+    border-color: var(--accent);
+    background: var(--accent-wash);
+  }
+}
+@keyframes d-arrow {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  36%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes d-tag {
+  0%,
+  36% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  42%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes d-l1 {
+  0%,
+  24% {
+    opacity: 0;
+  }
+  28%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes d-l2 {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  42%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes d-l3 {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes d-saved {
+  0%,
+  56% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  67%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,100 @@
+/* Scene 03: a failed branch greys out, becomes a lesson, and the next path routes around it. */
+.lp .sc-prune {
+  --loop: 10s;
+}
+.lp .tree {
+  display: block;
+  width: 100%;
+  max-width: 470px;
+  margin: 0 auto;
+  overflow: visible;
+}
+.lp .tree text {
+  font: 500 10.5px var(--mono);
+  fill: var(--fg);
+}
+.lp .tree .cap {
+  font-size: 9.5px;
+  fill: var(--faint);
+  animation-name: p-cap;
+}
+.lp .tree .cap:first-of-type {
+  animation-name: none;
+}
+.lp .nd rect {
+  fill: var(--bg);
+  stroke: var(--line-2);
+}
+.lp .nd {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.lp .nd.pb rect,
+.lp .nd.pb1 rect {
+  stroke: var(--fg);
+}
+.lp .nd.lesson rect {
+  fill: var(--accent-wash);
+  stroke: var(--accent);
+  stroke-dasharray: 3 3;
+}
+.lp .nd.lesson text {
+  fill: var(--accent-ink);
+}
+.lp .edge {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 1;
+}
+.lp .edge.good {
+  stroke: var(--fg);
+}
+.lp .edge.dashed {
+  stroke: var(--accent);
+  stroke-dasharray: 0.07 0.05;
+}
+.lp .strike {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 1.4;
+  stroke-dasharray: 1;
+  animation-name: p-strike;
+}
+.lp .nd.pa {
+  opacity: 0.38;
+  animation-name: p-pa;
+}
+.lp .nd.pa1 {
+  opacity: 0.38;
+  animation-name: p-pa1;
+}
+.lp .edge.e1 {
+  opacity: 0.38;
+  animation-name: p-e1;
+}
+.lp .edge.e2 {
+  opacity: 0.38;
+  animation-name: p-e2;
+}
+.lp .edge.e3 {
+  animation-name: p-e3;
+}
+.lp .nd.lesson {
+  animation-name: p-lesson;
+}
+.lp .edge.e4 {
+  animation-name: p-e4;
+}
+.lp .edge.e5 {
+  animation-name: p-e5;
+}
+.lp .nd.pb {
+  animation-name: p-pb;
+}
+.lp .edge.e6 {
+  animation-name: p-e6;
+}
+.lp .nd.pb1 {
+  animation-name: p-pb1;
+}

@@ -1,0 +1,102 @@
+/* Scene 01: a slash command typed in Claude Code, then the new lane appearing on the board. */
+.lp .sc-join {
+  --loop: 8s;
+  display: grid;
+  gap: 14px;
+  max-width: 360px;
+}
+.lp .sc-join .type {
+  display: inline-block;
+  vertical-align: bottom;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 27ch;
+  animation-name: j-type;
+}
+.lp .sc-join .pr {
+  color: var(--faint);
+}
+.lp .sc-join .caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--fg);
+  animation: lp-blink 1s steps(1) infinite;
+}
+.lp .sc-join .j-out {
+  color: var(--muted);
+  animation-name: j-out;
+}
+.lp .sc-join .j-lane {
+  border-color: var(--line-2);
+  animation-name: j-lane;
+}
+.lp .j-track {
+  flex: 1;
+  min-width: 36px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 3px;
+  background: var(--sunk);
+  overflow: hidden;
+}
+.lp .j-track i {
+  display: block;
+  height: 100%;
+  width: 62%;
+  border-radius: inherit;
+  background: var(--fg);
+  animation-name: j-track;
+}
+@keyframes j-type {
+  0%,
+  8% {
+    width: 0;
+    animation-timing-function: steps(27, end);
+  }
+  42%,
+  100% {
+    width: 27ch;
+  }
+}
+@keyframes j-out {
+  0%,
+  46% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  52%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes j-lane {
+  0%,
+  56% {
+    opacity: 0;
+    transform: translateY(10px);
+    border-color: var(--accent);
+  }
+  64% {
+    opacity: 1;
+    transform: none;
+    border-color: var(--accent);
+  }
+  84%,
+  100% {
+    border-color: var(--line-2);
+  }
+}
+@keyframes j-track {
+  0%,
+  64% {
+    width: 0;
+  }
+  90%,
+  100% {
+    width: 62%;
+  }
+}

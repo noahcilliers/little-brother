@@ -1,0 +1,76 @@
+/* Keyframes for scene 06. Each runs once per --loop, so its percentages are the shared timeline. */
+@keyframes q-scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  12% {
+    transform: translateY(70px);
+  }
+  24% {
+    transform: translateY(0);
+  }
+}
+@keyframes q-s1 {
+  0%,
+  28% {
+    opacity: 1;
+  }
+  32%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes q-s2 {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  34%,
+  58% {
+    opacity: 1;
+  }
+  62%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes q-s3 {
+  0%,
+  60% {
+    opacity: 0;
+  }
+  64%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes q-wait {
+  0%,
+  34% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  40%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes q-adm {
+  0%,
+  53% {
+    background: var(--bg);
+    color: var(--fg);
+    transform: none;
+  }
+  56% {
+    transform: scale(0.9);
+  }
+  59%,
+  100% {
+    background: var(--fg);
+    color: var(--bg);
+    transform: none;
+  }
+}

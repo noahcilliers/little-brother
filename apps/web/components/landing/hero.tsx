@@ -23,8 +23,8 @@ export function Hero({ origin }: { origin: string }) {
             <a className="btn inv" href="/start">
               Get started
             </a>
-            <a className="btn" href="#catches">
-              What it catches
+            <a className="btn" href="#features">
+              See features
             </a>
           </div>
           <p className="meta">Claude Code hooks + MCP · separate machines and accounts · Cal Hacks 13.0</p>

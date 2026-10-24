@@ -1,0 +1,189 @@
+/* Scene 07: classifier rows arrive with their reasons while the host server log streams. */
+.lp .sc-log {
+  --loop: 12s;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  max-width: 1040px;
+}
+.lp .lg-pane {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+.lp .lg-h {
+  display: grid;
+  gap: 8px;
+}
+.lp .lg-cols,
+.lp .lg-row {
+  display: grid;
+  grid-template-columns: 70px 92px minmax(0, 1fr) 40px 54px;
+  gap: 10px;
+  align-items: center;
+  font: 400 11.5px var(--mono);
+}
+.lp .lg-cols {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lp .lg-cols > span:nth-child(n + 4),
+.lp .lg-row > span:nth-child(n + 4) {
+  text-align: right;
+}
+.lp .lg-row {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.lp .lg-row > span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .c-time {
+  color: var(--faint);
+}
+.lp .lg-row.r0 {
+  animation-name: l-r0;
+}
+.lp .lg-row.r1 {
+  animation-name: l-r1;
+}
+.lp .lg-row.r2 {
+  animation-name: l-r2;
+}
+.lp .lg-row.r3 {
+  animation-name: l-r3;
+}
+.lp .lg-row.r4 {
+  animation-name: l-r4;
+}
+.lp .lg-why {
+  padding-top: 8px;
+  font: 400 11px var(--mono);
+  color: var(--accent-ink);
+  animation-name: l-why;
+}
+.lp .lg-server {
+  gap: 8px;
+}
+.lp .lg-stream {
+  height: 196px;
+  overflow: hidden;
+  mask-image: linear-gradient(transparent, black 14%, black 86%, transparent);
+}
+.lp .lg-roll {
+  animation: l-roll 16s linear infinite;
+}
+.lp .lg-roll code {
+  display: block;
+  padding-bottom: 7px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .lg-roll code::before {
+  content: "› ";
+  color: var(--faint);
+}
+@media (max-width: 760px) {
+  .lp .sc-log {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp .lg-cols,
+  .lp .lg-row {
+    grid-template-columns: 84px minmax(0, 1fr) 36px 50px;
+    gap: 8px;
+  }
+  .lp .lg-pane .c-time {
+    display: none;
+  }
+}
+@keyframes l-roll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes l-r0 {
+  0%,
+  4% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  8%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes l-r1 {
+  0%,
+  12% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  16%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes l-r2 {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  24%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes l-r3 {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  32%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes l-r4 {
+  0%,
+  36% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  40%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes l-why {
+  0%,
+  46% {
+    opacity: 0;
+  }
+  52%,
+  100% {
+    opacity: 1;
+  }
+}

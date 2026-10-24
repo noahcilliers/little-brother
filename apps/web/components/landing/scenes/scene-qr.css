@@ -1,0 +1,167 @@
+/* Scene 06: a phone scans the host QR, waits in the waiting room, and is admitted. */
+.lp .sc-qr {
+  --loop: 10s;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  max-width: 360px;
+}
+.lp .qr-host {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+}
+.lp .sc-qr .qr {
+  display: block;
+  color: var(--fg);
+}
+.lp .sc-qr .qr-bg {
+  fill: var(--bg);
+}
+.lp .qr-host > .qr {
+  width: 92px;
+  height: 92px;
+  padding: 4px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.lp .qr-wait {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--bg);
+  font: 400 11px var(--mono);
+  animation-name: q-wait;
+}
+.lp .qr-wait > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+}
+.lp .qr-wait small {
+  font-size: 10px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.lp .adm {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid var(--fg);
+  border-radius: 5px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 500 10.5px var(--mono);
+  animation-name: q-adm;
+}
+.lp .qr-phone {
+  position: relative;
+  width: 116px;
+  height: 206px;
+  padding: 6px;
+  border: 1.5px solid var(--fg);
+  border-radius: 22px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+.lp .ph {
+  position: absolute;
+  inset: 6px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--sunk);
+  text-align: center;
+  font: 400 10px var(--mono);
+}
+.lp .ph b {
+  font: 600 12px var(--sans);
+}
+.lp .ph small {
+  color: var(--faint);
+  font-size: 9.5px;
+}
+.lp .ph.s1 {
+  opacity: 0;
+  animation-name: q-s1;
+}
+.lp .ph.s2 {
+  opacity: 0;
+  animation-name: q-s2;
+}
+.lp .ph.s3 {
+  animation-name: q-s3;
+}
+.lp .vf {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  outline: 1.5px solid var(--fg);
+  outline-offset: 4px;
+}
+.lp .vf .qr {
+  width: 100%;
+  height: 100%;
+}
+.lp .vf .scan {
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation-name: q-scan;
+}
+.lp .ph .dots {
+  display: flex;
+  gap: 4px;
+}
+.lp .ph .dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--fg);
+  animation: d-pulse 1.2s ease-in-out infinite;
+}
+.lp .ph .dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.lp .ph .dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.lp .ok-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-wash);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+.lp .ph-lanes {
+  display: grid;
+  gap: 4px;
+  width: 72px;
+  margin-top: 4px;
+}
+.lp .ph .ph-lanes i {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line-2);
+}
+.lp .ph .ph-lanes i:nth-child(2) {
+  width: 62%;
+}
+.lp .ph .ph-lanes i:nth-child(3) {
+  width: 80%;
+}

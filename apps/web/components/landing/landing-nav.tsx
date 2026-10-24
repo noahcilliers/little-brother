@@ -13,8 +13,10 @@ export function LandingNav({ signedIn, links = true }: Props) {
         {links ? (
           <div className="links">
             <a href="/#demo">demo</a>
-            <a href="/#catches">catches</a>
+            <a href="/#features">features</a>
             <a href="/#how">how it works</a>
+            <a href="/#why">why</a>
+            <a href="/#stack">stack</a>
             <a href="/#connect">connect</a>
           </div>
         ) : (

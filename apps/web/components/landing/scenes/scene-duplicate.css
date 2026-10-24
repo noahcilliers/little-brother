@@ -1,0 +1,115 @@
+/* Scene 02: a second agent starts the same work, gets denied at the edit, and the tokens are saved. */
+.lp .sc-dup {
+  --loop: 9s;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 32px;
+  align-items: center;
+  max-width: 740px;
+}
+.lp .dup-lanes {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding-right: 46px;
+}
+.lp .dbar {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: var(--sunk);
+  font-size: 11px;
+}
+.lp .dbar .live {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--fg);
+  vertical-align: 1px;
+  animation: d-pulse 1.4s ease-in-out infinite;
+}
+.lp .dbar.b2 {
+  transform-origin: left;
+  border-style: dashed;
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  animation-name: d-b2;
+}
+.lp .dup-arrow {
+  position: absolute;
+  right: 0;
+  top: 7px;
+  width: 44px;
+  height: 72px;
+  color: var(--accent);
+  animation-name: d-arrow;
+}
+.lp .dup-arrow path {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lp .dup-arrow .dash {
+  stroke-dasharray: 4 4;
+  animation: d-march 0.8s linear infinite;
+}
+.lp .dup-tag {
+  justify-self: end;
+  font: 500 10.5px var(--mono);
+  color: var(--accent-ink);
+  border: 1px dashed var(--accent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg);
+  animation-name: d-tag;
+}
+.lp .dup-right {
+  position: relative;
+}
+.lp .dup-term .d1 {
+  animation-name: d-l1;
+}
+.lp .dup-term .d2 {
+  animation-name: d-l2;
+}
+.lp .dup-term .d3 {
+  color: var(--muted);
+  padding-left: 14px;
+  animation-name: d-l3;
+}
+.lp .saved-chip {
+  position: absolute;
+  right: -6px;
+  bottom: -14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 500 11px var(--mono);
+  box-shadow: var(--shadow);
+  animation-name: d-saved;
+}
+.lp .saved-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+@media (max-width: 680px) {
+  .lp .sc-dup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
