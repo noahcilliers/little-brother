@@ -7,6 +7,8 @@ export type BarState = "running" | "done" | "abandoned" | "stopped" | "supersede
 export type CatchKind = BoardCatch["kind"];
 // A settled catch fades out over this much compressed time.
 const FADE_MS = 3000;
+// Opacity a settled catch rests at.
+const RESTING = 0.32;
 
 export function isRunning(k: BoardTask, t: number): boolean {
   return k.t1 === null || t < k.t1;
@@ -104,8 +106,8 @@ export function isOpen(c: BoardCatch, t: number): boolean {
 }
 
 /**
- * Catch edges show while open and briefly after; afterwards only when one end is selected or their kind is
- * highlighted from the top bar.
+ * Catch edges are bright while open, fade after they settle, then rest as a faint link so the board keeps
+ * showing what was caught; selecting an end or highlighting the kind brings one back up.
  */
 export function catchOpacity(
   c: BoardCatch,
@@ -120,8 +122,7 @@ export function catchOpacity(
       ? 1
       : Math.max(0, 1 - (layout.axis.toC(t) - layout.axis.toC(c.until)) / FADE_MS);
   const pinned = selected === c.from || selected === c.to || highlight === c.kind;
-  if (fade <= 0 && !pinned) return null;
-  return pinned ? Math.max(fade, 0.8) : fade;
+  return pinned ? Math.max(fade, 0.8) : Math.max(fade, RESTING);
 }
 
 export function lastBefore<T extends { t: number }>(list: T[], t: number): T | undefined {
