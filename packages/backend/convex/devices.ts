@@ -80,7 +80,7 @@ export const redeem = internalMutation({
       .query("deviceTokens")
       .withIndex("by_connect", (q) => q.eq("connectHash", connectHash))
       .unique();
-    if (!device || device.status !== "pending" || device.expiresAt < Date.now()) return null;
+    if (device?.status !== "pending" || device.expiresAt < Date.now()) return null;
     const member = await ctx.db.get(device.memberId);
     if (!member || member.revoked) return null;
     await ctx.db.patch(device._id, {

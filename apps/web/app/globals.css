@@ -821,3 +821,32 @@ a.ctl {
   color: var(--ink);
   text-decoration: none;
 }
+/* A long beat caption shrinks before it can push the account menu onto a second row. */
+.bar .caption {
+  flex: 1 1 0;
+  min-width: 200px;
+  justify-content: flex-end;
+}
+/* Theme toggle and avatar stay together at the right edge, even when the bar wraps. */
+.bar-end {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.caption-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A long beat caption shrinks before it can push the account menu onto a second row. */
+.bar .caption {
+  flex: 1 1 0;
+  min-width: 160px;
+  justify-content: flex-end;
+}
+.caption-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

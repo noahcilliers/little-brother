@@ -25,7 +25,11 @@ function Joined({ me, origin }: { me: NonNullable<Me>; origin: string }) {
       {team.isOwner ? (
         <p className="hint">
           Leaked or stale?{" "}
-          <button type="button" className="link" onClick={() => rotate().catch((e) => setError(errorText(e)))}>
+          <button
+            type="button"
+            className="link"
+            onClick={() => rotate().catch((e) => setError(errorText(e)))}
+          >
             Rotate the link
           </button>
           . Old links stop working; people already on the team stay.

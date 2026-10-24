@@ -20,7 +20,7 @@ function Steps({ origin }: { origin: string }) {
   if (status === undefined || me === undefined) return <p className="start-loading">connecting…</p>;
   const signedIn = me !== null;
   const member = me?.member ?? null;
-  const live = progress !== undefined && progress.sessionStart && progress.prompt && progress.edit;
+  const live = Boolean(progress?.sessionStart && progress.prompt && progress.edit);
   const connected = progress?.sessionStart ?? false;
   return (
     <div className="tiles start-steps">

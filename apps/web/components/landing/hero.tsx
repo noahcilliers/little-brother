@@ -20,6 +20,9 @@ export function Hero({ origin }: { origin: string }) {
           </p>
           <div className="cta">
             <CopyCmd text={installCmd(origin)} />
+            <a className="btn inv" href="/start">
+              Get started
+            </a>
             <a className="btn" href="#catches">
               What it catches
             </a>

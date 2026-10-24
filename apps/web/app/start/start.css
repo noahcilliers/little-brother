@@ -258,3 +258,13 @@
     grid-column: 2;
   }
 }
+.lp .notice a,
+.lp .hint a {
+  color: var(--fg);
+  text-underline-offset: 2px;
+}
+.lp .notice a,
+.lp .hint a {
+  color: var(--fg);
+  text-underline-offset: 2px;
+}

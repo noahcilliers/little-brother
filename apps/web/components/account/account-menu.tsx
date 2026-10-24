@@ -27,13 +27,8 @@ export function AccountMenu() {
     };
   }, [open]);
 
-  if (me === undefined) return null;
-  if (me === null)
-    return (
-      <a className="ctl" href="/start">
-        Sign in
-      </a>
-    );
+  // Signed out only happens in local open mode, where there is nothing to put here.
+  if (!me) return null;
   const handle = me.member?.handle ?? me.user.login ?? me.user.name;
   return (
     <div className="account" ref={ref}>

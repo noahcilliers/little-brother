@@ -2,7 +2,6 @@ import { type HookOutput, IngestEnvelope, TASK_TOOLS } from "@lb/core";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { upsertAgent } from "./agents";
-import { memberByTokenHash } from "./tokenAuth";
 import { onPreCompact, onSessionEnd } from "./hooks/end";
 import { onPostToolUse } from "./hooks/post";
 import { onPreToolUse } from "./hooks/pre";
@@ -11,6 +10,7 @@ import { onSessionStart } from "./hooks/start";
 import { onStop } from "./hooks/stop";
 import { onTaskEvent, onTaskTool } from "./hooks/task";
 import type { HookHandler, HookResult } from "./hooks/types";
+import { memberByTokenHash } from "./tokenAuth";
 
 const HANDLERS: Record<string, HookHandler> = {
   SessionStart: onSessionStart,

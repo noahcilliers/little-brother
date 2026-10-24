@@ -30,7 +30,9 @@ function Resolve({ t }: { t: number }) {
         {approved ? "pushed to joshua" : "edits on auth.mechanism paused"}
       </div>
       <div className="rv-btns">
-        <span className={`a ${pressed ? "pressed" : ""}`}>{approved ? "Approved ✓" : "Approve jwt-bearer"}</span>
+        <span className={`a ${pressed ? "pressed" : ""}`}>
+          {approved ? "Approved ✓" : "Approve jwt-bearer"}
+        </span>
         <span className="b">Keep cookie-session</span>
       </div>
     </div>

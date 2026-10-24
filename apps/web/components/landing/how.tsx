@@ -1,8 +1,28 @@
 const STEPS = [
-  ["01 · observe", "Hooks log the event", "Every prompt, edit and command becomes an event and a node: intent, action or knowledge.", "PreToolUse · Write · users.ts"],
-  ["02 · classify", "Cheapest check first", "Rules in milliseconds, then similarity against past work, then an LLM judge only for close calls.", "rules → similarity → judge"],
-  ["03 · respond", "Steer in the same step", "Deny, warn or stay silent in the hook response. Affected teammates' agents get it pushed into their session.", 'permissionDecision: "deny"'],
-  ["04 · learn", "Every verdict is graded", "Confirmed or dismissed verdicts tune thresholds, examples and rules, so checks get faster and more precise.", "confirmed · false_positive"],
+  [
+    "01 · observe",
+    "Hooks log the event",
+    "Every prompt, edit and command becomes an event and a node: intent, action or knowledge.",
+    "PreToolUse · Write · users.ts",
+  ],
+  [
+    "02 · classify",
+    "Cheapest check first",
+    "Rules in milliseconds, then similarity against past work, then an LLM judge only for close calls.",
+    "rules → similarity → judge",
+  ],
+  [
+    "03 · respond",
+    "Steer in the same step",
+    "Deny, warn or stay silent in the hook response. Affected teammates' agents get it pushed into their session.",
+    'permissionDecision: "deny"',
+  ],
+  [
+    "04 · learn",
+    "Every verdict is graded",
+    "Confirmed or dismissed verdicts tune thresholds, examples and rules, so checks get faster and more precise.",
+    "confirmed · false_positive",
+  ],
 ] as const;
 
 const FACTS = [

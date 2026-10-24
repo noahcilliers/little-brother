@@ -7,4 +7,5 @@ export const oneStepCmd = (origin: string, token: string) =>
 export const MARKETPLACE_CMD = "claude plugin marketplace add noahcilliers/little-brother";
 export const PLUGIN_CMD = "claude plugin install little-brother@little-brother";
 export const TODO_TOOLS_CMD = "export CLAUDE_CODE_ENABLE_TODO_TOOLS=1";
-export const CHANNELS_CMD = "claude --dangerously-load-development-channels plugin:little-brother@little-brother";
+export const CHANNELS_CMD =
+  "claude --dangerously-load-development-channels plugin:little-brother@little-brother";

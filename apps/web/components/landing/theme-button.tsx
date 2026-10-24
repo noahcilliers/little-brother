@@ -8,7 +8,9 @@ export function ThemeButton() {
   useEffect(() => setLabel(document.documentElement.dataset.theme ?? "auto"), []);
   const flip = () => {
     const root = document.documentElement;
-    const dark = (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    const dark =
+      (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) ===
+      "dark";
     const next = dark ? "light" : "dark";
     root.dataset.theme = next;
     try {

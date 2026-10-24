@@ -63,9 +63,9 @@ export function StepConnect({ state, enabled, origin }: Props) {
           <CopyCmd text={TODO_TOOLS_CMD} />
           <CopyCmd text={CHANNELS_CMD} />
           <p className="hint">
-            <code>CLAUDE_CODE_ENABLE_TODO_TOOLS=1</code> turns on the task-list tools, so the dashboard can show
-            each agent's plan. The channels flag lets Little Brother push urgent notices into a running session
-            (research preview); without it, notices still arrive through hook responses.
+            <code>CLAUDE_CODE_ENABLE_TODO_TOOLS=1</code> turns on the task-list tools, so the dashboard can
+            show each agent's plan. The channels flag lets Little Brother push urgent notices into a running
+            session (research preview); without it, notices still arrive through hook responses.
           </p>
         </div>
       </div>

@@ -4,7 +4,10 @@ export const STAGE_W = 1200;
 export const STAGE_H = 660;
 
 /** The last entry whose start time (first element) is at or before t. */
-export function lastBefore<T extends readonly [number, ...unknown[]]>(list: readonly T[], t: number): T | undefined {
+export function lastBefore<T extends readonly [number, ...unknown[]]>(
+  list: readonly T[],
+  t: number,
+): T | undefined {
   let hit: T | undefined;
   for (const item of list) if (item[0] <= t) hit = item;
   return hit;

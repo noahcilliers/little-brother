@@ -31,9 +31,12 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
       const st = s.current;
       if (st.playing) {
         if (st.t < DURATION) set(st.t + dt);
-        else if ((st.hold += dt) > LOOP_HOLD) {
-          st.hold = 0;
-          set(0);
+        else {
+          st.hold += dt;
+          if (st.hold > LOOP_HOLD) {
+            st.hold = 0;
+            set(0);
+          }
         }
       }
       raf = requestAnimationFrame(tick);

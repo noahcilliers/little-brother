@@ -21,7 +21,7 @@ async function freeHandle(ctx: MutationCtx, base: string, userId: Id<"users">): 
       .withIndex("by_handle", (q) => q.eq("handle", handle))
       .first();
     // A row with no user is a legacy invite-code member of the same name: the GitHub account claims it.
-    if (!taken || !taken.userId || taken.userId === userId) return handle;
+    if (!taken?.userId || taken.userId === userId) return handle;
   }
   throw new ConvexError("Could not pick a free handle.");
 }

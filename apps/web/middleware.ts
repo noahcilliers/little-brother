@@ -1,9 +1,9 @@
-import { api } from "@lb/backend/api";
 import {
   convexAuthNextjsMiddleware,
   createRouteMatcher,
   nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
+import { api } from "@lb/backend/api";
 import { fetchQuery } from "convex/nextjs";
 
 // `/` and the installer stay public; `/start` renders its own signed-out step; the dashboard needs sign-in.

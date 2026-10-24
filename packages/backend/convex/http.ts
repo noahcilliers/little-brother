@@ -3,10 +3,10 @@ import { httpRouter } from "convex/server";
 import { z } from "zod";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
-import { bearerToken } from "./tokenAuth";
 import { auth } from "./auth";
 import { sha256Hex } from "./hash";
 import { join } from "./httpJoin";
+import { bearerToken } from "./tokenAuth";
 import { VerifyBody } from "./verify";
 
 const McpBody = z.object({ claudeSessionId: z.string().default(""), args: z.unknown().default({}) });

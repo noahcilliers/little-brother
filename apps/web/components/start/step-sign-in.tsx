@@ -14,9 +14,9 @@ function NotConfigured({ status }: { status: TeamStatus }) {
     <div className="notice">
       <b>Sign-in not configured yet</b>
       <p>
-        This deployment is missing {status.missing.join(", ")}. Create a GitHub OAuth app with the callback URL
-        below, set the variables on the Convex deployment (<code>npx convex env set NAME value</code>), and
-        generate the JWT keys with <code>npx @convex-dev/auth</code>. DEPLOY.md has the steps.
+        This deployment is missing {status.missing.join(", ")}. Create a GitHub OAuth app with the callback
+        URL below, set the variables on the Convex deployment (<code>npx convex env set NAME value</code>),
+        and generate the JWT keys with <code>npx @convex-dev/auth</code>. DEPLOY.md has the steps.
       </p>
       <code className="block">{convexSiteUrl()}/api/auth/callback/github</code>
       {status.openMode ? (
@@ -39,7 +39,9 @@ export function StepSignIn({ state, status, me, invite }: Props) {
           <Avatar src={me.user.image} name={me.user.login ?? me.user.name} size={32} />
           <div>
             <b>{me.user.name}</b>
-            <span>@{me.user.login ?? me.member?.handle ?? "you"} · your GitHub login becomes your handle</span>
+            <span>
+              @{me.user.login ?? me.member?.handle ?? "you"} · your GitHub login becomes your handle
+            </span>
           </div>
           <button type="button" className="link" onClick={() => void signOut()}>
             Sign out

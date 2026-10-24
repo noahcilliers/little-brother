@@ -1,7 +1,13 @@
 import { installCmd, joinCmd, MARKETPLACE_CMD, PLUGIN_CMD } from "./commands";
 import { CopyCmd } from "./copy-cmd";
 
-const SENT = ["Tool names and file paths", "Diff previews, 40 lines max", "Command exit codes", "Prompt, first 500 characters", "Token counts"];
+const SENT = [
+  "Tool names and file paths",
+  "Diff previews, 40 lines max",
+  "Command exit codes",
+  "Prompt, first 500 characters",
+  "Token counts",
+];
 const NEVER = ["File contents", "Session transcripts", "Claude's reasoning", "Credentials and env vars"];
 
 export function Connect({ origin }: { origin: string }) {
@@ -12,7 +18,9 @@ export function Connect({ origin }: { origin: string }) {
           <span className="label">Connect</span>
           <h2>Three commands per teammate</h2>
         </div>
-        <p>Machines connect out to one shared workspace. No shared login, no port forwarding, no peer-to-peer.</p>
+        <p>
+          Machines connect out to one shared workspace. No shared login, no port forwarding, no peer-to-peer.
+        </p>
       </div>
       <div className="tiles two">
         <div className="tile connect">
@@ -25,11 +33,15 @@ export function Connect({ origin }: { origin: string }) {
             <li>
               <CopyCmd text={joinCmd(origin, "<token>")} />
               <small>
-                Join your team's workspace. <a href="/start">Get started</a> gives you a token for this laptop.
+                Join your team's workspace. <a href="/start">Get started</a> gives you a token for this
+                laptop.
               </small>
             </li>
             <li>
-              <CopyCmd text={`${MARKETPLACE_CMD} && ${PLUGIN_CMD}`} />
+              <div className="cmd-stack">
+                <CopyCmd text={MARKETPLACE_CMD} />
+                <CopyCmd text={PLUGIN_CMD} />
+              </div>
               <small>Add the hooks, MCP server and team protocol</small>
             </li>
           </ol>

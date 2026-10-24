@@ -36,7 +36,7 @@
   --faint: #6b6b67;
   color-scheme: dark;
   --shadow: 0 0 0 1px #ffffff08, 0 40px 100px -30px #000000e6;
-    --ok: #3fd583;
+  --ok: #3fd583;
 }
 :root:has(.lp) body {
   background: var(--bg);
@@ -500,7 +500,9 @@
 @media (prefers-reduced-motion: reduce) {
   .lp *,
   .lp *::before {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every animated rule */
     animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above */
     transition: none !important;
   }
 }
@@ -530,4 +532,16 @@
   .lp .nav-signin {
     display: none;
   }
+}
+.lp .cmd-stack {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
+}
+.lp .cmd-stack {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
 }

@@ -3,10 +3,10 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { resolveAgent } from "./agents";
-import { memberByTokenHash } from "./tokenAuth";
 import { teamDigest } from "./digest";
 import { markDeliveredIds } from "./inbox";
 import { answer, ask, type Posted, postDecision, postKnowledge, reportFailure } from "./knowledge";
+import { memberByTokenHash } from "./tokenAuth";
 
 type McpResult = { status: 200 | 400 | 401 | 404; text: string };
 type Tool = keyof typeof McpArgs;

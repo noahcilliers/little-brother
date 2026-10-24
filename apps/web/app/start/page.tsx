@@ -3,7 +3,7 @@ import "@/app/landing.css";
 import "./start.css";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { StartClient } from "@/components/start/start-client";
-import { siteOrigin, signedIn } from "@/lib/server-site";
+import { signedIn, siteOrigin } from "@/lib/server-site";
 
 export const metadata: Metadata = { title: "Get started · Little Brother" };
 

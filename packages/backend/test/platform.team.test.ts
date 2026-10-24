@@ -50,13 +50,17 @@ describe("team and connect tokens", () => {
     expect(body.handle).toBe("ash");
     expect((await post(t, "/join", { token: connect })).status).toBe(401);
 
-    expect((await post(t, "/hook/SessionStart", envelope("SessionStart", "s1"), body.token)).status).toBe(200);
+    expect((await post(t, "/hook/SessionStart", envelope("SessionStart", "s1"), body.token)).status).toBe(
+      200,
+    );
     const progress = await ash.query(api.onboarding.progress, {});
     expect(progress).toMatchObject({ sessionStart: true, prompt: false, edit: false });
     expect((await ash.query(api.devices.list, {}))[0]?.status).toBe("active");
 
     await ash.mutation(api.devices.revoke, { id });
-    expect((await post(t, "/hook/SessionStart", envelope("SessionStart", "s2"), body.token)).status).toBe(401);
+    expect((await post(t, "/hook/SessionStart", envelope("SessionStart", "s2"), body.token)).status).toBe(
+      401,
+    );
   });
 
   test("outside open mode the invite code is refused and the board needs a member", async () => {

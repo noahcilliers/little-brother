@@ -2,8 +2,8 @@
 
 import "./film.css";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { DURATION } from "./film-graph-data";
 import { FilmGraph } from "./film-graph";
+import { DURATION } from "./film-graph-data";
 import { cursorAt, lastBefore, mmss, stageTransform } from "./film-math";
 import { CATCHES, CHAPTERS, SCENES } from "./film-story";
 import { FilmTable } from "./film-table";
@@ -94,7 +94,12 @@ export function Film() {
           />
           <div className="chapters">
             {CHAPTERS.map(([at, name]) => (
-              <button key={name} type="button" aria-current={chapter?.[0] === at} onClick={() => film.seek(at)}>
+              <button
+                key={name}
+                type="button"
+                aria-current={chapter?.[0] === at}
+                onClick={() => film.seek(at)}
+              >
                 {name}
               </button>
             ))}
@@ -104,7 +109,9 @@ export function Film() {
           {mmss(t)} / {mmss(DURATION)}
         </span>
       </div>
-      <p className="disclaim">Illustrative run of the Cal Hacks demo repo · numbers are from the scripted scenario</p>
+      <p className="disclaim">
+        Illustrative run of the Cal Hacks demo repo · numbers are from the scripted scenario
+      </p>
     </div>
   );
 }

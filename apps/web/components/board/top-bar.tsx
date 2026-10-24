@@ -1,10 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { Board } from "@/lib/api";
 import { type CatchKind, isOpen, lastBefore } from "@/lib/board-time";
 import { CATCH_STYLE } from "@/lib/catch-style";
 import { kTokens } from "@/lib/format";
-import type { ReactNode } from "react";
 import { useTheme } from "@/lib/theme";
 import { CATCH_ICON, InlineIcon } from "./icons";
 
@@ -94,12 +94,14 @@ export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecisi
       ) : null}
       <span className="caption">
         <i style={{ background: TONE[beat?.tone ?? "faint"] }} />
-        {beat?.text ?? "Watching"}
+        <span className="caption-text">{beat?.text ?? "Watching"}</span>
       </span>
-      <button type="button" className="ctl" onClick={toggle} aria-label="Cycle theme: auto, light, dark">
-        theme: {choice}
-      </button>
-      {account}
+      <span className="bar-end">
+        <button type="button" className="ctl" onClick={toggle} aria-label="Cycle theme: auto, light, dark">
+          theme: {choice}
+        </button>
+        {account}
+      </span>
     </header>
   );
 }

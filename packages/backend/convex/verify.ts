@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { resolveAgent } from "./agents";
-import { memberByTokenHash } from "./tokenAuth";
 import {
   agentsOnBranch,
   type GitConflict,
@@ -11,6 +10,7 @@ import {
   recentVerdicts,
   verdictsCovering,
 } from "./gitVerify";
+import { memberByTokenHash } from "./tokenAuth";
 
 export const VerifyBody = z.object({
   branches: z.array(z.string()).min(1),
