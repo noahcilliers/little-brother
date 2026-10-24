@@ -3,9 +3,10 @@
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { api, type RoomId } from "@/lib/api";
 import { parseInvite } from "@/lib/invite";
 import { useAction } from "@/lib/use-action";
+import { WaitingForHost } from "./waiting-for-host";
 
 /** Paste whatever a teammate sent (link or bare code) to join their room. */
 export function JoinRoomForm() {
@@ -13,6 +14,7 @@ export function JoinRoomForm() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [bad, setBad] = useState(false);
+  const [waiting, setWaiting] = useState<RoomId | null>(null);
   const { busy, error, run } = useAction();
   return (
     <form
@@ -23,7 +25,8 @@ export function JoinRoomForm() {
         setBad(invite === null);
         if (!invite) return;
         void run(() => join({ invite })).then((r) => {
-          if (r) router.push(`/app/rooms/${r.roomId}`);
+          if (r?.status === "member") router.push(`/app/rooms/${r.roomId}`);
+          else if (r) setWaiting(r.roomId);
         });
       }}
     >
@@ -44,6 +47,7 @@ export function JoinRoomForm() {
       </div>
       {bad ? <p className="form-error">That doesn't look like an invite link or code.</p> : null}
       {error ? <p className="form-error">{error}</p> : null}
+      {waiting ? <WaitingForHost roomId={waiting} /> : null}
     </form>
   );
 }

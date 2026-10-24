@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api, type RoomId } from "@/lib/api";
 import { useAction } from "@/lib/use-action";
+import { WaitingForHost } from "../rooms/waiting-for-host";
 import { Step, type StepState } from "./step";
 
 type Props = { state: StepState; enabled: boolean; invite: string | null; handle: string | null };
@@ -13,6 +14,7 @@ function InviteJoin({ invite, onJoined }: { invite: string; onJoined: (id: RoomI
   const mine = useQuery(api.rooms.mine);
   const join = useMutation(api.rooms.join);
   const { busy, error, run } = useAction();
+  const [waiting, setWaiting] = useState(false);
   if (room === undefined) return <p className="hint">Checking the invite…</p>;
   if (room === null)
     return <p className="error">That invite link is no longer valid. Ask the room owner for a new one.</p>;
@@ -31,11 +33,17 @@ function InviteJoin({ invite, onJoined }: { invite: string; onJoined: (id: RoomI
       <button
         type="button"
         className="btn inv"
-        disabled={busy}
-        onClick={() => void run(() => join({ invite })).then((r) => r && onJoined(r.roomId))}
+        disabled={busy || waiting}
+        onClick={() =>
+          void run(() => join({ invite })).then((r) => {
+            if (r?.status === "member") onJoined(r.roomId);
+            else if (r) setWaiting(true);
+          })
+        }
       >
-        {busy ? "Joining…" : `Join ${room.name}`}
+        {busy ? "Asking…" : `Join ${room.name}`}
       </button>
+      {waiting ? <WaitingForHost roomId={room.id} name={room.name} /> : null}
       {error ? <p className="error">{error}</p> : null}
     </div>
   );

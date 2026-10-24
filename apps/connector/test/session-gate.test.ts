@@ -10,10 +10,12 @@ type Hit = { path: string; body: { code?: string; session?: { lbSession?: string
 
 let server: Server;
 let hits: Hit[];
+let waiting: "no" | "pending" | "admitted";
 
 /** A fake backend: one known session code, hooks answered with no output. */
 async function backend(): Promise<string> {
   hits = [];
+  waiting = "no";
   server = createServer((req, res) => {
     let raw = "";
     req.on("data", (c: Buffer) => {
@@ -22,6 +24,12 @@ async function backend(): Promise<string> {
     req.on("end", () => {
       const body = JSON.parse(raw || "{}") as Hit["body"];
       hits.push({ path: req.url ?? "", body });
+      if (req.url === "/session/attach" && body.code === "wait01") {
+        const status = waiting === "admitted" ? "joined" : "pending";
+        res.writeHead(status === "joined" ? 200 : 202, { "content-type": "application/json" });
+        res.end(JSON.stringify({ status, code: "wait01", name: "waiting room", room: "cal" }));
+        return;
+      }
       if (req.url === "/session/attach") {
         const ok = body.code === "k7f2qx";
         res.writeHead(ok ? 200 : 404, { "content-type": "application/json" });
@@ -82,5 +90,18 @@ describe("opt-in sessions", () => {
     const r = await runHook("UserPromptSubmit", prompt("/little-brother:join nope99"));
     expect(contextOf(r.output)).toMatch(/No open session with code nope99/);
     expect(readAttachment(fx.userPrompt.session_id)).toBeNull();
+  });
+
+  it("a session in the waiting room sends nothing, then joins on the first prompt after the host admits it", async () => {
+    waiting = "pending";
+    const asked = await runHook("UserPromptSubmit", prompt("/little-brother:join wait01"));
+    expect(contextOf(asked.output)).toMatch(/Asked the host of room cal/);
+    await runHook("UserPromptSubmit", prompt("still waiting"));
+    expect(hits.map((h) => h.path)).toEqual(["/session/attach", "/session/attach"]);
+
+    waiting = "admitted";
+    const r = await runHook("UserPromptSubmit", prompt("now build the cart"));
+    expect(contextOf(r.output)).toMatch(/The host admitted you/);
+    expect(hits.at(-1)?.body.session?.lbSession).toBe("wait01");
   });
 });

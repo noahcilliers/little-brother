@@ -44,7 +44,13 @@ describe("rooms, sessions and connect tokens", () => {
     await expect(noah.mutation(api.rooms.join, { invite: "nope" })).rejects.toThrow(/no longer valid/);
     const rotated = await ash.mutation(api.rooms.rotateInvite, { roomId });
     await expect(noah.mutation(api.rooms.join, { invite })).rejects.toThrow(/no longer valid/);
-    await noah.mutation(api.rooms.join, { invite: rotated.inviteCode });
+    expect((await noah.mutation(api.rooms.join, { invite: rotated.inviteCode })).status).toBe("pending");
+    expect(await noah.query(api.rooms.mine, {})).toEqual([]);
+    const [req] = await ash.query(api.roomAdmin.requests, { roomId });
+    expect(req).toMatchObject({ handle: "noah", via: "link" });
+    expect(await noah.query(api.roomAdmin.requests, { roomId })).toEqual([]);
+    await ash.mutation(api.roomAdmin.decide, { requestId: req?.id ?? ("" as never), admit: true });
+    expect(await noah.query(api.roomAdmin.myStatus, { roomId })).toBe("member");
     expect((await noah.query(api.rooms.mine, {})).map((r) => r.name)).toEqual(["cal"]);
     await expect(noah.mutation(api.rooms.rotateInvite, { roomId })).rejects.toThrow(/owner/);
 
@@ -77,7 +83,22 @@ describe("rooms, sessions and connect tokens", () => {
     const noah = await signedIn(t, "noah");
     expect(await noah.query(api.dashboard.board, { sessionId })).toBeNull();
     const noahToken = await connector(t, noah);
-    expect((await post(t, "/session/attach", { code }, noahToken)).status).toBe(404);
+    expect((await post(t, "/session/attach", { code }, noahToken)).status).toBe(202);
+    expect((await post(t, "/session/attach", { code }, noahToken)).status).toBe(202);
+    const [req] = await ash.query(api.roomAdmin.requests, { roomId });
+    expect(req).toMatchObject({ handle: "noah", via: "claude", session: "auth sprint" });
+    await ash.mutation(api.roomAdmin.decide, { requestId: req?.id ?? ("" as never), admit: false });
+    expect((await post(t, "/session/attach", { code }, noahToken)).status).toBe(403);
+
+    const old = envelope("UserPromptSubmit", "n9", { prompt: "/little-brother:join abc123" });
+    old.session.lbSession = undefined;
+    const reply = (await (await post(t, "/hook/UserPromptSubmit", old, noahToken)).json()) as {
+      output: unknown;
+    };
+    expect(JSON.stringify(reply.output)).toMatch(/out of date/);
+    const log = (await ash.query(api.dashboard.serverLog, { sessionId })) ?? [];
+    expect(log.map((r) => r.kind)).toEqual(expect.arrayContaining(["request", "denied", "attached"]));
+    expect(await noah.query(api.dashboard.serverLog, { sessionId })).toBeNull();
 
     await ash.mutation(api.sessions.end, { sessionId });
     const late = envelope("UserPromptSubmit", "s1", { prompt: "more" });

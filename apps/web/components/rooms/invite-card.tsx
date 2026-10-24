@@ -18,7 +18,11 @@ export function InviteCard({ room }: { room: Room }) {
         {room.inviteCode ? (
           <>
             <CopyField text={inviteLink(window.location.origin, room.inviteCode)} label="Copy invite link" />
-            <p className="muted small">Anyone with this link can join after signing in with GitHub.</p>
+            <p className="muted small">
+              {room.admission === "open"
+                ? "Anyone with this link joins after signing in with GitHub."
+                : "People who open this link ask to join; you admit them."}
+            </p>
           </>
         ) : (
           <p className="muted small">Only room members can see the invite link.</p>

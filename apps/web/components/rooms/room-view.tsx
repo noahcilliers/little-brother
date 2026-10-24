@@ -4,11 +4,13 @@ import { useQuery } from "convex/react";
 import { api, asRoomId } from "@/lib/api";
 import { AppHeader } from "../shell/app-header";
 import { PageState } from "../shell/page-state";
+import { AdmissionCard } from "./admission-card";
 import { InviteCard } from "./invite-card";
 import { LeaveRoom } from "./leave-room";
 import { MembersCard } from "./members-card";
 import { NewSessionForm } from "./new-session-form";
 import { SessionRow } from "./session-row";
+import { WaitingRoom } from "./waiting-room";
 
 /** /app/rooms/[roomId]: the room's sessions, with its invite link and members alongside. */
 export function RoomView({ roomId }: { roomId: string }) {
@@ -74,8 +76,10 @@ export function RoomView({ roomId }: { roomId: string }) {
           ) : null}
         </div>
         <aside className="col">
+          <WaitingRoom roomId={room.id} />
           <InviteCard room={room} />
-          <MembersCard members={room.members} />
+          <AdmissionCard room={room} />
+          <MembersCard room={room} />
         </aside>
       </main>
     </>

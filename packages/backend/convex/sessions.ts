@@ -1,7 +1,9 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
-import { requireRoom, viewSession } from "./access";
-import { freeCode, sessionForCode } from "./sessionRows";
+import { openMode, requireRoom, viewerMember, viewSession } from "./access";
+import { requestOrJoin } from "./admission";
+import { logForMember, writeLog } from "./serverLog";
+import { freeCode, sessionByCode } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
 
 export const create = mutation({
@@ -29,7 +31,9 @@ export const get = query({
     const s = sessionId ? await viewSession(ctx, sessionId) : null;
     if (!s) return null;
     const team = await ctx.db.get(s.teamId);
+    const me = await viewerMember(ctx);
     return {
+      isHost: team !== null && me !== null && team.ownerId === me.userId,
       id: s._id,
       name: s.name,
       code: s.code,
@@ -62,15 +66,40 @@ export const reopen = mutation({
   },
 });
 
-/** `/little-brother:join <code>` from a connector: does this member's room have that open session? */
+/**
+ * `/little-brother:join <code>` from a connector. Someone not yet in the room lands in its waiting room;
+ * their connector asks again on the next prompt and gets in once the host admits them.
+ */
 export const attach = internalMutation({
   args: { tokenHash: v.string(), code: v.string() },
   handler: async (ctx, { tokenHash, code }) => {
     const member = await memberByTokenHash(ctx, tokenHash);
     if (!member) throw new ConvexError("unauthorized");
-    const s = await sessionForCode(ctx, member, code);
-    if (!s) return null;
-    const team = await ctx.db.get(s.teamId);
-    return { code: s.code, name: s.name, room: team?.name ?? "room" };
+    const s = await sessionByCode(ctx, member, code);
+    const team = s ? await ctx.db.get(s.teamId) : null;
+    if (!s || !team || s.endedAt) {
+      await logForMember(ctx, member._id, {
+        level: "warn",
+        kind: "join-failed",
+        text: `@${member.handle} tried code ${code}: ${s?.endedAt ? "that session has ended" : "no such session"}`,
+      });
+      return null;
+    }
+    const status = openMode() ? "member" : await requestOrJoin(ctx, team, member, "claude", s._id);
+    if (status === "member")
+      await writeLog(ctx, {
+        teamId: team._id,
+        sessionId: s._id,
+        memberId: member._id,
+        level: "info",
+        kind: "attached",
+        text: `@${member.handle} joined "${s.name}" from Claude Code`,
+      });
+    return {
+      status: status === "member" ? ("joined" as const) : status,
+      code: s.code,
+      name: s.name,
+      room: team.name,
+    };
   },
 });

@@ -1,18 +1,13 @@
 import { ConvexError, v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { type MutationCtx, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { membership, requireMember, requireRoom, viewerMember, viewRoom } from "./access";
+import { addMember, requestOrJoin } from "./admission";
 import { randomToken } from "./hash";
 import { roomSessions } from "./sessionRows";
 
 const newInvite = () => randomToken(12);
 const MAX_ROOMS = 50;
 const MAX_MEMBERS = 100;
-
-async function addMember(ctx: MutationCtx, teamId: Id<"teams">, memberId: Id<"members">): Promise<void> {
-  if (await membership(ctx, teamId, memberId)) return;
-  await ctx.db.insert("roomMembers", { teamId, memberId, joinedAt: Date.now() });
-}
 
 /** The rooms the signed-in member belongs to, newest first. */
 export const mine = query({
@@ -62,12 +57,20 @@ export const get = query({
     const members = [];
     for (const r of rows) {
       const m = await ctx.db.get(r.memberId);
-      if (m) members.push({ id: m._id, handle: m.handle, name: m.name, avatarUrl: m.avatarUrl ?? null });
+      if (m)
+        members.push({
+          id: m._id,
+          handle: m.handle,
+          name: m.name,
+          avatarUrl: m.avatarUrl ?? null,
+          isHost: m.userId === room.team.ownerId,
+        });
     }
     return {
       id: room.team._id,
       name: room.team.name,
       isOwner: room.member !== null && room.team.ownerId === room.member.userId,
+      admission: room.team.admission ?? "approval",
       inviteCode: room.member ? room.team.inviteCode : null,
       members,
       sessions: await roomSessions(ctx, roomId),
@@ -113,8 +116,8 @@ export const join = mutation({
       .first();
     if (!team)
       throw new ConvexError("That invite link is no longer valid. Ask the room owner for a new one.");
-    await addMember(ctx, team._id, member._id);
-    return { roomId: team._id };
+    const status = await requestOrJoin(ctx, team, member, "link");
+    return { roomId: team._id, status };
   },
 });
 

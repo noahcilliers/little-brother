@@ -58,7 +58,7 @@ const mcp = httpAction(async (ctx, req) => {
 
 const AttachBody = z.object({ code: z.string().min(4).max(40) });
 
-/** `/little-brother:join <code>`: 200 with the session's name, 404 when the code is unknown, ended or not yours. */
+/** `/little-brother:join <code>`: 200 joined, 202 waiting for the host, 403 denied, 404 unknown or ended. */
 const attach = httpAction(async (ctx, req) => {
   const tokenHash = await tokenHashOf(req);
   if (!tokenHash) return json(401, { error: "missing token" });
@@ -66,7 +66,8 @@ const attach = httpAction(async (ctx, req) => {
   if (!body.success) return json(400, { error: body.error.message });
   try {
     const s = await ctx.runMutation(internal.sessions.attach, { tokenHash, code: body.data.code });
-    return s ? json(200, s) : json(404, { error: "no open session with that code in your rooms" });
+    if (!s) return json(404, { error: "no open session with that code" });
+    return json(s.status === "joined" ? 200 : s.status === "pending" ? 202 : 403, s);
   } catch {
     return json(401, { error: "unauthorized" });
   }

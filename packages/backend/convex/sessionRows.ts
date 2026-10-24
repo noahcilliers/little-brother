@@ -61,26 +61,17 @@ export async function roomSessions(ctx: QueryCtx, teamId: Id<"teams">) {
   return out;
 }
 
-/**
- * The open session a connector's code names, if this member's room has it. In local open mode an unknown
- * code creates the session, so e2e runs need no website.
- */
-export async function sessionForCode(
+/** The session a code names, open or ended. In local open mode an unknown code creates it, so e2e runs need no website. */
+export async function sessionByCode(
   ctx: MutationCtx,
   member: Doc<"members">,
-  code: string | undefined,
+  code: string,
 ): Promise<Doc<"sessions"> | null> {
-  if (!code) return null;
   const found = await ctx.db
     .query("sessions")
     .withIndex("by_code", (q) => q.eq("code", code.toLowerCase()))
     .first();
-  if (found) {
-    if (found.endedAt) return null;
-    if (openMode() || (await membership(ctx, found.teamId, member._id))) return found;
-    return null;
-  }
-  if (!openMode()) return null;
+  if (found || !openMode()) return found;
   const team =
     (await ctx.db.query("teams").first()) ??
     (await ctx.db.get(
@@ -95,4 +86,16 @@ export async function sessionForCode(
     createdAt: Date.now(),
   });
   return ctx.db.get(id);
+}
+
+/** The open session a connector's code names, if this member is in its room. Hooks use this on every event. */
+export async function sessionForCode(
+  ctx: MutationCtx,
+  member: Doc<"members">,
+  code: string | undefined,
+): Promise<Doc<"sessions"> | null> {
+  if (!code) return null;
+  const s = await sessionByCode(ctx, member, code);
+  if (!s || s.endedAt) return null;
+  return openMode() || (await membership(ctx, s.teamId, member._id)) ? s : null;
 }

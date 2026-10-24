@@ -116,16 +116,22 @@ export const classifyNode = internalAction({
       }),
     );
     const judgeFailed = results.some((r) => !r.ok);
-    console.log(
-      `classify ${view.text} #${attempt}: ${structural.pairs.length} candidates, judged [${toJudge
-        .map(
-          (t, i) =>
-            `${t.pair.other.text.slice(0, 40)} → ${results[i]?.ok ? results[i]?.j.relation : "FAILED"}`,
-        )
-        .join(
-          "; ",
-        )}]${unsettled.length > toJudge.length ? `, skipped ${unsettled.length - toJudge.length}` : ""}`,
-    );
+    const summary = `${view.text} #${attempt}: ${structural.pairs.length} candidates, ${structural.judgments.length} settled by rules, judged [${toJudge
+      .map(
+        (t, i) => `${t.pair.other.text.slice(0, 40)} → ${results[i]?.ok ? results[i]?.j.relation : "FAILED"}`,
+      )
+      .join(
+        "; ",
+      )}]${unsettled.length > toJudge.length ? `, skipped ${unsettled.length - toJudge.length}` : ""}${
+      judge ? "" : " (no judge configured)"
+    }`;
+    console.log(`classify ${summary}`);
+    await ctx.runMutation(internal.serverLog.recordForNode, {
+      nodeId,
+      level: judgeFailed ? "warn" : "info",
+      kind: judgeFailed ? "judge-failed" : "classify",
+      text: summary,
+    });
     const judged: Judgment[] = results.map((r) => r.j);
     await ctx.runMutation(internal.classify.db.persist, {
       nodeId,

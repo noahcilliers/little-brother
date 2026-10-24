@@ -10,6 +10,7 @@ import { onSessionStart } from "./hooks/start";
 import { onStop } from "./hooks/stop";
 import { onTaskEvent, onTaskTool } from "./hooks/task";
 import type { HookHandler, HookResult } from "./hooks/types";
+import { unscoped } from "./outdated";
 import { sessionForCode } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
 
@@ -49,7 +50,7 @@ export const ingest = internalMutation({
     if (seen) return { status: 200, output: (seen.payload?.output ?? null) as HookOutput };
     // Only Claude sessions that joined an open session are recorded; anything else is dropped unseen.
     const scope = await sessionForCode(ctx, member, env.session.lbSession);
-    if (!scope) return { status: 200, output: null };
+    if (!scope) return { status: 200, output: await unscoped(ctx, member, args.hook, env) };
 
     const now = Date.now();
     const agent = await upsertAgent(ctx, member._id, env.session, scope, now, env.baseRev);

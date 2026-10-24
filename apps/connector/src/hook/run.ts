@@ -10,7 +10,7 @@ import { buildEnvelope } from "./envelope";
 import { type RepoInfo, repoInfo } from "./git";
 import { baseRev, gitOpFor } from "./git-state";
 import { appendOutbox, flushOutbox, type OutboxEntry } from "./outbox";
-import { handleSessionCommand } from "./session-command";
+import { handleSessionCommand, retryPending } from "./session-command";
 import { writeSessionId } from "./session-file";
 import { transcriptTokens, transcriptToolUsage } from "./transcript";
 
@@ -88,6 +88,12 @@ async function deliver(entry: OutboxEntry, timeoutMs: number): Promise<unknown> 
   return postJson(url, entry.envelope, { token: profile.token, timeoutMs });
 }
 
+/** Prepends a line to a prompt hook's additionalContext, creating the output when there was none. */
+function withNote(output: unknown, note: string): unknown {
+  const text = [note, additional(output)].filter(Boolean).join("\n\n");
+  return { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: text } };
+}
+
 const additional = (output: unknown): string => {
   const out = output as { hookSpecificOutput?: { additionalContext?: unknown } } | null;
   const text = out?.hookSpecificOutput?.additionalContext;
@@ -128,7 +134,11 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
     }
     const command = await joinOrLeave(input, opts);
     if (command) return command;
-    const code = sessionCodeFor(input.session_id, opts.session);
+    // A session in the host's waiting room asks again on each prompt and joins once admitted.
+    const admitted = sessionCodeFor(input.session_id, opts.session)
+      ? null
+      : await retryPending(input, opts.as);
+    const code = admitted?.code ?? sessionCodeFor(input.session_id, opts.session);
     if (!code)
       return { output: null, delivered: false, error: "this Claude session has not joined a session" };
     const repo = repoInfo(input.cwd);
@@ -161,7 +171,8 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
         },
       );
     await flushOutbox(resend).catch(() => 0);
-    return { output: body.output ?? null, envelope, delivered: true };
+    const output = admitted ? withNote(body.output ?? null, admitted.note) : (body.output ?? null);
+    return { output, envelope, delivered: true };
   } catch (e) {
     return { output: null, envelope, delivered: false, error: e instanceof Error ? e.message : String(e) };
   }

@@ -687,3 +687,119 @@ p.small {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Server log (host) */
+.srv {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font: 400 12px / 1.55 var(--mono);
+  overflow: hidden;
+}
+.srv-row {
+  display: grid;
+  grid-template-columns: 74px 150px 120px minmax(0, 1fr);
+  gap: 12px;
+  padding: 4px 12px;
+  border-left: 2px solid transparent;
+}
+.srv-row + .srv-row {
+  border-top: 1px solid var(--line);
+}
+.srv-row.l-warn {
+  border-left-color: var(--warn);
+}
+.srv-row.l-error {
+  border-left-color: var(--hot);
+}
+.srv-time,
+.srv-kind {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.srv-kind,
+.srv-who {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.l-warn .srv-kind {
+  color: var(--warn);
+}
+.l-error .srv-kind {
+  color: var(--hot);
+}
+.srv-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .srv-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .srv-kind,
+  .srv-who {
+    display: none;
+  }
+}
+
+/* Waiting room */
+.waiting {
+  border-color: var(--ink);
+}
+.waiting.floating {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  width: min(380px, calc(100vw - 32px));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.wait-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wait-row .row-main {
+  flex: 1;
+  min-width: 0;
+}
+.choice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 13px;
+}
+.choice span {
+  display: grid;
+  gap: 2px;
+}
+.waiting-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}

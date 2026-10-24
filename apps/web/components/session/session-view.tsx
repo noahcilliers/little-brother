@@ -4,12 +4,14 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api, asSessionId } from "@/lib/api";
 import { Board } from "../board/board";
+import { WaitingRoom } from "../rooms/waiting-room";
 import { AppHeader } from "../shell/app-header";
 import { CodeChip } from "../shell/code-chip";
 import { PageState } from "../shell/page-state";
 import { ClassifierLog } from "./classifier-log";
 import { ConnectPanel } from "./connect-panel";
 import { JoinPopover } from "./join-popover";
+import { ServerLog } from "./server-log";
 import { SessionActions } from "./session-actions";
 import { type SessionTab, ViewSwitch } from "./view-switch";
 
@@ -48,14 +50,17 @@ export function SessionView({ sessionId }: { sessionId: string }) {
       >
         {session.endedAt !== null ? <span className="row-tag">ended</span> : null}
         <CodeChip code={session.code} />
-        {empty ? null : <ViewSwitch tab={tab} onChange={setTab} />}
+        {empty ? null : <ViewSwitch tab={tab} onChange={setTab} host={session.isHost} />}
         {empty ? null : <JoinPopover code={session.code} />}
         <SessionActions session={session} />
       </AppHeader>
+      <WaitingRoom roomId={session.room.id} floating />
       {empty ? (
         <ConnectPanel session={session} />
       ) : tab === "log" ? (
         <ClassifierLog sessionId={id} />
+      ) : tab === "server" ? (
+        <ServerLog sessionId={id} />
       ) : (
         <Board sessionId={id} />
       )}

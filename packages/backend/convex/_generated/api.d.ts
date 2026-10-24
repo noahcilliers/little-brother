@@ -10,6 +10,7 @@
 
 import type * as access from "../access.js";
 import type * as admin from "../admin.js";
+import type * as admission from "../admission.js";
 import type * as agents from "../agents.js";
 import type * as auth from "../auth.js";
 import type * as classify_adapters_claude from "../classify/adapters/claude.js";
@@ -36,6 +37,7 @@ import type * as dashboardQueries_labels from "../dashboardQueries/labels.js";
 import type * as dashboardQueries_lanes from "../dashboardQueries/lanes.js";
 import type * as dashboardQueries_log from "../dashboardQueries/log.js";
 import type * as dashboardQueries_routine from "../dashboardQueries/routine.js";
+import type * as dashboardQueries_serverRows from "../dashboardQueries/serverRows.js";
 import type * as dashboardQueries_sessions from "../dashboardQueries/sessions.js";
 import type * as dashboardQueries_shared from "../dashboardQueries/shared.js";
 import type * as dashboardQueries_source from "../dashboardQueries/source.js";
@@ -71,11 +73,14 @@ import type * as members from "../members.js";
 import type * as migrateRooms from "../migrateRooms.js";
 import type * as nodes from "../nodes.js";
 import type * as onboarding from "../onboarding.js";
+import type * as outdated from "../outdated.js";
 import type * as resolve from "../resolve.js";
+import type * as roomAdmin from "../roomAdmin.js";
 import type * as rooms from "../rooms.js";
 import type * as savings from "../savings.js";
 import type * as schemaTeam from "../schemaTeam.js";
 import type * as seed from "../seed.js";
+import type * as serverLog from "../serverLog.js";
 import type * as sessionRows from "../sessionRows.js";
 import type * as sessions from "../sessions.js";
 import type * as taskAttribution from "../taskAttribution.js";
@@ -95,6 +100,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   access: typeof access;
   admin: typeof admin;
+  admission: typeof admission;
   agents: typeof agents;
   auth: typeof auth;
   "classify/adapters/claude": typeof classify_adapters_claude;
@@ -121,6 +127,7 @@ declare const fullApi: ApiFromModules<{
   "dashboardQueries/lanes": typeof dashboardQueries_lanes;
   "dashboardQueries/log": typeof dashboardQueries_log;
   "dashboardQueries/routine": typeof dashboardQueries_routine;
+  "dashboardQueries/serverRows": typeof dashboardQueries_serverRows;
   "dashboardQueries/sessions": typeof dashboardQueries_sessions;
   "dashboardQueries/shared": typeof dashboardQueries_shared;
   "dashboardQueries/source": typeof dashboardQueries_source;
@@ -156,11 +163,14 @@ declare const fullApi: ApiFromModules<{
   migrateRooms: typeof migrateRooms;
   nodes: typeof nodes;
   onboarding: typeof onboarding;
+  outdated: typeof outdated;
   resolve: typeof resolve;
+  roomAdmin: typeof roomAdmin;
   rooms: typeof rooms;
   savings: typeof savings;
   schemaTeam: typeof schemaTeam;
   seed: typeof seed;
+  serverLog: typeof serverLog;
   sessionRows: typeof sessionRows;
   sessions: typeof sessions;
   taskAttribution: typeof taskAttribution;

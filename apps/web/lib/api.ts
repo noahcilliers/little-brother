@@ -36,3 +36,5 @@ export const asRoomId = (id: string) => id as RoomId;
 export const asSessionId = (id: string) => id as SessionId;
 export type LogStep = NonNullable<FunctionReturnType<typeof api.dashboard.log>>[number];
 export type LogVerdict = LogStep["verdicts"][number];
+export type JoinRequest = FunctionReturnType<typeof api.roomAdmin.requests>[number];
+export type ServerRow = NonNullable<FunctionReturnType<typeof api.dashboard.serverLog>>[number];

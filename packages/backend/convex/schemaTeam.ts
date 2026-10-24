@@ -43,7 +43,23 @@ export const teamTables = {
     ownerId: v.optional(v.id("users")),
     inviteCode: v.string(),
     createdAt: v.number(),
+    // "approval" (the default when absent): an invite link or a join code only asks; the owner admits.
+    admission: v.optional(v.union(v.literal("approval"), v.literal("open"))),
   }).index("by_invite", ["inviteCode"]),
+
+  // The waiting room: someone opened the invite link, or ran /little-brother:join from Claude Code,
+  // without being in the room yet. The owner admits or denies; admitted requests become roomMembers.
+  joinRequests: defineTable({
+    teamId: v.id("teams"),
+    memberId: v.id("members"),
+    via: v.union(v.literal("link"), v.literal("claude")),
+    sessionId: v.optional(v.id("sessions")),
+    status: v.union(v.literal("pending"), v.literal("admitted"), v.literal("denied")),
+    createdAt: v.number(),
+    decidedAt: v.optional(v.number()),
+  })
+    .index("by_team_status", ["teamId", "status", "createdAt"])
+    .index("by_member_team", ["memberId", "teamId"]),
 
   roomMembers: defineTable({
     teamId: v.id("teams"),
@@ -65,6 +81,21 @@ export const teamTables = {
   })
     .index("by_team", ["teamId", "createdAt"])
     .index("by_code", ["code"]),
+
+  // What the server did for a room, for its host: join attempts, admissions, dropped events, classifier
+  // runs and failures. Hook arrivals themselves are read from `events`, not duplicated here.
+  serverLog: defineTable({
+    teamId: v.id("teams"),
+    sessionId: v.optional(v.id("sessions")),
+    memberId: v.optional(v.id("members")),
+    level: v.union(v.literal("info"), v.literal("warn"), v.literal("error")),
+    kind: v.string(),
+    text: v.string(),
+    at: v.number(),
+  })
+    .index("by_team", ["teamId", "at"])
+    .index("by_session", ["sessionId", "at"])
+    .index("by_member", ["memberId", "at"]),
 
   // One row per laptop. The connect token is single-use and exchanged at /join for the connector token.
   deviceTokens: defineTable({

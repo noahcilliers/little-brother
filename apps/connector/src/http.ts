@@ -1,7 +1,7 @@
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    body: string,
+    readonly body: string,
   ) {
     super(`HTTP ${status}: ${body.slice(0, 200)}`);
   }

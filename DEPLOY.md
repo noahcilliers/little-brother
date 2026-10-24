@@ -141,7 +141,9 @@ Requirements: macOS or Linux, Node 20 or newer, git, and Claude Code.
 
 5. **Join a session.** On the site, create a room (or open a teammate's invite link) and create a session in it. In each Claude Code session that should take part, run `/little-brother:join <session code>`. Claude sessions that haven't joined are never recorded; `/little-brother:leave` stops sharing. From a terminal, `LB_SESSION=<code> claude …` joins at launch.
 
-To update later, re-run the `curl … | sh` line for the connector, then run `claude plugin marketplace update little-brother`.
+By default a room has a waiting room: opening its invite link, or running `/little-brother:join` before you're in the room, asks the host, who admits or denies you from the room or session page. A Claude session that asked joins by itself on its next prompt after being admitted. The host can switch the room to "anyone with the link" and remove members.
+
+To update later, run `lb update` (or re-run the `curl … | sh` line; connectors from before sessions need the `curl` line once) for the connector, then run `claude plugin marketplace update little-brother`.
 
 To uninstall, run `claude plugin uninstall little-brother@little-brother`, then `rm -r ~/.little-brother ~/.local/bin/lb`.
 
