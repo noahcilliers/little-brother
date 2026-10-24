@@ -35,13 +35,36 @@ export const teamTables = {
   ...authTables,
   users,
 
-  // One team per deployment: the first signed-in user creates it and owns the invite code.
+  // Rooms (shown as "rooms", stored as teams): who may see each other's sessions. Anyone signed in can
+  // create one; others join through its invite link.
   teams: defineTable({
     name: v.string(),
-    ownerId: v.id("users"),
+    // Absent only for the room a local open-mode deployment creates for e2e runs, which nobody signs in to.
+    ownerId: v.optional(v.id("users")),
     inviteCode: v.string(),
     createdAt: v.number(),
   }).index("by_invite", ["inviteCode"]),
+
+  roomMembers: defineTable({
+    teamId: v.id("teams"),
+    memberId: v.id("members"),
+    joinedAt: v.number(),
+  })
+    .index("by_team", ["teamId", "joinedAt"])
+    .index("by_member", ["memberId", "teamId"]),
+
+  // A coordination session inside a room. Claude Code sessions opt in with its code; only sessions
+  // that joined are recorded, and the classifier compares work within one session.
+  sessions: defineTable({
+    teamId: v.id("teams"),
+    name: v.string(),
+    code: v.string(),
+    createdBy: v.id("members"),
+    createdAt: v.number(),
+    endedAt: v.optional(v.number()),
+  })
+    .index("by_team", ["teamId", "createdAt"])
+    .index("by_code", ["code"]),
 
   // One row per laptop. The connect token is single-use and exchanged at /join for the connector token.
   deviceTokens: defineTable({

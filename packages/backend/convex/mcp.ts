@@ -6,6 +6,7 @@ import { resolveAgent } from "./agents";
 import { teamDigest } from "./digest";
 import { markDeliveredIds } from "./inbox";
 import { answer, ask, type Posted, postDecision, postKnowledge, reportFailure } from "./knowledge";
+import { sessionAgents } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
 
 type McpResult = { status: 200 | 400 | 401 | 404; text: string };
@@ -85,12 +86,10 @@ async function run(ctx: MutationCtx, member: Doc<"members">, agent: Doc<"agents"
  */
 async function branches(ctx: MutationCtx, agent: Doc<"agents">): Promise<McpResult> {
   const out: { handle: string; branch: string }[] = [];
-  const active = await ctx.db
-    .query("agents")
-    .withIndex("by_status", (q) => q.eq("status", "active"))
-    .collect();
-  for (const a of active) {
-    if (a._id === agent._id || a.repo !== agent.repo || !a.branch || a.branch === agent.branch) continue;
+  const mates = agent.sessionId ? await sessionAgents(ctx, agent.sessionId) : [];
+  for (const a of mates) {
+    if (a.status !== "active" || a._id === agent._id || a.repo !== agent.repo) continue;
+    if (!a.branch || a.branch === agent.branch) continue;
     const member = await ctx.db.get(a.memberId);
     if (member && !out.some((o) => o.branch === a.branch))
       out.push({ handle: member.handle, branch: a.branch });

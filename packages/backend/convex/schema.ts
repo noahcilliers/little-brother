@@ -30,6 +30,8 @@ export default defineSchema({
   agents: defineTable({
     memberId: v.id("members"),
     claudeSessionId: v.string(),
+    teamId: v.optional(v.id("teams")),
+    sessionId: v.optional(v.id("sessions")),
     machine: v.string(),
     repo: v.string(),
     branch: v.string(),
@@ -49,7 +51,8 @@ export default defineSchema({
   })
     .index("by_session", ["claudeSessionId"])
     .index("by_status", ["status"])
-    .index("by_member", ["memberId", "lastSeenAt"]),
+    .index("by_member", ["memberId", "lastSeenAt"])
+    .index("by_lb_session", ["sessionId", "lastSeenAt"]),
 
   events: defineTable({
     agentId: v.id("agents"),

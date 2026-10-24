@@ -56,6 +56,22 @@ const mcp = httpAction(async (ctx, req) => {
   return json(res.status, { text: res.text });
 });
 
+const AttachBody = z.object({ code: z.string().min(4).max(40) });
+
+/** `/little-brother:join <code>`: 200 with the session's name, 404 when the code is unknown, ended or not yours. */
+const attach = httpAction(async (ctx, req) => {
+  const tokenHash = await tokenHashOf(req);
+  if (!tokenHash) return json(401, { error: "missing token" });
+  const body = AttachBody.safeParse(await readJson(req));
+  if (!body.success) return json(400, { error: body.error.message });
+  try {
+    const s = await ctx.runMutation(internal.sessions.attach, { tokenHash, code: body.data.code });
+    return s ? json(200, s) : json(404, { error: "no open session with that code in your rooms" });
+  } catch {
+    return json(401, { error: "unauthorized" });
+  }
+});
+
 const verify = httpAction(async (ctx, req) => {
   const tokenHash = await tokenHashOf(req);
   if (!tokenHash) return json(401, { text: "missing token" });
@@ -70,6 +86,7 @@ auth.addHttpRoutes(http);
 http.route({ path: "/join", method: "POST", handler: join });
 http.route({ pathPrefix: "/hook/", method: "POST", handler: hook });
 http.route({ pathPrefix: "/mcp/", method: "POST", handler: mcp });
+http.route({ path: "/session/attach", method: "POST", handler: attach });
 http.route({ path: "/verify", method: "POST", handler: verify });
 http.route({ path: "/health", method: "GET", handler: httpAction(async () => new Response("ok")) });
 

@@ -55,7 +55,10 @@ export async function agentStatus(
   return out;
 }
 
-/** Turn loaded nodes into candidates: failure memory from anyone, active work only from other live agents. */
+/**
+ * Turn loaded nodes into candidates: failure memory from anyone in the same room, active work only from other
+ * live agents in the same session. Retrieval reads across rooms, so the scope is enforced here.
+ */
 export async function toCandidates(
   ctx: QueryCtx,
   next: Doc<"nodes">,
@@ -64,10 +67,8 @@ export async function toCandidates(
   similarity: Map<string, number> = new Map(),
   priority: PriorityLoader = priorityLoader(ctx),
 ): Promise<Candidate[]> {
-  const agents = await agentStatus(
-    ctx,
-    nodes.map((n) => n.agentId),
-  );
+  const agents = await agentStatus(ctx, [next.agentId, ...nodes.map((n) => n.agentId)]);
+  const mine = agents.get(next.agentId);
   const out: Candidate[] = [];
   const seen = new Set<string>();
   for (const n of nodes) {
@@ -75,12 +76,13 @@ export async function toCandidates(
     seen.add(n._id);
     const sim = similarity.get(n._id);
     const base = { node: toClassifiedNode(stored(n)), ...(sim !== undefined ? { similarity: sim } : {}) };
+    const agent = agents.get(n.agentId);
+    if (!agent || agent.teamId !== mine?.teamId) continue;
     if (isFailureMemory(n)) {
       out.push({ ...base, failedMemory: true });
       continue;
     }
-    const agent = agents.get(n.agentId);
-    if (n.agentId === next.agentId || !agent || agent.status === "offline") continue;
+    if (n.agentId === next.agentId || agent.status === "offline" || agent.sessionId !== mine?.sessionId) continue;
     if (n.kind === "knowledge" || !isActive(n, now)) continue;
     out.push({ ...base, node: { ...base.node, priority: await priority.of(n) }, failedMemory: false });
   }

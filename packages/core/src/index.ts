@@ -5,6 +5,7 @@ export * from "./ingest";
 export * from "./labels";
 export * from "./mcp";
 export * from "./nodes";
+export * from "./prompt-text";
 export * from "./tasks";
 export * from "./topics";
 export * from "./usage";

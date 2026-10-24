@@ -10,11 +10,14 @@ export async function upsertAgent(
   ctx: MutationCtx,
   memberId: Id<"members">,
   session: IngestEnvelope["session"],
+  scope: Doc<"sessions">,
   now: number,
   baseRev?: string,
 ): Promise<Doc<"agents">> {
   const existing = await agentBySession(ctx, session.claudeSessionId);
   const fields = {
+    teamId: scope.teamId,
+    sessionId: scope._id,
     machine: session.machine,
     repo: session.repo,
     branch: session.branch,

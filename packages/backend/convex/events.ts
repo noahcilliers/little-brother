@@ -10,6 +10,7 @@ import { onSessionStart } from "./hooks/start";
 import { onStop } from "./hooks/stop";
 import { onTaskEvent, onTaskTool } from "./hooks/task";
 import type { HookHandler, HookResult } from "./hooks/types";
+import { sessionForCode } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
 
 const HANDLERS: Record<string, HookHandler> = {
@@ -46,9 +47,12 @@ export const ingest = internalMutation({
       .withIndex("by_key", (q) => q.eq("eventKey", env.eventKey))
       .first();
     if (seen) return { status: 200, output: (seen.payload?.output ?? null) as HookOutput };
+    // Only Claude sessions that joined an open session are recorded; anything else is dropped unseen.
+    const scope = await sessionForCode(ctx, member, env.session.lbSession);
+    if (!scope) return { status: 200, output: null };
 
     const now = Date.now();
-    const agent = await upsertAgent(ctx, member._id, env.session, now, env.baseRev);
+    const agent = await upsertAgent(ctx, member._id, env.session, scope, now, env.baseRev);
     const eventId = await ctx.db.insert("events", {
       agentId: agent._id,
       eventKey: env.eventKey,

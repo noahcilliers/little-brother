@@ -56,6 +56,7 @@ export const IngestEnvelope = z.object({
     branch: z.string(),
     machine: z.string(),
     cwd: z.string(),
+    lbSession: z.string().max(40).optional(), // the Little Brother session code this Claude session joined
   }),
   tool: z.string().optional(),
   toolUseId: z.string().optional(), // pairs PreToolUse with its PostToolUse

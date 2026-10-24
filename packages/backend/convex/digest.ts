@@ -2,6 +2,7 @@ import { renderDigest } from "@lb/core";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { markDeliveredIds, queuedItems } from "./inbox";
+import { sessionAgents } from "./sessionRows";
 
 const MAX_LINES = 15;
 const PROTOCOL = [
@@ -18,20 +19,15 @@ async function handleOf(ctx: QueryCtx, agent: Doc<"agents">): Promise<string> {
 }
 
 async function teamLines(ctx: QueryCtx, me: Doc<"agents">): Promise<string[]> {
+  if (!me.sessionId) return [];
   const lines: string[] = [];
-  for (const status of ["active", "idle"] as const) {
-    const agents = await ctx.db
-      .query("agents")
-      .withIndex("by_status", (q) => q.eq("status", status))
-      .collect();
-    for (const a of agents) {
-      if (a._id === me._id || a.repo !== me.repo) continue;
-      const intent = a.intentId ? await ctx.db.get(a.intentId) : null;
-      const git = a.git?.ok ? `, last ${a.git.op} ${(a.git.sha ?? "").slice(0, 7)}`.trimEnd() : "";
-      lines.push(
-        `- ${await handleOf(ctx, a)} (${a.branch}, ${status}${git}): ${clip(intent?.text ?? "no intent yet")}`,
-      );
-    }
+  for (const a of await sessionAgents(ctx, me.sessionId)) {
+    if (a._id === me._id || a.status === "offline") continue;
+    const intent = a.intentId ? await ctx.db.get(a.intentId) : null;
+    const git = a.git?.ok ? `, last ${a.git.op} ${(a.git.sha ?? "").slice(0, 7)}`.trimEnd() : "";
+    lines.push(
+      `- ${await handleOf(ctx, a)} (${a.branch}, ${a.status}${git}): ${clip(intent?.text ?? "no intent yet")}`,
+    );
   }
   return lines;
 }
