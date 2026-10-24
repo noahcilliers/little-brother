@@ -50,6 +50,7 @@ export function measure(app: HTMLElement): Geometry {
 
 const lookup: Lookup = {
   tasks: new Map(FULL_BOARD.tasks.map((k) => [k.id, k])),
+  goals: new Map(FULL_BOARD.goals.map((g) => [g.id, g])),
   shared: new Map(FULL_BOARD.shared.map((s) => [s.id, s])),
   layout: LAYOUT,
   bandDy: bandOffsets(FULL_BOARD.shared, LAYOUT),

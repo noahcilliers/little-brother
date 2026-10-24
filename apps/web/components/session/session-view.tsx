@@ -12,6 +12,7 @@ import { PageState } from "../shell/page-state";
 import { ClassifierLog } from "./classifier-log";
 import { ConnectPanel } from "./connect-panel";
 import { JoinPopover } from "./join-popover";
+import { ServerAlerts } from "./server-alerts";
 import { ServerLog } from "./server-log";
 import { SessionActions } from "./session-actions";
 import { type SessionTab, ViewSwitch } from "./view-switch";
@@ -57,6 +58,7 @@ export function SessionView({ sessionId }: { sessionId: string }) {
         <SessionActions session={session} />
       </AppHeader>
       <WaitingRoom roomId={session.room.id} floating />
+      {session.isHost ? <ServerAlerts sessionId={id} onOpenLog={() => setTab("server")} /> : null}
       {empty ? (
         <ConnectPanel session={session} />
       ) : tab === "log" ? (

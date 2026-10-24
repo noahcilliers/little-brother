@@ -7,6 +7,7 @@ import { layoutBoard } from "@/lib/board-layout";
 import type { CatchKind } from "@/lib/board-time";
 import { cleanBoard } from "@/lib/clean-label";
 import { agentColor } from "@/lib/format";
+import { useCatchToasts } from "@/lib/use-catch-toasts";
 import { useDecisions } from "@/lib/use-decisions";
 import { usePlayback } from "@/lib/use-playback";
 import { AgentsPanel } from "./agents-panel";
@@ -39,6 +40,7 @@ export function Board({ sessionId, watchToken }: Source) {
   const colorOf = (agentId: string) => agentColor(colors.get(agentId));
   const start = layout?.axis.start ?? 0;
   const empty = board !== undefined && board.agents.length === 0;
+  useCatchToasts(board, { readOnly, onSelect: setSelected, onDecide: () => decisions.show() });
 
   return (
     <div className="app">

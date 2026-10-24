@@ -17,6 +17,9 @@ const PX_PER_S_MAX = 56;
 const TICK_MIN_PX = 50;
 const STEPS_S = [1, 2, 3, 5, 10, 15, 30, 60, 120, 300, 600, 1800, 3600];
 
+/** Middle of a row's goal line, where the goal pills sit. */
+export const goalLineY = (row: Row): number => row.top + GOAL_LINE / 2;
+
 export type Tick = { x: number; label: string };
 export type Row = {
   agentId: string;

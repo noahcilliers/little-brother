@@ -9,7 +9,7 @@ export type BoardCatch = {
   id: string;
   classificationId: Id<"classifications">;
   kind: CatchKind;
-  /** Task id, or a lesson/decision id. */
+  /** Task id, a lesson/decision id, or a goal id when a plan was caught before it had a task. */
   from: string;
   to: string;
   t: number;
@@ -59,8 +59,16 @@ export function buildCatches(
   sharedIds: Set<string>,
 ): BoardCatch[] {
   const taskById = new Map(tasks.map((t) => [t.id, t]));
-  const anchor = (id: Id<"nodes"> | undefined) =>
-    id ? (taskOfNode.get(id) ?? (sharedIds.has(id) ? id : undefined)) : undefined;
+  // Plans are caught before any code exists: draw them from the goal's first task, or the goal flag itself.
+  const firstTask = new Map<string, string>();
+  for (const t of [...tasks].sort((a, b) => a.t0 - b.t0))
+    if (t.goalId && !firstTask.has(t.goalId)) firstTask.set(t.goalId, t.id);
+  const anchor = (id: Id<"nodes"> | undefined) => {
+    if (!id) return undefined;
+    const direct = taskOfNode.get(id) ?? (sharedIds.has(id) ? id : undefined);
+    if (direct) return direct;
+    return src.nodeById.get(id)?.kind === "intent" ? (firstTask.get(id) ?? id) : undefined;
+  };
   const resolvedAt = new Map<string, number>();
   for (const e of src.events) {
     const cid = payloadField(e, "classificationId");

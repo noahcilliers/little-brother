@@ -62,6 +62,15 @@ async function semanticCandidates(
  * unsettled pairs to the judge, fall back when it is absent or fails, then persist and fan out.
  */
 const MAX_ATTEMPTS = 3;
+
+/** Short reason for the host's server log: rate limit, timeout, bad output, or the provider's own words. */
+function whyFailed(e: unknown): string {
+  const text = String(e);
+  if (/\b429\b|RESOURCE_EXHAUSTED/.test(text)) return "rate limited (429)";
+  if (/timeout|aborted/i.test(text)) return "timed out";
+  if (/\b5\d\d\b|UNAVAILABLE/.test(text)) return "provider unavailable";
+  return text.replace(/\s+/g, " ").slice(0, 80);
+}
 const RETRY_MS = 3000;
 
 export const classifyNode = internalAction({
@@ -101,7 +110,13 @@ export const classifyNode = internalAction({
     const results = await Promise.all(
       toJudge.map(async ({ pair, hints }) => {
         const started = Date.now();
-        const verdict = judge ? await judge.judge(pair, hints, examples).catch(() => null) : null;
+        let error = judge ? "no verdict" : "no judge";
+        const verdict = judge
+          ? await judge.judge(pair, hints, examples).catch((e: unknown) => {
+              error = whyFailed(e);
+              return null;
+            })
+          : null;
         return verdict
           ? {
               ok: true,
@@ -112,14 +127,15 @@ export const classifyNode = internalAction({
                 Date.now() - started,
               ),
             }
-          : { ok: false, j: fallbackJudgment(pair, hints) };
+          : { ok: false, j: fallbackJudgment(pair, hints), error };
       }),
     );
     const judgeFailed = results.some((r) => !r.ok);
     const summary = `${view.text} #${attempt}: ${structural.pairs.length} candidates, ${structural.judgments.length} settled by rules, judged [${toJudge
-      .map(
-        (t, i) => `${t.pair.other.text.slice(0, 40)} → ${results[i]?.ok ? results[i]?.j.relation : "FAILED"}`,
-      )
+      .map((t, i) => {
+        const r = results[i];
+        return `${t.pair.other.text.slice(0, 40)} → ${r?.ok ? r.j.relation : `FAILED (${r && "error" in r ? r.error : "?"})`}`;
+      })
       .join(
         "; ",
       )}]${unsettled.length > toJudge.length ? `, skipped ${unsettled.length - toJudge.length}` : ""}${

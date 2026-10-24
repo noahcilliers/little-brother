@@ -1,5 +1,5 @@
-import type { BoardCatch, BoardShared, BoardTask } from "./api";
-import { BAR_H, type Layout, laneY } from "./board-layout";
+import type { BoardCatch, BoardGoal, BoardShared, BoardTask } from "./api";
+import { BAR_H, goalLineY, type Layout, laneY } from "./board-layout";
 
 // Everything on the board is drawn as of time t (live: now; paused or replay: the scrubber).
 
@@ -43,6 +43,8 @@ export function stopColor(k: BoardTask): string {
 
 export type Lookup = {
   tasks: Map<string, BoardTask>;
+  /** A plan caught before it had any task is drawn from its goal pill. */
+  goals: Map<string, BoardGoal>;
   shared: Map<string, BoardShared>;
   layout: Layout;
   /** Vertical nudge for lessons and decisions whose labels would overlap a neighbour in the band. */
@@ -84,6 +86,11 @@ export function anchor(id: string, t: number, l: Lookup): { x: number; y: number
     const band = l.layout.bandRow.get(s.id)?.band;
     if (band === null || band === undefined) return undefined;
     return { x: l.layout.xAt(s.t), y: band + (l.bandDy.get(s.id) ?? 0) };
+  }
+  const g = l.goals.get(id);
+  if (g) {
+    const row = l.layout.rows.get(g.agentId);
+    return row ? { x: l.layout.xAt(Math.max(t, g.t0)), y: goalLineY(row) } : undefined;
   }
   const k = l.tasks.get(id);
   const top = k ? barTop(k, l.layout) : undefined;

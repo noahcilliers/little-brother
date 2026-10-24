@@ -31,6 +31,7 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
   const lookup: Lookup = useMemo(
     () => ({
       tasks: new Map(board.tasks.map((k) => [k.id, k])),
+      goals: new Map(board.goals.map((g) => [g.id, g])),
       shared: new Map(board.shared.map((s) => [s.id, s])),
       layout,
       bandDy: bandOffsets(board.shared, layout),
