@@ -1,5 +1,5 @@
-import { countUp } from "./film-fx";
 import { prog } from "./film-clock";
+import { countUp } from "./film-fx";
 
 // A reasoning trajectory tree: Noah's failed branch is distilled into a lesson and pruned; a later agent heading
 // the same way is routed around it (the stale catch). The counter is the real replay number.
@@ -35,18 +35,35 @@ export function LearnTree({ s }: { s: number }) {
   const counter = prog(s, T0 + 3.7, 0.8);
   return (
     <svg viewBox="0 0 880 900" className="lt" aria-hidden="true">
-      <path d={chain(FAIL)} pathLength={1} className={failed ? "lt-edge fail" : "lt-edge"} style={{ strokeDashoffset: 1 - failDraw, opacity: 1 - pruned * 0.65 }} />
-      <path d={chain(WORK)} pathLength={1} className="lt-edge ok" style={{ strokeDashoffset: 1 - workDraw }} />
+      <path
+        d={chain(FAIL)}
+        pathLength={1}
+        className={failed ? "lt-edge fail" : "lt-edge"}
+        style={{ strokeDashoffset: 1 - failDraw, opacity: 1 - pruned * 0.65 }}
+      />
+      <path
+        d={chain(WORK)}
+        pathLength={1}
+        className="lt-edge ok"
+        style={{ strokeDashoffset: 1 - workDraw }}
+      />
       <path
         d="M130 470 C220 440 250 400 290 380 C330 420 300 560 340 610 L545 640 L750 670"
         pathLength={1}
         className="lt-edge later"
         style={{ strokeDashoffset: 1 - later, opacity: later > 0 ? 1 : 0 }}
       />
-      {pruned > 0 ? <path d="M220 360 l40 40 M260 360 l-40 40" className="lt-cut" style={{ opacity: pruned }} /> : null}
+      {pruned > 0 ? (
+        <path d="M220 360 l40 40 M260 360 l-40 40" className="lt-cut" style={{ opacity: pruned }} />
+      ) : null}
       <PillNode p={ROOT} cls="root" shown={prog(s, T0, 0.3)} />
       {FAIL.map((p, i) => (
-        <PillNode key={p[2]} p={p} cls={i === 2 && failed ? "fail" : pruned > 0 ? "pruned" : ""} shown={Math.min(prog(s, T0 + 0.25 + i * 0.3, 0.3), 1 - pruned * 0.6)} />
+        <PillNode
+          key={p[2]}
+          p={p}
+          cls={i === 2 && failed ? "fail" : pruned > 0 ? "pruned" : ""}
+          shown={Math.min(prog(s, T0 + 0.25 + i * 0.3, 0.3), 1 - pruned * 0.6)}
+        />
       ))}
       {WORK.map((p, i) => (
         <PillNode key={p[2]} p={p} cls={i === 2 ? "ok" : ""} shown={prog(s, T0 + 1.4 + i * 0.25, 0.3)} />

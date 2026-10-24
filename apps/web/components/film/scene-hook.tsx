@@ -10,13 +10,28 @@ const PROBLEMS = [
 ] as const;
 
 /** One line of kinetic type: each word rises out of its own mask, staggered, and the line leaves upward. */
-function Words({ text, s, from, to, accent = [] }: { text: string; s: number; from: number; to: number; accent?: string[] }) {
+function Words({
+  text,
+  s,
+  from,
+  to,
+  accent = [],
+}: {
+  text: string;
+  s: number;
+  from: number;
+  to: number;
+  accent?: string[];
+}) {
   const out = prog(s, to, 0.35);
   return (
     <span className="fh-line" style={{ transform: `translateY(${-out * 40}px)`, opacity: 1 - out }}>
       {text.split(" ").map((w, i) => (
         <span key={`${w}${i}`} className="fh-mask">
-          <span className={accent.includes(w) ? "fh-word accent" : "fh-word"} style={rise(prog(s, from + i * 0.07, 0.45))}>
+          <span
+            className={accent.includes(w) ? "fh-word accent" : "fh-word"}
+            style={rise(prog(s, from + i * 0.07, 0.45))}
+          >
             {w}
           </span>
         </span>
@@ -32,8 +47,12 @@ export function SceneHook({ s }: { s: number }) {
     <div className="fh">
       <div className="fh-grid" aria-hidden="true" />
       <div className="fh-stack">
-        {s < 2.2 ? <Words text="Your team runs five Claude Code agents." s={s} from={0.15} to={1.75} /> : null}
-        {s >= 1.8 && s < 3.6 ? <Words text="They can't see each other." s={s} from={1.85} to={3.3} accent={["can't", "see"]} /> : null}
+        {s < 2.2 ? (
+          <Words text="Your team runs five Claude Code agents." s={s} from={0.15} to={1.75} />
+        ) : null}
+        {s >= 1.8 && s < 3.6 ? (
+          <Words text="They can't see each other." s={s} from={1.85} to={3.3} accent={["can't", "see"]} />
+        ) : null}
         {s >= 3.3 ? (
           <span className="fh-line fh-three">
             <span className="fh-mask">
@@ -43,7 +62,10 @@ export function SceneHook({ s }: { s: number }) {
             </span>
             {PROBLEMS.map(([label, icon], i) => (
               <span key={label} className="fh-mask">
-                <span className={i === 2 ? "fh-chip accent" : "fh-chip"} style={rise(prog(s, 3.6 + i * 0.32, 0.45))}>
+                <span
+                  className={i === 2 ? "fh-chip accent" : "fh-chip"}
+                  style={rise(prog(s, 3.6 + i * 0.32, 0.45))}
+                >
                   <InlineIcon name={icon} color="currentColor" size={34} />
                   {label}
                   {i < 2 ? "," : "."}

@@ -25,7 +25,11 @@ export function PhoneB({ s, ...f }: { s: number } & Frame) {
         <div className="p-remote">
           <i /> joshua-mbp · ~/lb-demo-shop
         </div>
-        {sent ? <div className="p-bubble">{PROMPT}</div> : <div className="p-empty">Connected to your laptop session</div>}
+        {sent ? (
+          <div className="p-bubble">{PROMPT}</div>
+        ) : (
+          <div className="p-empty">Connected to your laptop session</div>
+        )}
         {steps.map(([at, text]) => (
           <div key={at} className="p-step">
             ⏺ {text}

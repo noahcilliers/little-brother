@@ -1,0 +1,302 @@
+/* Motion-graphic scenes: kinetic type, the pipeline, the learning loop, metric cards and the close. */
+.lp .fh-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.08em;
+}
+.lp .fh-mask > span {
+  display: inline-block;
+}
+
+/* hook */
+.lp .fh {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 56px;
+}
+.lp .fh-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+  opacity: 0.6;
+}
+.lp .fh-stack {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 120px;
+}
+.lp .fh-line {
+  position: absolute;
+  white-space: nowrap;
+  font: 600 76px / 1.1 var(--sans);
+  letter-spacing: -0.045em;
+  word-spacing: 0.04em;
+}
+.lp .fh-word {
+  margin-right: 0.24em;
+}
+.lp .fh-word.accent,
+.lp .fh-chip.accent {
+  color: var(--film-accent);
+}
+.lp .fh-three {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 62px;
+}
+.lp .fh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+}
+.lp .fh-agents {
+  position: relative;
+  display: flex;
+}
+.lp .fh-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--panel);
+  font: 500 16px var(--mono);
+}
+.lp .fh-agent i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--add);
+}
+.lp .fh-agent.alone {
+  border-style: dashed;
+}
+
+/* shared scene title */
+.lp .fx-title {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 600 46px / 1.1 var(--sans);
+  letter-spacing: -0.035em;
+}
+.lp .fx-title.left {
+  justify-items: start;
+  left: 40px;
+  top: 34px;
+}
+.lp .fx-title small {
+  font: 400 18px var(--sans);
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.lp .fx-how,
+.lp .fx-learn,
+.lp .fx-metrics,
+.lp .fx-close {
+  position: absolute;
+  inset: 0;
+}
+.lp .fx-metrics {
+  transform-origin: 0 0;
+}
+
+/* how it works */
+.lp .fx-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.lp .fx-lane {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-dasharray: 2 6;
+}
+.lp .fx-lane-label,
+.lp .fx-note {
+  font: 500 13px var(--mono);
+  letter-spacing: 0.06em;
+  fill: var(--muted);
+}
+.lp .fx-note {
+  letter-spacing: 0;
+  font-size: 15px;
+}
+.lp .fx-edge {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+}
+.lp .fx-edge.async {
+  stroke: var(--film-accent);
+}
+.lp .fx-node {
+  fill: var(--panel);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+.lp .fx-node.lit {
+  stroke: var(--film-accent);
+  stroke-width: 3;
+}
+.lp .fx-node-title {
+  font: 600 20px var(--sans);
+  fill: var(--ink);
+}
+.lp .fx-node-sub {
+  font: 400 13.5px var(--mono);
+  fill: var(--muted);
+}
+.lp .fx-packet {
+  fill: var(--film-accent);
+}
+
+/* learning loop */
+.lp .fx-learn-tree {
+  position: absolute;
+  left: 30px;
+  top: 120px;
+  width: 760px;
+  height: 777px;
+}
+.lp .lt,
+.lp .fx-loop svg {
+  width: 100%;
+  height: 100%;
+}
+.lp .lt-edge {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+}
+.lp .lt-edge.fail {
+  stroke: var(--hot);
+}
+.lp .lt-edge.ok {
+  stroke: var(--add);
+}
+.lp .lt-edge.later {
+  stroke: var(--film-accent);
+  stroke-width: 3;
+}
+.lp .lt-pill {
+  fill: var(--panel);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+.lp .lt-pill.fail {
+  stroke: var(--hot);
+}
+.lp .lt-pill.ok {
+  stroke: var(--add);
+}
+.lp .lt-pill.pruned {
+  stroke-dasharray: 4 4;
+}
+.lp .lt-pill.root {
+  stroke: var(--ink);
+}
+.lp .lt-text {
+  font: 500 14px var(--mono);
+  fill: var(--ink);
+}
+.lp .lt-lesson {
+  fill: color-mix(in srgb, var(--warn) 12%, var(--panel));
+  stroke: var(--warn);
+}
+.lp .lt-cut {
+  stroke: var(--hot);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.lp .lt-note {
+  font: 500 14px var(--mono);
+  fill: var(--film-accent);
+}
+.lp .lt-big {
+  font: 700 76px var(--sans);
+  fill: var(--ink);
+}
+.lp .lt-src {
+  font: 400 12.5px var(--mono);
+  fill: var(--muted);
+}
+.lp .fx-loop {
+  position: absolute;
+  right: 40px;
+  top: 150px;
+  width: 760px;
+  height: 720px;
+}
+.lp .fx-loop svg {
+  height: 600px;
+}
+.lp .fx-ring {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+}
+.lp .fx-station {
+  fill: var(--panel);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+  transition: r 0.25s;
+}
+.lp .fx-station.on {
+  stroke: var(--film-accent);
+  stroke-width: 3;
+}
+.lp .fx-station-name {
+  font: 600 14px var(--sans);
+  fill: var(--ink);
+}
+.lp .fx-loop-center {
+  font: 600 30px var(--sans);
+  fill: var(--film-accent);
+}
+.lp .fx-loop-sub {
+  font: 400 13px var(--mono);
+  fill: var(--muted);
+}
+.lp .fx-loop-how {
+  margin: 0;
+  text-align: center;
+  font: 400 19px / 1.4 var(--sans);
+  min-height: 56px;
+}
+.lp .fx-roadmap {
+  margin: 10px auto 0;
+  width: fit-content;
+  padding: 6px 12px;
+  border: 1px dashed var(--line-2);
+  border-radius: 8px;
+  font: 400 13px var(--mono);
+  color: var(--muted);
+}
+.lp .fx-roadmap b {
+  margin-right: 8px;
+  color: var(--film-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

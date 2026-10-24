@@ -12,7 +12,10 @@ function Scan({ s }: { s: number }) {
   const lock = prog(s, BEAT.scan + 0.5, 0.4);
   return (
     <div className="p-camera">
-      <div className="p-viewfinder" style={{ transform: `scale(${1.25 - lock * 0.25}) rotate(${(1 - lock) * -6}deg)` }}>
+      <div
+        className="p-viewfinder"
+        style={{ transform: `scale(${1.25 - lock * 0.25}) rotate(${(1 - lock) * -6}deg)` }}
+      >
         <QrCode text={JOIN_URL} label="Join code" />
       </div>
       {lock >= 1 ? <span className="p-found">little-brother-gules.vercel.app/r/k7f2qx</span> : null}
@@ -59,7 +62,9 @@ function Decide({ s }: { s: number }) {
         <p className="p-done">Kept JWT bearer · delivered to Ash's session</p>
       ) : (
         <>
-          <span className={s >= BEAT.phoneTap - 0.1 ? "p-btn solid pressed" : "p-btn solid"}>Keep JWT bearer</span>
+          <span className={s >= BEAT.phoneTap - 0.1 ? "p-btn solid pressed" : "p-btn solid"}>
+            Keep JWT bearer
+          </span>
           <span className="p-btn">Keep cookie sessions</span>
         </>
       )}

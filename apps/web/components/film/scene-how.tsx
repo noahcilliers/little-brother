@@ -28,7 +28,9 @@ const EDGES: [d: string, s: number, async: boolean][] = [
 ];
 
 const PACKETS: [from: [number, number], to: [number, number], s: number][] = [
-  [[420, 350], [500, 350], T0 + 0.5], [[780, 350], [860, 350], T0 + 1.3], [[1140, 350], [1220, 350], T0 + 2.1],
+  [[420, 350], [500, 350], T0 + 0.5],
+  [[780, 350], [860, 350], T0 + 1.3],
+  [[1140, 350], [1220, 350], T0 + 2.1],
   [[1140, 650], [1220, 650], T0 + 4.7],
 ];
 
@@ -39,14 +41,32 @@ export function SceneHow({ s }: { s: number }) {
         <span className="fh-mask">
           <span style={rise(prog(s, T0 - 0.2, 0.5))}>One check on every tool call.</span>
         </span>
-        <small style={{ opacity: prog(s, T0 + 0.3, 0.4) }}>Fast path answers in the hook. The judge thinks in the background.</small>
+        <small style={{ opacity: prog(s, T0 + 0.3, 0.4) }}>
+          Fast path answers in the hook. The judge thinks in the background.
+        </small>
       </h2>
       <svg viewBox="0 0 1600 900" className="fx-svg" aria-hidden="true">
-        <rect x={110} y={250} width={1420} height={190} rx={18} className="fx-lane" style={{ opacity: prog(s, T0, 0.4) }} />
+        <rect
+          x={110}
+          y={250}
+          width={1420}
+          height={190}
+          rx={18}
+          className="fx-lane"
+          style={{ opacity: prog(s, T0, 0.4) }}
+        />
         <text x={130} y={276} className="fx-lane-label" style={{ opacity: prog(s, T0, 0.4) }}>
           EDIT PATH · &lt; 150 ms
         </text>
-        <rect x={470} y={560} width={1060} height={190} rx={18} className="fx-lane async" style={{ opacity: prog(s, T0 + 3.4, 0.4) }} />
+        <rect
+          x={470}
+          y={560}
+          width={1060}
+          height={190}
+          rx={18}
+          className="fx-lane async"
+          style={{ opacity: prog(s, T0 + 3.4, 0.4) }}
+        />
         <text x={490} y={586} className="fx-lane-label" style={{ opacity: prog(s, T0 + 3.4, 0.4) }}>
           ASYNC · SCHEDULED IN THE BACKEND
         </text>
@@ -59,21 +79,43 @@ export function SceneHow({ s }: { s: number }) {
             style={{ strokeDashoffset: 1 - prog(s, at, 0.5), opacity: s >= at ? 1 : 0 }}
           />
         ))}
-        <text x={820} y={196} textAnchor="middle" className="fx-note" style={{ opacity: prog(s, T0 + 3.2, 0.4) }}>
+        <text
+          x={820}
+          y={196}
+          textAnchor="middle"
+          className="fx-note"
+          style={{ opacity: prog(s, T0 + 3.2, 0.4) }}
+        >
           deny or warn lands in the same step: the agent never waits on a model
         </text>
-        <text x={820} y={842} textAnchor="middle" className="fx-note" style={{ opacity: prog(s, T0 + 6, 0.4) }}>
-          verdicts reach running sessions on their next step · the judge averaged ≈ 6.9 s, fully off the edit path
+        <text
+          x={820}
+          y={842}
+          textAnchor="middle"
+          className="fx-note"
+          style={{ opacity: prog(s, T0 + 6, 0.4) }}
+        >
+          verdicts reach running sessions on their next step · the judge averaged ≈ 6.9 s, fully off the edit
+          path
         </text>
         {PACKETS.map(([a, b, at]) => {
           const p = prog(s, at, 0.5);
-          return p > 0 && p < 1 ? <circle key={at} cx={lerp(a[0], b[0], p)} cy={lerp(a[1], b[1], p)} r={7} className="fx-packet" /> : null;
+          return p > 0 && p < 1 ? (
+            <circle key={at} cx={lerp(a[0], b[0], p)} cy={lerp(a[1], b[1], p)} r={7} className="fx-packet" />
+          ) : null;
         })}
         {NODES.map((n) => {
           const on = prog(s, n.lit, 0.35);
           return (
             <g key={n.id} style={{ opacity: 0.25 + on * 0.75 }}>
-              <rect x={n.x} y={n.y} width={NW} height={NH} rx={14} className={on >= 1 ? "fx-node lit" : "fx-node"} />
+              <rect
+                x={n.x}
+                y={n.y}
+                width={NW}
+                height={NH}
+                rx={14}
+                className={on >= 1 ? "fx-node lit" : "fx-node"}
+              />
               <text x={n.x + 22} y={n.y + 42} className="fx-node-title">
                 {n.title}
               </text>

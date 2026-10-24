@@ -6,12 +6,22 @@ import { after, Bar, MetricCard } from "./metric-card";
 export function ReplayCard({ p }: { p: number }) {
   const a = after(p, 0.3);
   return (
-    <MetricCard title="6-agent replay" source="fixtures/scenario.jsonl through the real connector + backend" p={p}>
+    <MetricCard
+      title="6-agent replay"
+      source="fixtures/scenario.jsonl through the real connector + backend"
+      p={p}
+    >
       <div className="mc-big">
         ≈ {countUp(8.5, a, 1)}k<small>tokens saved · estimate</small>
       </div>
       <Bar label="duplicates stopped" value={3} max={3} p={after(p, 0.4)} shown={countUp(3, after(p, 0.4))} />
-      <Bar label="stale paths avoided" value={2} max={3} p={after(p, 0.55)} shown={countUp(2, after(p, 0.55))} />
+      <Bar
+        label="stale paths avoided"
+        value={2}
+        max={3}
+        p={after(p, 0.55)}
+        shown={countUp(2, after(p, 0.55))}
+      />
       <Bar label="ordering waits" value={2} max={3} p={after(p, 0.7)} shown={countUp(2, after(p, 0.7))} />
     </MetricCard>
   );
@@ -36,7 +46,12 @@ export function LatencyCard({ p }: { p: number }) {
   return (
     <MetricCard title="Latency" source="log scale · judge average from production, fully async" p={p}>
       <svg viewBox="0 0 470 210" className="mc-svg" aria-hidden="true">
-        <path d={`M${X0} 176 H${X0 + XW}`} pathLength={1} className="mc-axis" style={{ strokeDashoffset: 1 - axis }} />
+        <path
+          d={`M${X0} 176 H${X0 + XW}`}
+          pathLength={1}
+          className="mc-axis"
+          style={{ strokeDashoffset: 1 - axis }}
+        />
         {[0.1, 1, 10].map((v) => (
           <g key={v} style={{ opacity: axis }}>
             <path d={`M${xOf(v)} 20 V176`} className="mc-grid" />
@@ -55,7 +70,14 @@ export function LatencyCard({ p }: { p: number }) {
               <text x={0} y={y + 14} className="mc-tick strong">
                 {label}
               </text>
-              <rect x={x0} y={y} width={Math.max(w, 2)} height={20} rx={4} className={async ? "mc-rect hatch" : "mc-rect"} />
+              <rect
+                x={x0}
+                y={y}
+                width={Math.max(w, 2)}
+                height={20}
+                rx={4}
+                className={async ? "mc-rect hatch" : "mc-rect"}
+              />
               <text x={x0 + w + 8} y={y + 14} className="mc-tick strong" style={{ opacity: g }}>
                 {value}
               </text>
@@ -74,7 +96,11 @@ export function CorrectCard({ p }: { p: number }) {
   const won = Math.floor(20 * after(p, 0.3, 1));
   const ring = after(p, 0.5, 0.9);
   return (
-    <MetricCard title="Correctness" source="race test, 20 runs · small eval set (10 pairs) · targets are targets" p={p}>
+    <MetricCard
+      title="Correctness"
+      source="race test, 20 runs · small eval set (10 pairs) · targets are targets"
+      p={p}
+    >
       <div className="mc-split">
         <div>
           <div className="mc-dots">
@@ -90,7 +116,14 @@ export function CorrectCard({ p }: { p: number }) {
         <div>
           <svg viewBox="0 0 100 100" className="mc-ring" aria-hidden="true">
             <circle cx={50} cy={50} r={40} className="mc-ring-bg" />
-            <circle cx={50} cy={50} r={40} pathLength={1} className="mc-ring-fg" style={{ strokeDashoffset: 1 - ring }} />
+            <circle
+              cx={50}
+              cy={50}
+              r={40}
+              pathLength={1}
+              className="mc-ring-fg"
+              style={{ strokeDashoffset: 1 - ring }}
+            />
             <text x={50} y={57} textAnchor="middle">
               {countUp(10, ring)}/10
             </text>
@@ -99,8 +132,12 @@ export function CorrectCard({ p }: { p: number }) {
         </div>
       </div>
       <div className="mc-targets" style={{ opacity: after(p, 1.2, 0.4) }}>
-        <span>precision ≥ 0.85 · block / serialize <em>target</em></span>
-        <span>recall ≥ 0.80 <em>target</em></span>
+        <span>
+          precision ≥ 0.85 · block / serialize <em>target</em>
+        </span>
+        <span>
+          recall ≥ 0.80 <em>target</em>
+        </span>
       </div>
     </MetricCard>
   );

@@ -17,7 +17,10 @@ const LAYOUTS = new Map<number, Layout>();
 function layoutFor(ids: string[]): Layout {
   const hit = LAYOUTS.get(ids.length);
   if (hit) return hit;
-  const layout = layoutBoard({ ...FULL_BOARD, agents: FULL_BOARD.agents.filter((a) => ids.includes(a.id)) }, at(42));
+  const layout = layoutBoard(
+    { ...FULL_BOARD, agents: FULL_BOARD.agents.filter((a) => ids.includes(a.id)) },
+    at(42),
+  );
   LAYOUTS.set(ids.length, layout);
   return layout;
 }
@@ -36,7 +39,10 @@ const PATH: [s: number, x: number, y: number][] = [
   [5.2, 760, 260], [5.85, DASH.w - 62, 22], [8.95, DASH.w - 62, 22], [9.45, DASH.w - 66, BODY_H - 40],
   [10.3, DASH.w - 66, BODY_H - 40], [32.3, DASH.w - 320, 240], [32.85, DASH.w - 94, 142], [34, DASH.w - 94, 142],
 ];
-const SHOWN: [number, number][] = [[5.2, 10.3], [32.3, 33.6]];
+const SHOWN: [number, number][] = [
+  [5.2, 10.3],
+  [32.3, 33.6],
+];
 const CLICKS = [BEAT.shareClick, BEAT.admit, BEAT.decideClick];
 
 function pointerAt(s: number) {
@@ -71,7 +77,10 @@ export function StoryDashboard({ s }: { s: number }) {
         </span>
         <span className={pointer.press && s < 7 ? "f-btn pressed" : "f-btn"}>Share · QR</span>
       </div>
-      <div className="d-board" style={{ left: BOARD_AT.x, top: BOARD_AT.y, width: BOARD_W, transform: `scale(${BOARD_SCALE})` }}>
+      <div
+        className="d-board"
+        style={{ left: BOARD_AT.x, top: BOARD_AT.y, width: BOARD_W, transform: `scale(${BOARD_SCALE})` }}
+      >
         <TopBar board={board} t={t} highlight={null} onHighlight={noop} waiting={0} onOpenDecision={noop} />
         {ids.length > 0 ? (
           <Graph
@@ -87,7 +96,9 @@ export function StoryDashboard({ s }: { s: number }) {
           />
         ) : (
           <div className="card graph">
-            <p className="empty">No agents have connected yet. Each Claude Code session with the plugin shows up here.</p>
+            <p className="empty">
+              No agents have connected yet. Each Claude Code session with the plugin shows up here.
+            </p>
           </div>
         )}
         <FilmDecision s={s} />

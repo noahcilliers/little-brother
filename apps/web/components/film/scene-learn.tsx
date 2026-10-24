@@ -30,14 +30,23 @@ export function SceneLearn({ s }: { s: number }) {
         <span className="fh-mask">
           <span style={rise(prog(s, T0 - 0.2, 0.5))}>It gets better as your team works.</span>
         </span>
-        <small style={{ opacity: prog(s, T0 + 0.3, 0.4) }}>Pruning reasoning trajectories, labelling verdicts, retrieving what was learned.</small>
+        <small style={{ opacity: prog(s, T0 + 0.3, 0.4) }}>
+          Pruning reasoning trajectories, labelling verdicts, retrieving what was learned.
+        </small>
       </h2>
       <div className="fx-learn-tree">
         <LearnTree s={s} />
       </div>
       <div className="fx-loop">
         <svg viewBox="0 0 760 800" aria-hidden="true">
-          <circle cx={CX} cy={CY} r={R} pathLength={1} className="fx-ring" style={{ strokeDashoffset: 1 - ring }} />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={R}
+            pathLength={1}
+            className="fx-ring"
+            style={{ strokeDashoffset: 1 - ring }}
+          />
           {STATIONS.map(([name], i) => {
             const a = -Math.PI / 2 + (i * 2 * Math.PI) / STATIONS.length;
             const x = CX + R * Math.cos(a);

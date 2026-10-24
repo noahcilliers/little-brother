@@ -25,7 +25,10 @@ export function SceneClose({ s }: { s: number }) {
           Claude Code plugin · hooks + MCP · works across laptops and accounts
         </span>
       </div>
-      <section className="fx-qr-card" style={{ opacity: card, transform: `translateY(${(1 - card) * 24}px)` }}>
+      <section
+        className="fx-qr-card"
+        style={{ opacity: card, transform: `translateY(${(1 - card) * 24}px)` }}
+      >
         <h3>Scan to join a live session</h3>
         <p>Sign in with GitHub and land on the board.</p>
         <QrCode text={SITE} label="little-brother-gules.vercel.app" />

@@ -22,7 +22,8 @@ function entering(kind: Transition, p: number): CSSProperties {
 
 /** How the outgoing layer looks while the next one enters with `kind`. */
 function leaving(kind: Transition, p: number): CSSProperties {
-  if (kind === "zoom") return { opacity: 1 - p, transform: `scale(${lerp(1, 1.6, p)})`, filter: `blur(${p * 6}px)` };
+  if (kind === "zoom")
+    return { opacity: 1 - p, transform: `scale(${lerp(1, 1.6, p)})`, filter: `blur(${p * 6}px)` };
   if (kind === "wipe") return { transform: `translateX(${-p * 6}%)`, opacity: 1 - p * 0.5 };
   if (kind === "iris") return { transform: `scale(${lerp(1, 0.94, p)})`, opacity: 1 - p * 0.6 };
   return {};
@@ -37,7 +38,10 @@ export function layerStyle(id: SceneId, s: number, still: boolean): CSSPropertie
   const nextScene = next ? SCENES[next] : undefined;
   const pout = nextScene ? easeInOut(clamp01((s - nextScene[0]) / TRANSITION_S)) : 0;
   if (still) return s >= (nextScene?.[0] ?? Number.POSITIVE_INFINITY) + TRANSITION_S / 2 ? null : {};
-  return { ...(pin < 1 ? entering(enter, pin) : {}), ...(pout > 0 && nextScene ? leaving(nextScene[2], pout) : {}) };
+  return {
+    ...(pin < 1 ? entering(enter, pin) : {}),
+    ...(pout > 0 && nextScene ? leaving(nextScene[2], pout) : {}),
+  };
 }
 
 /** The scene's own clock: seconds since it started. */

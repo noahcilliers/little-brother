@@ -23,7 +23,10 @@ const CARDS: [id: string, card: ComponentType<{ p: number }>][] = [
   ["providers", ProvidersCard],
   ["learning", LearningCard],
 ];
-const box = (i: number) => ({ x: LEFT + (i % 3) * (COL_W + GAP), y: TOP + Math.floor(i / 3) * (ROW_H + GAP) });
+const box = (i: number) => ({
+  x: LEFT + (i % 3) * (COL_W + GAP),
+  y: TOP + Math.floor(i / 3) * (ROW_H + GAP),
+});
 
 function camera(s: number, still: boolean): string {
   if (still) return "none";
@@ -51,7 +54,9 @@ export function SceneMetrics({ s, still }: { s: number; still: boolean }) {
         <span className="fh-mask">
           <span style={rise(prog(s, T0 - 0.3, 0.5))}>What we measured.</span>
         </span>
-        <small style={{ opacity: prog(s, T0, 0.4) }}>Sources on every card. Targets are labelled as targets.</small>
+        <small style={{ opacity: prog(s, T0, 0.4) }}>
+          Sources on every card. Targets are labelled as targets.
+        </small>
       </h2>
       {CARDS.map(([id, Card], i) => {
         const b = box(i);

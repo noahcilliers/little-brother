@@ -51,7 +51,9 @@ export function WaitingCard({ s }: { s: number }) {
           <small>@noah · via invite link</small>
         </span>
         <span className="f-btn">Deny</span>
-        <span className={admitted ? "f-btn solid pressed" : "f-btn solid"}>{admitted ? "Admitted" : "Admit"}</span>
+        <span className={admitted ? "f-btn solid pressed" : "f-btn solid"}>
+          {admitted ? "Admitted" : "Admit"}
+        </span>
       </div>
     </section>
   );

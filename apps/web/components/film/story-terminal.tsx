@@ -1,6 +1,6 @@
 import { typed } from "./film-clock";
 import { Terminal } from "./mockups";
-import { shownAt, TYPE_CPS, type TermLine } from "./terminal-script";
+import { shownAt, type TermLine, TYPE_CPS } from "./terminal-script";
 
 const MARK: Partial<Record<TermLine[1], string>> = { say: "⏺", tool: "⏺", out: "⎿", ok: "⎿ ✓" };
 
@@ -53,7 +53,10 @@ export function StoryTerminal({
     <Terminal title={title} {...frame}>
       <div className="t-scroll">
         {shown.map((l) => (
-          <div key={`${l[0]}${l[1]}`} className={l === newest && s - shownAt(l) < 0.5 ? "t-row enter" : "t-row"}>
+          <div
+            key={`${l[0]}${l[1]}`}
+            className={l === newest && s - shownAt(l) < 0.5 ? "t-row enter" : "t-row"}
+          >
             <Line line={l} />
           </div>
         ))}

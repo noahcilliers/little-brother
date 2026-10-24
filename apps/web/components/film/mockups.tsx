@@ -82,5 +82,7 @@ export function Pointer({ x, y, press, shown }: { x: number; y: number; press: b
 /** A finger tap on a phone: a ring that expands and fades. */
 export function Tap({ x, y, p }: { x: number; y: number; p: number }) {
   if (p <= 0 || p >= 1) return null;
-  return <span className="m-tap" style={{ left: x, top: y, transform: `scale(${0.4 + p})`, opacity: 1 - p }} />;
+  return (
+    <span className="m-tap" style={{ left: x, top: y, transform: `scale(${0.4 + p})`, opacity: 1 - p }} />
+  );
 }

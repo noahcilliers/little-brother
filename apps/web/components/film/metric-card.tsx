@@ -3,7 +3,17 @@ import { clamp01, easeOut } from "./film-clock";
 
 // The frame every metric card shares: a title, the chart, and where the number comes from.
 
-export function MetricCard({ title, source, p, children }: { title: string; source: string; p: number; children: ReactNode }) {
+export function MetricCard({
+  title,
+  source,
+  p,
+  children,
+}: {
+  title: string;
+  source: string;
+  p: number;
+  children: ReactNode;
+}) {
   const e = easeOut(clamp01(p / 0.5));
   return (
     <section className="mc" style={{ opacity: e, transform: `translateY(${(1 - e) * 24}px)` }}>

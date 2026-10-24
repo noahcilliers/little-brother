@@ -3,6 +3,8 @@
 import "./film.css";
 import "./film-story.css";
 import "./film-motion.css";
+import "./film-devices.css";
+import "./film-metrics.css";
 import { type ReactNode, useRef } from "react";
 import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";
@@ -69,7 +71,8 @@ export function Film() {
         onSeek={film.seek}
       />
       <p className="disclaim">
-        Illustrative run of lb-demo-shop on the real dashboard components · metrics from our replay and test suites
+        Illustrative run of lb-demo-shop on the real dashboard components · metrics from our replay and test
+        suites
       </p>
     </div>
   );

@@ -20,7 +20,10 @@ const TERM_A_BOX = { x: 40, y: 490, w: 750, h: 380 };
 const TERM_B_BOX = { x: 810, y: 490, w: 750, h: 380 };
 
 type Point = [x: number, y: number];
-const center = (b: { x: number; y: number; w: number; h: number }, fy = 0.5): Point => [b.x + b.w / 2, b.y + b.h * fy];
+const center = (b: { x: number; y: number; w: number; h: number }, fy = 0.5): Point => [
+  b.x + b.w / 2,
+  b.y + b.h * fy,
+];
 const lookup: Lookup = {
   tasks: new Map(FULL_BOARD.tasks.map((k) => [k.id, k])),
   shared: new Map(FULL_BOARD.shared.map((x) => [x.id, x])),

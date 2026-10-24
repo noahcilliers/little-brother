@@ -30,12 +30,42 @@ const catchRow = (
 });
 
 export const CATCHES: BoardCatch[] = [
-  catchRow("c1", "duplicate", ["j2", "n1"], [BEAT.dup, 23.4], "duplicate", "Joshua's users table duplicates Noah's db.users.", 6_200),
-  catchRow("c2", "stale", ["a2", "s1"], [BEAT.stale, 27.4], "stale", "Ash heads into Noah's failed CORS path.", 2_300),
-  catchRow("c3", "conflict", ["a4", "n4"], [CONFLICT_AT, RESOLVE_AT], "conflict · auth.mechanism", "JWT bearer tokens vs cookie session."),
+  catchRow(
+    "c1",
+    "duplicate",
+    ["j2", "n1"],
+    [BEAT.dup, 23.4],
+    "duplicate",
+    "Joshua's users table duplicates Noah's db.users.",
+    6_200,
+  ),
+  catchRow(
+    "c2",
+    "stale",
+    ["a2", "s1"],
+    [BEAT.stale, 27.4],
+    "stale",
+    "Ash heads into Noah's failed CORS path.",
+    2_300,
+  ),
+  catchRow(
+    "c3",
+    "conflict",
+    ["a4", "n4"],
+    [CONFLICT_AT, RESOLVE_AT],
+    "conflict · auth.mechanism",
+    "JWT bearer tokens vs cookie session.",
+  ),
 ];
 
-const goal = (id: string, agentId: string, label: string, text: string, t0: number, t1: number): BoardGoal => ({
+const goal = (
+  id: string,
+  agentId: string,
+  label: string,
+  text: string,
+  t0: number,
+  t1: number,
+): BoardGoal => ({
   id,
   agentId,
   label,
@@ -56,7 +86,15 @@ const BEATS: [s: number, text: string, tone: "hot" | "warn" | "faint"][] = [
 export const FULL_BOARD: Board = {
   repo: "lb-demo-shop",
   agents: [
-    { id: "joshua", handle: "joshua", name: "Joshua", color: 3, branch: "joshua/checkout", active: true, tokens: 58_300 },
+    {
+      id: "joshua",
+      handle: "joshua",
+      name: "Joshua",
+      color: 3,
+      branch: "joshua/checkout",
+      active: true,
+      tokens: 58_300,
+    },
     { id: "noah", handle: "noah", name: "Noah", color: 2, branch: "noah/auth", active: true, tokens: 51_900 },
     { id: "ash", handle: "ash", name: "Ash", color: 1, branch: "ash/frontend", active: true, tokens: 40_500 },
   ],
@@ -72,8 +110,24 @@ export const FULL_BOARD: Board = {
   loose: [],
   decisions: [DECISION],
   shared: [
-    { id: "s1", kind: "lesson", agentId: "noah", t: at(19.2), label: "CORS * + credentials fails → use proxy", note: "Tried wildcard CORS; browsers reject it with credentials. What worked: Vite proxy.", fromTask: "n2" },
-    { id: "s2", kind: "decision", agentId: "noah", t: at(RESOLVE_AT), label: "auth.mechanism = JWT bearer", note: "Decided by Noah.", fromTask: "n4" },
+    {
+      id: "s1",
+      kind: "lesson",
+      agentId: "noah",
+      t: at(19.2),
+      label: "CORS * + credentials fails → use proxy",
+      note: "Tried wildcard CORS; browsers reject it with credentials. What worked: Vite proxy.",
+      fromTask: "n2",
+    },
+    {
+      id: "s2",
+      kind: "decision",
+      agentId: "noah",
+      t: at(RESOLVE_AT),
+      label: "auth.mechanism = JWT bearer",
+      note: "Decided by Noah.",
+      fromTask: "n4",
+    },
   ],
   catches: CATCHES,
   sessions: [],
