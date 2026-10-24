@@ -5,6 +5,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SITE="${LB_SITE_URL:-http://127.0.0.1:3211}"
 export LB_HOME="${LB_HOME:-/tmp/lb-e2e-home}"
+# Every replayed Claude session joins one session; open mode creates it on first use.
+export LB_SESSION="${LB_SESSION:-e2e001}"
 LB="node $ROOT/apps/connector/dist/cli.js"
 
 # Local dev deployment only: the shared invite code is disabled unless LB_ALLOW_INVITE=1.

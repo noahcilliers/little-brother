@@ -1,16 +1,16 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { assertViewer } from "./access";
+import { assertSession, viewSession } from "./access";
 import { board as boardView } from "./dashboardQueries/board";
 
-// Read model for apps/web: team members only (or anyone in local open mode); every read is bounded.
+// Read model for apps/web: one session at a time, for members of its room (anyone in local open mode).
 // The handler lives in dashboardQueries/ so each piece stays small; this file only fixes the public API name.
 
 export const board = query({
-  args: {},
-  handler: async (ctx) => {
-    await assertViewer(ctx);
-    return boardView(ctx);
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, { sessionId }) => {
+    if (!(await viewSession(ctx, sessionId))) return null;
+    return boardView(ctx, sessionId);
   },
 });
 
@@ -18,7 +18,10 @@ export const board = query({
 export const delivery = query({
   args: { classificationId: v.id("classifications") },
   handler: async (ctx, { classificationId }) => {
-    await assertViewer(ctx);
+    const agentId = (await ctx.db.get(classificationId))?.agentIds[0];
+    const agent = agentId ? await ctx.db.get(agentId) : null;
+    if (!agent?.sessionId) return [];
+    await assertSession(ctx, agent.sessionId);
     const items = await ctx.db
       .query("inbox")
       .withIndex("by_classification", (q) => q.eq("classificationId", classificationId))

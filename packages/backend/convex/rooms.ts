@@ -109,7 +109,8 @@ export const join = mutation({
       .query("teams")
       .withIndex("by_invite", (q) => q.eq("inviteCode", invite.trim()))
       .first();
-    if (!team) throw new ConvexError("That invite link is no longer valid. Ask the room owner for a new one.");
+    if (!team)
+      throw new ConvexError("That invite link is no longer valid. Ask the room owner for a new one.");
     await addMember(ctx, team._id, member._id);
     return { roomId: team._id };
   },

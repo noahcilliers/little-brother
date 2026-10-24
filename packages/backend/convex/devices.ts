@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
-import { requireMember, theTeam, viewerMember } from "./access";
+import { requireMember, viewerMember } from "./access";
 import { randomToken, sha256Hex } from "./hash";
 
 // Connect tokens: one per laptop, shown once, exchanged by `lb join --token` for a long-lived connector
@@ -57,16 +57,14 @@ export const list = query({
   },
 });
 
-/** Members revoke their own laptops; the owner can revoke anyone's. The connector token stops working at once. */
+/** Members revoke their own laptops. The connector token stops working at once. */
 export const revoke = mutation({
   args: { id: v.id("deviceTokens") },
   handler: async (ctx, { id }) => {
     const member = await requireMember(ctx);
     const device = await ctx.db.get(id);
     if (!device) return null;
-    const team = await theTeam(ctx);
-    const isOwner = team !== null && member.userId === team.ownerId;
-    if (device.memberId !== member._id && !isOwner) throw new ConvexError("Not your laptop.");
+    if (device.memberId !== member._id) throw new ConvexError("Not your laptop.");
     await ctx.db.patch(id, { status: "revoked", connectHash: undefined });
     return null;
   },

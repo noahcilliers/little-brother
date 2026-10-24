@@ -1,3 +1,4 @@
+import { cleanPrompt } from "@lb/core";
 import type { Doc } from "../_generated/dataModel";
 import { clip, lbSentence } from "./labels";
 import { payloadField, payloadString } from "./shared";
@@ -58,7 +59,11 @@ function eventLine(e: Doc<"events">, src: Source, taskOf: Map<string, string>): 
   const tool = e.tool ?? "";
   const call = `${tool}(${target(e)})`;
   if (e.hook === "UserPromptSubmit") {
-    return { ...base, kind: "prompt", text: payloadString(e, "envelope", "prompt") ?? e.summary };
+    return {
+      ...base,
+      kind: "prompt",
+      text: cleanPrompt(payloadString(e, "envelope", "prompt") ?? e.summary),
+    };
   }
   if (e.hook === "PreToolUse") {
     const reason = payloadString(e, "output", "hookSpecificOutput", "permissionDecisionReason");

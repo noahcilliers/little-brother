@@ -1,4 +1,4 @@
-import { context, signatureLine } from "@lb/core";
+import { cleanPrompt, context, signatureLine } from "@lb/core";
 import { internal } from "../_generated/api";
 import { deliverPending } from "../digest";
 import { insertNode, topicFor, topicFromText } from "../nodes";
@@ -11,9 +11,12 @@ const oneLine = (s: string, n = 200) => {
 };
 
 export const onUserPromptSubmit: HookHandler = async ({ ctx, agent, env }) => {
-  const prompt = env.prompt ?? env.preview ?? "";
+  const prompt = cleanPrompt(env.prompt ?? env.preview ?? "");
+  // Harness-only prompts (task notifications, reminders) carry no intent; just deliver what is queued.
+  if (!prompt)
+    return { output: context("UserPromptSubmit", await deliverPending(ctx, agent._id)), summary: "" };
   const topic =
-    (await topicFor(ctx, agent.repo, env.files)) ?? (await topicFromText(ctx, agent.repo, env.prompt ?? ""));
+    (await topicFor(ctx, agent.repo, env.files)) ?? (await topicFromText(ctx, agent.repo, prompt));
   const nodeId = await insertNode(ctx, {
     agentId: agent._id,
     kind: "intent",

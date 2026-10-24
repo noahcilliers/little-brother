@@ -470,9 +470,6 @@
   }
 }
 @media (max-width: 720px) {
-  .lp .cap-mobile {
-    display: block;
-  }
   .lp .hero .lead {
     padding: 32px 20px 28px;
   }
@@ -544,4 +541,29 @@
   gap: 6px;
   justify-items: start;
   min-width: 0;
+}
+
+/* catch-type chips on the catches tiles */
+.lp .vt {
+  display: inline-block;
+  font: 500 10.5px / 1 var(--mono);
+  padding: 3px 6px;
+  border: 1px solid var(--line-2);
+}
+.lp .vt.normal {
+  color: var(--faint);
+  border-color: transparent;
+  padding-left: 0;
+}
+.lp .vt.duplicate {
+  border: 3px double var(--fg);
+  padding: 1px 5px;
+}
+.lp .vt.stale {
+  border: 1px dashed var(--fg);
+}
+.lp .vt.conflict {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
 }

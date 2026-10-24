@@ -28,6 +28,7 @@ beforeEach(() => {
   delete process.env.LB_PROFILE;
   delete process.env.LB_SESSION_DIR;
   delete process.env.CLAUDE_PLUGIN_DATA;
+  process.env.LB_SESSION = "test01";
 });
 
 describe("fail open", () => {

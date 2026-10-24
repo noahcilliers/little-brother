@@ -3,31 +3,23 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { Ctx, Klass } from "./shared";
 
 // Every read the board makes, bounded. The page shows one run, so these caps are generous.
-const LANE_LIMIT = 6;
+const AGENT_LIMIT = 24;
 const NODES_PER_AGENT = 150;
 const TASKS_PER_AGENT = 60;
 const EVENTS_PER_AGENT = 300;
 const INBOX_PER_AGENT = 40;
 const VERDICT_SCAN = 1000;
-const MEMBER_SCAN = 100;
-// Agents seen within this long of the most recent one belong to the same run.
-const RUN_WINDOW_MS = 15 * 60 * 1000;
 
-async function laneAgents(ctx: Ctx): Promise<Doc<"agents">[]> {
-  const live = [
-    ...(await ctx.db
+/** Every Claude session that joined this Little Brother session, live ones first (lanes merge per person later). */
+async function laneAgents(ctx: Ctx, sessionId: Id<"sessions">): Promise<Doc<"agents">[]> {
+  const agents = (
+    await ctx.db
       .query("agents")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
-      .take(LANE_LIMIT)),
-    ...(await ctx.db
-      .query("agents")
-      .withIndex("by_status", (q) => q.eq("status", "idle"))
-      .take(LANE_LIMIT)),
-  ].filter((a) => a.machine !== "verify");
-  if (live.length > 0) return live.slice(0, LANE_LIMIT);
-  const recent = (await ctx.db.query("agents").order("desc").take(30)).filter((a) => a.machine !== "verify");
-  const latest = Math.max(0, ...recent.map((a) => a.lastSeenAt));
-  return recent.filter((a) => latest - a.lastSeenAt < RUN_WINDOW_MS).slice(0, LANE_LIMIT);
+      .withIndex("by_lb_session", (q) => q.eq("sessionId", sessionId))
+      .order("desc")
+      .take(AGENT_LIMIT)
+  ).filter((a) => a.machine !== "verify");
+  return agents;
 }
 
 export type Source = {
@@ -64,12 +56,17 @@ async function perAgent<T>(agents: Doc<"agents">[], load: (a: Doc<"agents">) => 
   return out;
 }
 
-export async function loadSource(ctx: Ctx): Promise<Source> {
-  const agents = (await laneAgents(ctx)).sort((a, b) => a._creationTime - b._creationTime);
-  const members = await ctx.db.query("members").take(MEMBER_SCAN);
-  // Color follows the member, not the session, so a person keeps one color across runs.
-  const memberColor = new Map(members.map((m, i) => [m._id, (i % 6) + 1]));
-  const memberHandle = new Map(members.map((m) => [m._id, m.handle]));
+export async function loadSource(ctx: Ctx, sessionId: Id<"sessions">): Promise<Source> {
+  const agents = (await laneAgents(ctx, sessionId)).sort((a, b) => a._creationTime - b._creationTime);
+  const mine = new Set<string>(agents.map((a) => a._id));
+  // Colors follow people in the order they joined this session, so the first six never share one.
+  const memberColor = new Map<string, number>();
+  const memberHandle = new Map<string, string>();
+  for (const a of agents) {
+    if (memberColor.has(a.memberId)) continue;
+    memberColor.set(a.memberId, (memberColor.size % 6) + 1);
+    memberHandle.set(a.memberId, (await ctx.db.get(a.memberId))?.handle ?? "agent");
+  }
   const handles = new Map(agents.map((a) => [a._id, memberHandle.get(a.memberId) ?? "agent"]));
   const colors = new Map(agents.map((a) => [a._id, memberColor.get(a.memberId) ?? 1]));
 
@@ -105,7 +102,10 @@ export async function loadSource(ctx: Ctx): Promise<Source> {
       .slice(-INBOX_PER_AGENT),
   );
   const start = nodes.length > 0 ? Math.min(...nodes.map((n) => n.at)) - 1000 : 0;
-  const recentVerdicts = await ctx.db.query("classifications").order("desc").take(VERDICT_SCAN);
+  // Verdicts are not indexed by session; a verdict belongs here when its new side is one of these agents.
+  const recentVerdicts = (await ctx.db.query("classifications").order("desc").take(VERDICT_SCAN)).filter(
+    (c) => mine.has(c.agentIds[0] ?? ""),
+  );
   const verdicts = recentVerdicts.filter((c) => c.at >= start && c.type !== "normal");
 
   // A verdict can point at a lesson, decision or step from an agent outside the lanes; pull that node in.
@@ -126,7 +126,7 @@ export async function loadSource(ctx: Ctx): Promise<Source> {
       .withIndex("by_time", (q) => q.gte("at", start))
       .order("desc")
       .take(200)
-  ).filter((e) => e.source === "verify");
+  ).filter((e) => e.source === "verify" && mine.has(e.agentId));
   nodes.sort((a, b) => a.at - b.at);
   tasks.sort((a, b) => a.startedAt - b.startedAt);
   const allEvents = [...events, ...verify].sort((a, b) => a.at - b.at);

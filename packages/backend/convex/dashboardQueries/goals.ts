@@ -1,3 +1,4 @@
+import { cleanPrompt } from "@lb/core";
 import type { Doc } from "../_generated/dataModel";
 import { decisionLabel, goalLabel, knowledgeNote, lessonLabel } from "./labels";
 import type { Source } from "./source";
@@ -40,7 +41,7 @@ export function buildGoals(src: Source, tasks: BoardTask[]): BoardGoal[] {
       id: g._id,
       agentId: g.agentId,
       label: goalLabel(g),
-      text: g.text,
+      text: cleanPrompt(g.text),
       t0: g.at,
       t1: running || current ? null : end,
     };

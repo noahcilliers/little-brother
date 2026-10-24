@@ -2,20 +2,20 @@
 
 import "./film.css";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { FilmGraph } from "./film-graph";
-import { DURATION } from "./film-graph-data";
-import { cursorAt, lastBefore, mmss, stageTransform } from "./film-math";
-import { CATCHES, CHAPTERS, SCENES } from "./film-story";
-import { FilmTable } from "./film-table";
-import { FilmThink } from "./film-think";
+import { STAGE_H, STAGE_W, stageTransform } from "./film-camera";
+import { lastBefore } from "./film-clock";
+import { FilmControls } from "./film-controls";
+import { FilmStage } from "./film-stage";
+import { CHAPTERS, SCENES } from "./film-story";
 import { useFilm } from "./use-film";
 
-/** Width of the stage viewport, so the 1200px stage can be scaled and zoomed into it. */
+/** Width of the stage viewport, so the fixed-size stage can be scaled and zoomed into it. */
 function useWidth(ref: RefObject<HTMLElement | null>): number {
-  const [w, setW] = useState(1200);
+  const [w, setW] = useState(STAGE_W);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    setW(el.clientWidth);
     const ro = new ResizeObserver(() => setW(el.clientWidth));
     ro.observe(el);
     return () => ro.disconnect();
@@ -23,17 +23,14 @@ function useWidth(ref: RefObject<HTMLElement | null>): number {
   return w;
 }
 
-/** The landing page's product preview: a scripted 44 s run of the demo repo with three catches. */
+/** The landing page's product video: a scripted run of the real dashboard on lb-demo-shop, three catches. */
 export function Film() {
   const wrap = useRef<HTMLDivElement>(null);
   const width = useWidth(wrap);
   const film = useFilm(wrap);
-  const { t } = film;
-  const scene = lastBefore(SCENES, t) ?? SCENES[0];
-  const focus = new Set(scene?.[3] ?? []);
-  const caught = lastBefore(CATCHES, t);
-  const cursor = cursorAt(t);
-  const chapter = lastBefore(CHAPTERS, t);
+  const s = film.t;
+  const scene = lastBefore(SCENES, s);
+  const chapter = lastBefore(CHAPTERS, s);
   return (
     <div className="showcase" id="demo">
       <div className="window">
@@ -46,71 +43,25 @@ export function Film() {
           <span>little brother · lb-demo-shop</span>
           <span className="live">live · 3 agents</span>
         </div>
-        <div className="stage-wrap" ref={wrap}>
-          <div className="stage" style={{ transform: stageTransform(t, width, film.reduced) }}>
-            <FilmGraph t={t} focus={focus} />
-            <FilmThink t={t} />
-            <FilmTable t={t} />
-            <div className="pane p-cap">
-              <span className="cap-tag">{scene?.[1]}</span>
-              <p className="cap-text">{scene?.[2]}</p>
-              <div className="counters">
-                <div>
-                  <b>{caught?.[1] ?? "0"}</b>catches before push
-                </div>
-                <div>
-                  <b>{caught?.[2] ?? "0"}</b>est. tokens saved
-                </div>
-              </div>
-            </div>
-            <div className="cursor" style={{ opacity: cursor ? 1 : 0, transform: cursor?.transform }}>
-              <svg viewBox="0 0 18 22" aria-hidden="true">
-                <path d="M1 1 L1 17 L5.5 13 L8.5 20 L11 19 L8 12 L14 12 Z" />
-              </svg>
-            </div>
+        <div className="film-view" ref={wrap} style={{ aspectRatio: `${STAGE_W} / ${STAGE_H}` }}>
+          <div className="film-stage" aria-hidden="true" inert>
+            <FilmStage s={s} transform={stageTransform(s, width, film.reduced)} />
           </div>
         </div>
-        <div className="cap-mobile">
-          <b>{scene?.[1]}</b>
-          {scene?.[2]}
-        </div>
+        <p className="film-sub" aria-live="polite">
+          <b>{chapter?.[1]}</b>
+          <span key={scene?.[0]}>{scene?.[1]}</span>
+        </p>
       </div>
-      <div className="fc-controls">
-        <button type="button" className="fc-ctl" onClick={film.toggle}>
-          {film.playing ? "Pause" : "Play"}
-        </button>
-        <button type="button" className="fc-ctl" onClick={film.restart}>
-          Restart
-        </button>
-        <div className="fc-scrub">
-          <input
-            type="range"
-            min={0}
-            max={DURATION}
-            step={0.05}
-            value={t}
-            aria-label="Seek"
-            onChange={(e) => film.seek(Number(e.target.value))}
-          />
-          <div className="chapters">
-            {CHAPTERS.map(([at, name]) => (
-              <button
-                key={name}
-                type="button"
-                aria-current={chapter?.[0] === at}
-                onClick={() => film.seek(at)}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-        </div>
-        <span className="fc-clock">
-          {mmss(t)} / {mmss(DURATION)}
-        </span>
-      </div>
+      <FilmControls
+        s={s}
+        playing={film.playing}
+        onToggle={film.toggle}
+        onRestart={film.restart}
+        onSeek={film.seek}
+      />
       <p className="disclaim">
-        Illustrative run of the Cal Hacks demo repo · numbers are from the scripted scenario
+        Illustrative run of the lb-demo-shop repo · scripted data, real dashboard components
       </p>
     </div>
   );

@@ -82,7 +82,8 @@ export async function toCandidates(
       out.push({ ...base, failedMemory: true });
       continue;
     }
-    if (n.agentId === next.agentId || agent.status === "offline" || agent.sessionId !== mine?.sessionId) continue;
+    if (n.agentId === next.agentId || agent.status === "offline" || agent.sessionId !== mine?.sessionId)
+      continue;
     if (n.kind === "knowledge" || !isActive(n, now)) continue;
     out.push({ ...base, node: { ...base.node, priority: await priority.of(n) }, failedMemory: false });
   }

@@ -32,6 +32,7 @@ describe("replayCommand", () => {
     );
     process.env.LB_HOME = tempHome({ siteUrl, convexUrl: "", current: "ash", profiles });
     process.env.LB_SESSION_DIR = join(process.env.LB_HOME, "sessions");
+    process.env.LB_SESSION = "test01";
 
     const out: string[] = [];
     const log = vi.spyOn(console, "log").mockImplementation((s: string) => void out.push(s));
@@ -84,6 +85,7 @@ describe("replayCommand", () => {
     const profiles = Object.fromEntries(["noah", "joshua"].map((h) => [h, { token: `tok-${h}` }]));
     process.env.LB_HOME = tempHome({ siteUrl, convexUrl: "", current: "noah", profiles });
     process.env.LB_SESSION_DIR = join(process.env.LB_HOME, "sessions");
+    process.env.LB_SESSION = "test01";
     const line = (step: string, as: string, delayMs: number) =>
       JSON.stringify({
         step,

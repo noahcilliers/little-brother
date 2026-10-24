@@ -6,6 +6,8 @@ description: Team protocol for Little Brother, which coordinates this Claude Cod
 
 # Little Brother team protocol
 
+Little Brother only sees a Claude Code session after the user runs `/little-brother:join <code>` in it (or starts Claude with `LB_SESSION=<code>`). Until then nothing is shared and the tools below say so; don't suggest joining unless the user asks about coordinating with teammates. `/little-brother:leave` stops sharing.
+
 Several Claude Code sessions, one per teammate, are working on this repo at the same time. Little Brother watches every prompt, edit and command, compares it with what the other sessions are doing and with approaches that already failed, and tells you about overlaps before you waste effort. The `lb` MCP server gives you the tools below.
 
 ## When you hear from Little Brother

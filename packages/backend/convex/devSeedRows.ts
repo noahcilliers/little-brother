@@ -2,6 +2,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { EXTRA_ORDERING, LOOSE } from "./devSeedExtra";
 import { BRANCH } from "./devSeedStory";
 import { memberFor, REPO, type Story, TAG, writeNode } from "./devSeedWrite";
+import { demoSession } from "./migrateRooms";
 
 // Dev only: the remaining devSeed rows (verdicts, loose reads, the ordering catch, the verify run).
 
@@ -58,7 +59,10 @@ export async function writeOrdering(s: Story, firstAct: Map<string, Id<"nodes">>
 }
 
 export async function writeVerify(s: Story, t: number) {
+  const scope = await demoSession(s.ctx);
   const verifier = await s.ctx.db.insert("agents", {
+    teamId: scope.teamId,
+    sessionId: scope._id,
     memberId: await memberFor(s.ctx, "noah"),
     claudeSessionId: `${TAG}-verify-${s.now}`,
     machine: "verify",

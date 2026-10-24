@@ -1,3 +1,4 @@
+import { cleanPrompt } from "@lb/core";
 import type { Doc } from "../_generated/dataModel";
 
 // Short labels derived from compact signatures (`VERB topic target → OUTCOME`, docs/PLAN.md §2), no model call.
@@ -21,7 +22,8 @@ export function basename(path: string): string {
 
 /** The signature without its leading verb and topic and its outcome tail: the free target text. */
 export function signatureRest(n: Pick<Sig, "verb" | "text" | "topic">): string {
-  const words = n.text.replace(/\s*→.*$/, "").split(/\s+/);
+  // Older intents were stored with harness tags (<pasted_content …>) still in the prompt.
+  const words = cleanPrompt(n.text.replace(/\s*→.*$/, "")).split(/\s+/);
   if (words[0] === n.verb) words.shift();
   if (n.topic && (words[0] === n.topic || words[0] === `${n.topic}:`)) words.shift();
   return words.join(" ").trim();
@@ -29,8 +31,10 @@ export function signatureRest(n: Pick<Sig, "verb" | "text" | "topic">): string {
 
 /** "PLAN auth build the user auth workflow" → "Build user auth". The full prompt goes to the session pane. */
 export function goalLabel(n: Sig): string {
-  const head = signatureRest(n).split(/[:;,.]/)[0] ?? "";
-  const words = head.split(/\s+/).filter((w) => w && !STOP.has(w.toLowerCase()));
+  const content = (part: string) => part.split(/\s+/).filter((w) => w && !STOP.has(w.toLowerCase()));
+  // Pasted specs often open with a one-word label ("Title: …"); the goal is the first clause with substance.
+  const parts = signatureRest(n).split(/[:;,.]/);
+  const words = content(parts.find((p) => content(p).length > 1) ?? parts[0] ?? "");
   return capitalize(clip(words.slice(0, 3).join(" ") || n.topic || "goal", 28));
 }
 

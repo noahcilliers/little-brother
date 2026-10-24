@@ -1,9 +1,9 @@
 "use client";
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { DURATION } from "./film-graph-data";
+import { DURATION } from "./film-clock";
 
-const START_AT = 27; // a poster frame mid-conflict until the film scrolls into view
+const START_AT = 28.4; // a poster frame on the decision popup until the film scrolls into view
 const LOOP_HOLD = 2.5;
 
 /** Playback clock: autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */

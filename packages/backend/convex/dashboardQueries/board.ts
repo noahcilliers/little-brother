@@ -1,8 +1,10 @@
+import type { Id } from "../_generated/dataModel";
 import { buildBeats } from "./beats";
 import { buildCatches } from "./catches";
 import { buildDecisions } from "./decisions";
 import { buildGoals, buildShared } from "./goals";
 import { capitalize } from "./labels";
+import { mergeLanes } from "./lanes";
 import type { LooseAction } from "./routine";
 import { buildSessions } from "./sessions";
 import { type Ctx, payloadField, payloadString } from "./shared";
@@ -45,8 +47,8 @@ function agentRows(src: Source, tasks: BoardTask[], loose: LooseAction[]) {
 }
 
 /** Everything the one-screen dashboard needs; the client only lays it out on the time axis. */
-export async function board(ctx: Ctx) {
-  const src = await loadSource(ctx);
+export async function board(ctx: Ctx, sessionId: Id<"sessions">) {
+  const src = mergeLanes(await loadSource(ctx, sessionId));
   const { tasks, taskOfNode, loose } = buildTasks(src);
   fillTokens(src, tasks, loose);
   const goals = buildGoals(src, tasks);

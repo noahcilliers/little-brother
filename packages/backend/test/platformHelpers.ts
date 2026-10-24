@@ -8,6 +8,9 @@ export const modules = import.meta.glob("../convex/**/*.ts");
 export const makeT = () => convexTest(schema, modules);
 export type T = ReturnType<typeof makeT>;
 
+/** Every helper member is in one room with this open session, so hooks are recorded. */
+export const TEST_SESSION = "test01";
+
 let seq = 0;
 export function envelope(hook: string, session: string, extra: Partial<IngestEnvelope> = {}): IngestEnvelope {
   seq += 1;
@@ -21,6 +24,7 @@ export function envelope(hook: string, session: string, extra: Partial<IngestEnv
       branch: `${session}/branch`,
       machine: "mbp",
       cwd: "/x",
+      lbSession: TEST_SESSION,
     },
     files: [],
     touches: [],
@@ -32,7 +36,25 @@ export function envelope(hook: string, session: string, extra: Partial<IngestEnv
 
 export async function joinMember(t: T, handle: string): Promise<string> {
   const token = `tok-${handle}`;
-  await t.mutation(internal.members.join, { handle, tokenHash: await sha256Hex(token) });
+  const memberId = await t.mutation(internal.members.join, { handle, tokenHash: await sha256Hex(token) });
+  await t.run(async (ctx) => {
+    const room =
+      (await ctx.db.query("teams").first())?._id ??
+      (await ctx.db.insert("teams", { name: "test", inviteCode: "inv", createdAt: 0 }));
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_code", (q) => q.eq("code", TEST_SESSION))
+      .first();
+    if (!session)
+      await ctx.db.insert("sessions", {
+        teamId: room,
+        name: "test",
+        code: TEST_SESSION,
+        createdBy: memberId,
+        createdAt: 0,
+      });
+    await ctx.db.insert("roomMembers", { teamId: room, memberId, joinedAt: Date.now() });
+  });
   return token;
 }
 

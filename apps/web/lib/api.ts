@@ -3,7 +3,8 @@ import type { FunctionReturnType } from "convex/server";
 
 export { api };
 
-export type Board = FunctionReturnType<typeof api.dashboard.board>;
+/** The board for one session; the query returns null when the viewer can't see that session. */
+export type Board = NonNullable<FunctionReturnType<typeof api.dashboard.board>>;
 export type BoardAgent = Board["agents"][number];
 export type BoardGoal = Board["goals"][number];
 export type BoardTask = Board["tasks"][number];
@@ -19,3 +20,9 @@ export type LooseAction = Board["loose"][number];
 export type TeamStatus = FunctionReturnType<typeof api.team.status>;
 export type Me = FunctionReturnType<typeof api.team.me>;
 export type Progress = FunctionReturnType<typeof api.onboarding.progress>;
+
+export type RoomSummary = FunctionReturnType<typeof api.rooms.mine>[number];
+export type Room = NonNullable<FunctionReturnType<typeof api.rooms.get>>;
+export type RoomSession = Room["sessions"][number];
+export type RoomMember = Room["members"][number];
+export type SessionHead = NonNullable<FunctionReturnType<typeof api.sessions.get>>;

@@ -1,6 +1,7 @@
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { BRANCH, type Handle, type SeedAct, type SeedTask } from "./devSeedStory";
+import { demoSession } from "./migrateRooms";
 
 // Dev only: row writers for devSeed. Every row hangs off an agent whose session id starts with TAG.
 
@@ -33,8 +34,11 @@ export async function startStory(ctx: MutationCtx, at: number, handles: Handle[]
   const now = Date.now();
   const base = now - at * UNIT_MS - 500;
   const agent = {} as Record<Handle, Id<"agents">>;
+  const scope = await demoSession(ctx);
   for (const h of handles) {
     agent[h] = await ctx.db.insert("agents", {
+      teamId: scope.teamId,
+      sessionId: scope._id,
       memberId: await memberFor(ctx, h),
       claudeSessionId: `${TAG}-${h}-${now}`,
       machine: TAG,

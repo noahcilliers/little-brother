@@ -1,9 +1,14 @@
 {
   "name": "little-brother",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Coordinates independent Claude Code sessions on one team: flags duplicate work, conflicts and known-failed approaches before they cost tokens.",
   "author": {
     "name": "Little Brother team"
   },
-  "keywords": ["coordination", "multi-agent", "hooks", "mcp"]
+  "keywords": [
+    "coordination",
+    "multi-agent",
+    "hooks",
+    "mcp"
+  ]
 }
