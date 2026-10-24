@@ -2,7 +2,7 @@ import { McpArgs } from "@lb/core";
 import { z } from "zod";
 import { activeProfile } from "../config";
 import { sessionCodeFor } from "../hook/attach";
-import { readSessionId } from "../hook/session-file";
+import { ownSessionId } from "../hook/session-file";
 import { postJson } from "../http";
 
 export type ToolName = keyof typeof McpArgs;
@@ -28,7 +28,7 @@ export type CallOptions = { as?: string; claudeSessionId?: string };
 export async function callTool(tool: ToolName, args: unknown, opts: CallOptions = {}): Promise<string> {
   const p = activeProfile(opts.as);
   if (!p) return "little-brother is not set up on this machine: run `lb join --url <siteUrl> --as <handle>`.";
-  const claudeSessionId = opts.claudeSessionId ?? readSessionId();
+  const claudeSessionId = opts.claudeSessionId ?? ownSessionId();
   if (!opts.as && !sessionCodeFor(claudeSessionId))
     return "This Claude session has not joined a Little Brother session, so nothing is shared. If the user wants coordination, they run /little-brother:join <code> (the code is on their dashboard).";
   const body = { claudeSessionId, args: McpArgs[tool].parse(args) };

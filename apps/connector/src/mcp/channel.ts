@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ActiveProfile } from "../config";
-import { readSessionId } from "../hook/session-file";
+import { ownSessionId } from "../hook/session-file";
 
 const WatchItem = z.object({
   id: z.string(),
@@ -38,7 +38,7 @@ export async function startChannel(
     logger: { log: () => undefined, logVerbose: () => undefined, warn: toStderr, error: toStderr },
   });
   const seen = new Set<string>();
-  let sessionId = readSessionId();
+  let sessionId = ownSessionId();
   let unsubscribe: (() => void) | null = null;
 
   const onItems = async (raw: unknown): Promise<void> => {
@@ -73,7 +73,7 @@ export async function startChannel(
   subscribe();
 
   const timer = setInterval(() => {
-    const next = readSessionId();
+    const next = ownSessionId();
     if (next !== sessionId) {
       sessionId = next;
       subscribe();
