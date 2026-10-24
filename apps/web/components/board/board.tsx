@@ -90,13 +90,11 @@ export function Board({ sessionId, watchToken }: Source) {
       </div>
       {board && !empty ? (
         <Sessions
-          agents={board.agents}
           sessions={board.sessions}
           t={play.t}
           start={start}
           selected={selected}
           onSelect={setSelected}
-          colorOf={colorOf}
         />
       ) : null}
       <PlaybackBar
