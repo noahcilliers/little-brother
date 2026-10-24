@@ -77,7 +77,9 @@ export async function verdictLog(ctx: QueryCtx, sessionId: Id<"sessions">): Prom
       source: c.source,
       confidence: c.confidence,
       // Non-catches store only "independent (llm, 0.90)"; the judge's own rationale is in the evidence.
-      reason: tidy(c.type === "normal" ? (c.evidence.find((e) => e.startsWith("judge:")) ?? c.reason) : c.reason),
+      reason: tidy(
+        c.type === "normal" ? (c.evidence.find((e) => e.startsWith("judge:")) ?? c.reason) : c.reason,
+      ),
       evidence: c.evidence.slice(0, 6),
       latencyMs: c.latencyMs,
       status: c.status,
