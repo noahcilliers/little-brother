@@ -1,5 +1,4 @@
 import {
-  ACTIVE_WINDOW_MS,
   type Candidate,
   type ClassifiedNode,
   isActive,
@@ -11,10 +10,8 @@ import {
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { type PriorityLoader, priorityLoader } from "./priority";
+import { roomFailures, sessionWork } from "./scope";
 
-/** Open work older than this is treated as abandoned rather than active. */
-const OPEN_WINDOW_MS = 12 * 60 * 60 * 1000;
-const ACTIVE_CAP = 200;
 const MEMORY_CAP = 50;
 
 export function stored(n: Doc<"nodes">): StoredNode {
@@ -57,7 +54,7 @@ export async function agentStatus(
 
 /**
  * Turn loaded nodes into candidates: failure memory from anyone in the same room, active work only from other
- * live agents in the same session. Retrieval reads across rooms, so the scope is enforced here.
+ * live agents in the same session. Vector and lexical retrieval read across rooms, so the scope is enforced here.
  */
 export async function toCandidates(
   ctx: QueryCtx,
@@ -90,31 +87,17 @@ export async function toCandidates(
   return out;
 }
 
-/** Structural candidate set (no embeddings): recent active work plus failure memory by signature, topic, path. */
+/**
+ * Structural candidate set (no embeddings): peers' active work in this session, plus the room's failure
+ * memory by path, signature and topic.
+ */
 export async function loadStructural(
   ctx: QueryCtx,
   next: Doc<"nodes">,
   now: number,
 ): Promise<Doc<"nodes">[]> {
-  const open = await ctx.db
-    .query("nodes")
-    .withIndex("by_outcome", (q) => q.eq("outcome", "open").gte("at", now - OPEN_WINDOW_MS))
-    .order("desc")
-    .take(ACTIVE_CAP);
-  const finished = await ctx.db
-    .query("nodes")
-    .withIndex("by_outcome", (q) => q.eq("outcome", "succeeded").gte("at", now - ACTIVE_WINDOW_MS))
-    .order("desc")
-    .take(ACTIVE_CAP / 2);
-  const failed = await ctx.db
-    .query("nodes")
-    .withIndex("by_outcome", (q) => q.eq("outcome", "failed"))
-    .order("desc")
-    .take(ACTIVE_CAP);
-  const files = new Set(next.files.concat(next.touches.map((t) => t.path)));
-  const failedNearby = failed.filter(
-    (n) => n.files.some((f) => files.has(f)) || n.touches.some((t) => files.has(t.path)),
-  );
+  const me = await ctx.db.get(next.agentId);
+  if (!me) return [];
   const bySignature = next.signature
     ? await ctx.db
         .query("nodes")
@@ -122,15 +105,18 @@ export async function loadStructural(
         .take(MEMORY_CAP)
     : [];
   const byTopic = next.topic
-    ? (
-        await ctx.db
-          .query("nodes")
-          .withIndex("by_topic", (q) => q.eq("topic", next.topic))
-          .order("desc")
-          .take(MEMORY_CAP)
-      ).filter(isFailureMemory)
+    ? await ctx.db
+        .query("nodes")
+        .withIndex("by_topic", (q) => q.eq("topic", next.topic))
+        .order("desc")
+        .take(MEMORY_CAP)
     : [];
-  return [...open, ...finished, ...failedNearby, ...bySignature.filter(isFailureMemory), ...byTopic];
+  return [
+    ...(await sessionWork(ctx, me, now)),
+    ...(await roomFailures(ctx, next, next.teamId ?? me.teamId, now)),
+    ...bySignature.filter(isFailureMemory),
+    ...byTopic.filter(isFailureMemory),
+  ];
 }
 
 const THRESHOLDS_KEY = "classifier:thresholds";

@@ -1,9 +1,14 @@
 import type { Metrics, RunRecord, Summary } from "./aggregate";
+import { armOf } from "./arm";
+import { latencySection } from "./report-latency";
+import { savingsSection } from "./report-savings";
 
 export type ReportMeta = {
   startedAt: string;
   model: string;
   variants: string[];
+  /** Missing in reports from before arms existed (Little Brother on only). */
+  arms?: string[];
   runsPerCase: number;
   backend: string;
   wallSec: number;
@@ -39,12 +44,14 @@ function metricTable(columns: [string, Metrics][]): string {
 
 function details(runs: RunRecord[]): string[] {
   const out: string[] = [];
-  const tag = (r: RunRecord) => `\`${r.caseId}\` ${r.variant} #${r.run}`;
+  const tag = (r: RunRecord) =>
+    `\`${r.caseId}\` ${r.variant}${armOf(r) === "off" ? " LB-off" : ""} #${r.run}`;
   for (const r of runs) {
     if (r.error) {
       out.push(`- ${tag(r)} · harness error: ${r.error}`);
       continue;
     }
+    if (armOf(r) === "off") continue;
     for (const e of r.score.expectations) {
       const pair = e.agents.join(" + ");
       if (e.outcome === "miss") out.push(`- ${tag(r)} · **miss**: ${e.type} on ${pair}, the clash happened`);
@@ -81,7 +88,9 @@ export function renderReport(meta: ReportMeta, s: Summary, runs: RunRecord[]): s
   return [
     `# Little Brother eval · ${meta.startedAt}`,
     "",
-    `Model **${meta.model}** · variants ${meta.variants.join(", ")} · ${meta.runsPerCase} run(s) per case · ` +
+    `Model **${meta.model}** · variants ${meta.variants.join(", ")} · ` +
+      `${meta.arms?.includes("off") ? `Little Brother ${meta.arms.join(" + ")} · ` : ""}` +
+      `${meta.runsPerCase} run(s) per case · ` +
       `cost $${s.costUsd.toFixed(2)} · wall ${(meta.wallSec / 60).toFixed(1)} min`,
     "",
     `Backend: ${meta.backend}`,
@@ -99,6 +108,8 @@ export function renderReport(meta: ReportMeta, s: Summary, runs: RunRecord[]): s
     "",
     metricTable(variantCols),
     "",
+    ...latencySection(s.latency),
+    ...savingsSection(s.savings),
     "## Cases",
     "",
     caseTable,

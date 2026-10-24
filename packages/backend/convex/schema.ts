@@ -73,6 +73,7 @@ export default defineSchema({
 
   nodes: defineTable({
     agentId: v.id("agents"),
+    teamId: v.optional(v.id("teams")), // the author agent's room, so hot-path reads stay inside it
     kind: v.union(v.literal("knowledge"), v.literal("intent"), v.literal("action")),
     verb: v.string(),
     text: v.string(), // compact signature; what gets embedded
@@ -99,6 +100,9 @@ export default defineSchema({
     .index("by_signature", ["signature"])
     .index("by_tool_use", ["toolUseId"])
     .index("by_outcome", ["outcome", "at"])
+    .index("by_agent_outcome", ["agentId", "outcome", "at"])
+    .index("by_team_outcome", ["teamId", "outcome", "at"])
+    .index("by_team_kind", ["teamId", "kind", "at"])
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
       dimensions: 768,
@@ -159,6 +163,7 @@ export default defineSchema({
     action,
     againstNodeId: v.optional(v.id("nodes")),
     agentIds: v.array(v.id("agents")),
+    teamId: v.optional(v.id("teams")), // the new node's room, so the PreToolUse gates scan only their room
     reason: v.string(),
     evidence: v.array(v.string()),
     confidence: v.number(),
@@ -177,6 +182,7 @@ export default defineSchema({
   })
     .index("by_node", ["nodeId"])
     .index("by_status", ["status", "at"])
+    .index("by_team_status", ["teamId", "status", "at"])
     .index("by_pair", ["nodeId", "againstNodeId"])
     .index("by_against", ["againstNodeId"]),
 

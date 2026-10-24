@@ -1,4 +1,6 @@
 import type { Metrics, Summary } from "./aggregate";
+import { latencyCompareRows } from "./report-latency";
+import { savingsCompareRows } from "./report-savings";
 
 const KEYS: [keyof Metrics, string, "pct" | "sec" | "n"][] = [
   ["recall", "Recall", "pct"],
@@ -52,6 +54,8 @@ export function renderCompare(baseline: Summary, current: Summary): string {
     "| Metric | Baseline | Now | Change |",
     "| --- | --- | --- | --- |",
     ...rows,
+    ...latencyCompareRows(baseline.latency, current.latency),
+    ...savingsCompareRows(baseline.savings, current.savings),
     "",
     moved.length ? moved.join("\n") : "No case changed.",
     "",

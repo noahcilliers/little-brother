@@ -28,17 +28,24 @@ async function tokenHashOf(req: Request): Promise<string | null> {
 }
 
 const hook = httpAction(async (ctx, req) => {
+  const t0 = Date.now();
   const tokenHash = await tokenHashOf(req);
   if (!tokenHash) return json(401, { error: "missing token" });
   const name = new URL(req.url).pathname.slice("/hook/".length);
   const envelope = IngestEnvelope.safeParse(await readJson(req));
   if (!name || !envelope.success) return json(400, { error: envelope.error?.message ?? "missing hook name" });
+  const t1 = Date.now();
   const res = await ctx.runMutation(internal.events.ingest, {
     tokenHash,
     hook: name,
     envelope: envelope.data,
   });
-  return res.status === 200 ? json(200, { output: res.output }) : json(res.status, { error: "unauthorized" });
+  const t2 = Date.now();
+  const out =
+    res.status === 200 ? json(200, { output: res.output }) : json(res.status, { error: "unauthorized" });
+  // Lets `lb hook` timing split a slow deliver into network, request parsing and the ingest mutation.
+  out.headers.set("server-timing", `parse;dur=${t1 - t0}, ingest;dur=${t2 - t1}`);
+  return out;
 });
 
 const mcp = httpAction(async (ctx, req) => {

@@ -13,6 +13,7 @@ import { appendOutbox, flushOutbox, type OutboxEntry } from "./outbox";
 import { revertedPaths } from "./reverts";
 import { handleSessionCommand, retryPending } from "./session-command";
 import { writeSessionId } from "./session-file";
+import type { PhaseTimer } from "./timing";
 import { transcriptTokens, transcriptToolUsage } from "./transcript";
 
 export type HookRunOptions = {
@@ -26,6 +27,8 @@ export type HookRunOptions = {
   background?: boolean;
   /** The Little Brother session code; defaults to LB_SESSION, then what this Claude session joined. */
   session?: string;
+  /** Set by `lb hook` when LB_TIMING_FILE is on; each step of the path marks its phase. */
+  timer?: PhaseTimer;
 };
 
 export type HookResult = { output: unknown; envelope?: IngestEnvelope; delivered: boolean; error?: string };
@@ -128,7 +131,9 @@ async function joinOrLeave(input: HookInput, opts: HookRunOptions): Promise<Hook
  * that has not joined a Little Brother session stops here, before any network call.
  */
 export async function runHook(event: string, raw: unknown, opts: HookRunOptions = {}): Promise<HookResult> {
+  const t = opts.timer;
   const input = parseInput(event, raw, opts.cwd);
+  t?.mark("parse");
   if (typeof input === "string") return { output: null, delivered: false, error: input };
   let envelope: IngestEnvelope | undefined;
   try {
@@ -142,14 +147,18 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
       ? null
       : await retryPending(input, opts.as);
     const code = admitted?.code ?? sessionCodeFor(input.session_id, opts.session);
+    t?.mark("session");
     if (!code)
       return { output: null, delivered: false, error: "this Claude session has not joined a session" };
     const repo = repoInfo(input.cwd);
+    t?.mark("git");
+    const normalized = await normalizeFor(input, repo.root);
+    t?.mark("normalize");
     envelope = buildEnvelope(input, {
       repo: repo.repo,
       branch: repo.branch,
       machine: hostname(),
-      normalized: await normalizeFor(input, repo.root),
+      normalized,
       tokens: input.hook_event_name === "Stop" ? transcriptTokens(input.transcript_path) : undefined,
       // The transcript can lag mid-turn; by Stop, SessionEnd and PreCompact the turn's usage is written.
       usage: USAGE_HOOKS.has(input.hook_event_name) ? transcriptToolUsage(input.transcript_path) : undefined,
@@ -157,7 +166,9 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
     });
     envelope.session.lbSession = code;
     if (input.hook_event_name === "SessionStart") envelope.topicMap = loadTopicMap(repo.root);
+    t?.mark("envelope");
     addGitContext(input, envelope, repo);
+    t?.mark("git");
     if (input.hook_event_name === "Stop" && opts.background)
       startBackgroundMergeCheck(repo, input.session_id, opts.as);
     const entry: OutboxEntry = { as: opts.as, envelope };
@@ -165,6 +176,7 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
       if (retryable(e)) appendOutbox(entry);
       throw e;
     });
+    t?.mark("deliver");
     const body = IngestResponse.parse(res);
     const resend = (e: OutboxEntry): Promise<void> =>
       deliver(e, opts.flushTimeoutMs ?? FLUSH_TIMEOUT_MS).then(
@@ -174,9 +186,11 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
         },
       );
     await flushOutbox(resend).catch(() => 0);
+    t?.mark("flush");
     const output = admitted ? withNote(body.output ?? null, admitted.note) : (body.output ?? null);
     return { output, envelope, delivered: true };
   } catch (e) {
+    t?.mark("failed");
     return { output: null, envelope, delivered: false, error: e instanceof Error ? e.message : String(e) };
   }
 }

@@ -104,6 +104,7 @@ export async function insertMissed(
     direction: "none",
     action: "serialize",
     agentIds: [a._id, b._id],
+    ...(node.teamId ? { teamId: node.teamId } : {}),
     reason,
     evidence: [`git merge-tree ${conflict.a} ${conflict.b}`, ...conflict.files.map((f) => `conflict: ${f}`)],
     confidence: 0.99,

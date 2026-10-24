@@ -1,5 +1,6 @@
 export * from "./classify/index";
 export * from "./command-outcome";
+export * from "./hook-timing";
 export * from "./hooks";
 export * from "./inbox";
 export * from "./ingest";

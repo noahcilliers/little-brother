@@ -1,5 +1,7 @@
 import { isAbsolute, relative } from "node:path";
+import { type TokenCounts, tokenCounts } from "@lb/core";
 import { z } from "zod";
+import { addTokens, maxTokens, ZERO_TOKENS } from "./tokens";
 
 // Claude Code's `--output-format stream-json` lines, reduced to what triggers and checks need.
 
@@ -22,7 +24,11 @@ const Line = z.union([
     .passthrough(),
   z.object({
     type: z.enum(["assistant", "user"]),
-    message: z.object({ content: z.array(Block).or(z.string()) }),
+    message: z.object({
+      id: z.string().optional(),
+      usage: z.unknown().optional(),
+      content: z.array(Block).or(z.string()),
+    }),
   }),
   z
     .object({
@@ -50,6 +56,8 @@ export type AgentLog = {
   /** Little Brother deny or warn texts the agent saw in tool results. */
   lbMessages: string[];
   costUsd: number;
+  /** API usage per assistant message id; read with `logTokens`. */
+  usage: Map<string, TokenCounts>;
   turns: number;
   finished: boolean;
   resultText: string;
@@ -62,6 +70,7 @@ export const emptyLog = (): AgentLog => ({
   firstEditAt: null,
   lbMessages: [],
   costUsd: 0,
+  usage: new Map(),
   turns: 0,
   finished: false,
   resultText: "",
@@ -92,6 +101,21 @@ export function redirectTargets(command: string): string[] {
   return out.filter((f) => f !== "/dev/null" && !f.startsWith("&"));
 }
 
+/**
+ * Claude Code emits one line per content block, each repeating its message's usage, and a streamed message's
+ * output count only grows, so each message id keeps its largest counts.
+ */
+function recordUsage(log: AgentLog, message: { id?: string; usage?: unknown }): void {
+  const key = message.id ?? `anon:${log.usage.size}`;
+  const counts = tokenCounts(message.usage);
+  const prev = log.usage.get(key);
+  log.usage.set(key, prev ? maxTokens(prev, counts) : counts);
+}
+
+/** Everything the agent's model calls used, subagents included. */
+export const logTokens = (log: AgentLog): TokenCounts =>
+  [...log.usage.values()].reduce(addTokens, ZERO_TOKENS);
+
 /** Folds one stdout line into the log. Returns true when this line was the agent's first successful edit. */
 export function applyLine(log: AgentLog, raw: string, root: string, now: number): boolean {
   let json: unknown;
@@ -114,6 +138,7 @@ export function applyLine(log: AgentLog, raw: string, root: string, now: number)
     log.resultText = line.result ?? "";
     return false;
   }
+  if (line.type === "assistant" && line.message.usage !== undefined) recordUsage(log, line.message);
   if (typeof line.message.content === "string") return false;
   let firstEdit = false;
   for (const block of line.message.content) {

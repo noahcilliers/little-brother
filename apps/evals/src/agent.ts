@@ -15,7 +15,11 @@ export type AgentLaunch = {
   sessionDir: string;
   pluginDir: string;
   mcpConfig: string;
+  /** False for the `off` arm: no plugin and no lb MCP server, so no hooks run and no tools are offered. */
+  lb: boolean;
   logFile: string;
+  /** LB_TIMING_FILE for this agent's hooks: one JSON line per call. */
+  timingFile: string;
   limits: Limits;
   onFirstEdit: () => void;
 };
@@ -67,6 +71,7 @@ function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
     LB_PROFILE: a.handle,
     LB_SESSION: a.sessionCode,
     LB_SESSION_DIR: a.sessionDir,
+    LB_TIMING_FILE: a.timingFile,
     CLAUDE_CODE_ENABLE_TODO_TOOLS: "1",
   };
 }
@@ -99,11 +104,9 @@ export function startAgent(a: AgentLaunch): RunningAgent {
     "--verbose",
     "--session-id",
     sessionId,
-    "--plugin-dir",
-    a.pluginDir,
+    // Strict with no config file leaves the off arm with no MCP servers at all, not the user's own.
     "--strict-mcp-config",
-    "--mcp-config",
-    a.mcpConfig,
+    ...(a.lb ? ["--plugin-dir", a.pluginDir, "--mcp-config", a.mcpConfig] : []),
     "--setting-sources",
     "project",
     "--permission-mode",

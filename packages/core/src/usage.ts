@@ -12,13 +12,26 @@ const rec = (v: unknown): Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0);
 
-/**
- * New tokens a message cost: what it wrote plus the input it added. Cache reads are context re-sent every turn,
- * not work done for this call, so they don't count.
- */
-function costOf(usage: Record<string, unknown>): number {
-  return num(usage.output_tokens) + num(usage.input_tokens) + num(usage.cache_creation_input_tokens);
+/** One API response's `usage`, by kind of token. */
+export type TokenCounts = { input: number; output: number; cacheCreation: number; cacheRead: number };
+
+export function tokenCounts(usage: unknown): TokenCounts {
+  const u = rec(usage);
+  return {
+    input: num(u.input_tokens),
+    output: num(u.output_tokens),
+    cacheCreation: num(u.cache_creation_input_tokens),
+    cacheRead: num(u.cache_read_input_tokens),
+  };
 }
+
+/**
+ * New tokens: what was written plus the input added. Cache reads are context re-sent every turn, not work
+ * done for this call, so they don't count. Savings estimates and eval totals both use this definition.
+ */
+export const newTokens = (t: TokenCounts): number => t.input + t.output + t.cacheCreation;
+
+const costOf = (usage: unknown): number => newTokens(tokenCounts(usage));
 
 /** A real prompt, not the tool_result entries Claude Code also logs as `user`. */
 function isPrompt(e: Record<string, unknown>): boolean {
@@ -47,7 +60,7 @@ export function transcriptUsage(entries: unknown[], maxTools = 500): TranscriptU
     const id = typeof msg.id === "string" ? msg.id : `entry:${i}`;
     let m = messages.get(id);
     if (!m) {
-      m = { cost: costOf(rec(msg.usage)), tools: [] };
+      m = { cost: costOf(msg.usage), tools: [] };
       messages.set(id, m);
     }
     const content = Array.isArray(msg.content) ? msg.content : [];
