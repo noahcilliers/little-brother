@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { HookInput } from "../../packages/core/src/hooks";
 import { McpArgs } from "../../packages/core/src/mcp";
+import { transcriptUsage } from "../../packages/core/src/usage";
 
 const AGENTS = ["noah", "joshua", "ash", "maya", "leo", "priya"];
 const dir = (rel: string) => fileURLToPath(new URL(`../${rel}`, import.meta.url));
@@ -63,6 +64,31 @@ describe("fixtures/scenario.jsonl", () => {
     const tool = (l: Record<string, unknown>) => (l.input as { tool_name?: string } | undefined)?.tool_name;
     expect(mine.filter((l) => hook(l) === "TaskCreated").length).toBeGreaterThanOrEqual(3);
     expect(mine.filter((l) => tool(l) === "Read").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("gives every Stop and SessionEnd a transcript that prices the agent's earlier tool calls", () => {
+    const ends = scenario.filter((l) =>
+      ["Stop", "SessionEnd"].includes(String((l.input as { hook_event_name?: string })?.hook_event_name)),
+    );
+    expect(ends.length).toBeGreaterThanOrEqual(12);
+    for (const end of ends) {
+      const text = readFileSync(dir(String(end.transcript)), "utf8");
+      const usage = transcriptUsage(
+        text
+          .split("\n")
+          .filter(Boolean)
+          .map((l) => JSON.parse(l)),
+      );
+      const i = scenario.indexOf(end);
+      const ids = scenario
+        .slice(0, i)
+        .filter((l) => l.as === end.as)
+        .map((l) => (l.input as { tool_use_id?: string } | undefined)?.tool_use_id)
+        .filter((id): id is string => !!id);
+      expect(ids.length).toBeGreaterThan(0);
+      for (const id of ids) expect(usage.toolTokens[id], `${end.step} prices ${id}`).toBeGreaterThan(0);
+      expect(usage.turnTokens).toBeGreaterThan(0);
+    }
   });
 
   it.each(scenario.map((l) => [l.step, l] as const))("%s is a valid line", (_step, line) => {

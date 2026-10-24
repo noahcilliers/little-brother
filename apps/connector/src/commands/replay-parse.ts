@@ -8,6 +8,8 @@ const base = {
   delayMs: z.number().nonnegative().optional(),
   as: z.string().min(1),
   cwd: z.string().optional(),
+  /** Transcript snapshot for this line, relative to the scenario file; becomes the input's transcript_path. */
+  transcript: z.string().optional(),
 };
 const HookLine = z.object({ ...base, input: z.object({ hook_event_name: z.string() }).passthrough() });
 const McpLine = z.object({ ...base, mcp: z.enum(MCP_TOOLS), args: z.unknown().default({}) });

@@ -1,17 +1,12 @@
+import type { Doc } from "../_generated/dataModel";
 import type { BoardCatch } from "./catches";
 import type { BoardShared } from "./goals";
 import type { LooseAction } from "./routine";
 import type { Source } from "./source";
 import type { BoardTask } from "./tasks";
 
-// Token cost and savings. The schema's token fields are optional and may be missing on older rows, so every read
-// is defensive, and each level falls back to the one below it: action → hook event, task → its actions.
-
-/** An optional numeric field on a stored row, read without assuming the schema has it yet. */
-export function numField(row: object, key: string): number | undefined {
-  const v = (row as Record<string, unknown>)[key];
-  return typeof v === "number" && Number.isFinite(v) ? v : undefined;
-}
+// Token cost and savings. The token fields are optional (older rows have none), so each level falls back to the
+// one below it: action → its hook event, task → its actions, catch → the attempt it kept from being repeated.
 
 const sum = (xs: (number | undefined)[]): number | undefined => {
   const known = xs.filter((x): x is number => x !== undefined);
@@ -24,16 +19,12 @@ export function fillTokens(src: Source, tasks: BoardTask[], loose: LooseAction[]
   for (const e of src.events) {
     if (e.nodeId && e.tokens !== undefined && e.hook === "PreToolUse") byEvent.set(e.nodeId, e.tokens);
   }
-  const nodes = new Map<string, object>(src.nodeById);
-  const ofAction = (id: string) => {
-    const n = nodes.get(id);
-    return (n && numField(n, "tokens")) ?? byEvent.get(id);
-  };
-  const docs = new Map<string, object>(src.tasks.map((t) => [t._id, t]));
+  const nodes = new Map<string, Doc<"nodes">>(src.nodeById);
+  const ofAction = (id: string) => nodes.get(id)?.tokens ?? byEvent.get(id);
+  const docs = new Map<string, Doc<"tasks">>(src.tasks.map((t) => [t._id, t]));
   for (const k of tasks) {
     for (const a of k.actions) a.tokens = ofAction(a.id);
-    const doc = docs.get(k.id);
-    k.tokens = (doc && numField(doc, "tokens")) ?? sum(k.actions.map((a) => a.tokens));
+    k.tokens = docs.get(k.id)?.tokens ?? sum(k.actions.map((a) => a.tokens));
   }
   for (const a of loose) a.tokens = ofAction(a.id);
 }
@@ -43,12 +34,11 @@ export function fillTokens(src: Source, tasks: BoardTask[], loose: LooseAction[]
  * have cost about what the original attempt did.
  */
 export function fillSavings(src: Source, catches: BoardCatch[], tasks: BoardTask[], shared: BoardShared[]) {
-  const verdicts = new Map<string, object>(src.verdicts.map((c) => [c._id, c]));
+  const verdicts = new Map<string, Doc<"classifications">>(src.verdicts.map((c) => [c._id, c]));
   const taskById = new Map(tasks.map((t) => [t.id, t]));
   const sharedById = new Map(shared.map((s) => [s.id, s]));
   for (const c of catches) {
-    const v = verdicts.get(c.classificationId);
-    const recorded = v ? numField(v, "tokensSaved") : undefined;
+    const recorded = verdicts.get(c.classificationId)?.tokensSaved;
     if (recorded !== undefined) {
       c.saved = recorded;
       continue;

@@ -4,6 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { unackedUrgent } from "../inbox";
 import { closeOpenTasks } from "../tasks";
+import { applyToolTokens } from "../tokens";
 import type { HookHandler } from "./types";
 
 const MAX_STOP_BLOCKS = 2;
@@ -37,6 +38,7 @@ async function closeIntent(ctx: MutationCtx, agent: Doc<"agents">): Promise<stri
 }
 
 export const onStop: HookHandler = async ({ ctx, agent, env }) => {
+  await applyToolTokens(ctx, agent, env.toolTokens);
   const urgent = await unackedUrgent(ctx, agent._id);
   const attempts = Math.max(0, ...urgent.map((i) => i.attempts));
   if (urgent.length > 0 && !env.stopHookActive && attempts < MAX_STOP_BLOCKS) {

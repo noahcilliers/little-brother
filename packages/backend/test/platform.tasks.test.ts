@@ -1,69 +1,9 @@
-import type { IngestEnvelope, Touch } from "@lb/core";
+import type { IngestEnvelope } from "@lb/core";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
-import { envelope, hook, joinMember, makeT, type T } from "./platformHelpers";
-
-const TOPICS = {
-  topics: {
-    "db.users": { owner: "noah", files: ["db/schema/users.ts"], consumers: ["src/checkout/**"] },
-    "auth.mechanism": { owner: "noah", files: ["src/auth/**"], consumers: ["src/checkout/**"] },
-    "api.cors": { owner: "noah", files: ["src/server.ts", "web/vite.config.ts"], consumers: [] },
-    "api.cart.shape": { owner: "joshua", files: ["src/checkout/cart.ts"], consumers: [] },
-  },
-};
-
-let clock = Date.UTC(2026, 9, 24, 9);
-const tick = () => {
-  clock += 1000;
-  vi.setSystemTime(clock);
-};
-
-async function send(
-  t: T,
-  token: string,
-  hookName: string,
-  session: string,
-  extra: Partial<IngestEnvelope> = {},
-) {
-  tick();
-  return hook(t, token, envelope(hookName, session, extra));
-}
-
-const edit = (path: string, touches: Touch[], toolUseId: string): Partial<IngestEnvelope> => ({
-  tool: "Edit",
-  toolUseId,
-  files: [path],
-  touches: [{ path, op: "write", lines: [1, 5] }, ...touches],
-  preview: `${toolUseId} change`,
-});
-
-async function editBoth(t: T, token: string, session: string, e: Partial<IngestEnvelope>) {
-  await send(t, token, "PreToolUse", session, e);
-  return send(t, token, "PostToolUse", session, e);
-}
-
-const tasksOf = (t: T, session: string) =>
-  t.run(async (ctx) => {
-    const agent = await ctx.db
-      .query("agents")
-      .withIndex("by_session", (q) => q.eq("claudeSessionId", session))
-      .first();
-    if (!agent) return [];
-    return ctx.db
-      .query("tasks")
-      .withIndex("by_agent", (q) => q.eq("agentId", agent._id))
-      .collect();
-  });
-const nodeByToolUse = (t: T, toolUseId: string) =>
-  t.run((ctx) =>
-    ctx.db
-      .query("nodes")
-      .withIndex("by_tool_use", (q) => q.eq("toolUseId", toolUseId))
-      .first(),
-  );
-const bySubject = async (t: T, session: string, subject: string) =>
-  (await tasksOf(t, session)).find((x) => x.subject === subject);
+import { joinMember, makeT, type T } from "./platformHelpers";
+import { bySubject, CLOCK_START, edit, editBoth, nodeByToolUse, send, TOPICS, tasksOf } from "./taskHelpers";
 
 let t: T;
 let noah: string;
@@ -71,7 +11,7 @@ let joshua: string;
 
 beforeEach(async () => {
   vi.useFakeTimers();
-  vi.setSystemTime(clock);
+  vi.setSystemTime(CLOCK_START);
   vi.stubEnv("GEMINI_API_KEY", "");
   vi.stubEnv("ANTHROPIC_API_KEY", "");
   t = makeT();

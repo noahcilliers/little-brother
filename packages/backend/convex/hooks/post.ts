@@ -77,6 +77,7 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
       parentId: agent.intentId,
       outcome,
       signature: await actionSignature(env),
+      toolUseId: env.toolUseId,
       taskId,
       label,
       baseRev: env.baseRev,

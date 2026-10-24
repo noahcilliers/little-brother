@@ -4,6 +4,7 @@ import type { Doc } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
 import { subjectThing } from "./dashboardQueries/labels";
 import { insertNode, topicFor } from "./nodes";
+import { refreshSavingsFor } from "./savings";
 import { supersedeTaskOf } from "./tasks";
 
 // Human decisions from the dashboard resolve panel. Unauthenticated for the hackathon.
@@ -78,6 +79,7 @@ export const approve = mutation({
       outcome: "human_override",
     });
     await supersede(ctx, lose, `Superseded: owner chose ${topic} = ${winner}.`);
+    await refreshSavingsFor(ctx, [lose._id]);
     const decisionId = await insertNode(ctx, {
       agentId: keep.agentId,
       kind: "knowledge",

@@ -3,11 +3,12 @@
  *
  *   npx tsx scripts/swarm.ts [--agents 8] [--overlap 0.25] [--seed 1] [--tasks 3-5] [--out swarm.jsonl]
  *
- * Prints the setup commands (worktrees + profiles) for the generated handles.
+ * Writes transcript snapshots to <out>.transcripts/ and prints the setup commands for the generated handles.
  */
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { basename, resolve } from "node:path";
 import { generateSwarm, SWARM_DEFAULTS, swarmHandles } from "../fixtures/scripts/swarm";
+import { transcriptsFor } from "../fixtures/scripts/transcripts";
 
 function flag(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -31,7 +32,15 @@ const opts = {
 const out = resolve(flag("out") ?? "swarm.jsonl");
 const story = generateSwarm(opts);
 const lines = story.lines;
-writeFileSync(out, `${lines.map((l) => JSON.stringify(l)).join("\n")}\n`);
+// Transcript snapshots next to the output, so replayed Stops price each tool call (see fixtures/README.md).
+const tdir = `${out}.transcripts`;
+rmSync(tdir, { recursive: true, force: true });
+mkdirSync(tdir, { recursive: true });
+const transcripts = transcriptsFor(lines);
+for (const [step, jsonl] of transcripts) writeFileSync(`${tdir}/${step}.jsonl`, jsonl);
+const rel = (step: string) => `${basename(tdir)}/${step}.jsonl`;
+const withTranscripts = lines.map((l) => (transcripts.has(l.step) ? { ...l, transcript: rel(l.step) } : l));
+writeFileSync(out, `${withTranscripts.map((l) => JSON.stringify(l)).join("\n")}\n`);
 
 const handles = swarmHandles(opts.agents);
 const seconds = lines.reduce((t, l) => t + l.delayMs, 0) / 1000;

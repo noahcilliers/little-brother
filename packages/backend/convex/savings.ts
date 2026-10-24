@@ -46,7 +46,11 @@ export async function savingsFor(ctx: QueryCtx, c: Doc<"classifications">): Prom
     return taskTokens(ctx, against);
   }
   if (c.type === "duplicate") return taskTokens(ctx, against);
-  if (c.type === "conflict" && (c.action === "block" || c.action === "serialize") && c.status === "resolved") {
+  if (
+    c.type === "conflict" &&
+    (c.action === "block" || c.action === "serialize") &&
+    c.status === "resolved"
+  ) {
     const next = await ctx.db.get(c.nodeId);
     const lose = [next, against].find((n) => n?.outcome === "superseded") ?? null;
     return taskTokens(ctx, lose);

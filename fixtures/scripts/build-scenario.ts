@@ -5,11 +5,12 @@
  * Six agents start within the same second and work at once, each on its own clock (see Story). Cross-agent
  * beats are pinned with `story.after`, and the checks at the end keep the timing the classifier needs.
  */
-import { writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Story } from "./events";
 import * as team from "./story-team";
 import * as trio from "./story-trio";
+import { transcriptsFor } from "./transcripts";
 
 // Think time between an agent's steps; 1.85 puts the whole run at about a minute at speed 1.
 const story = new Story(1.85);
@@ -88,7 +89,16 @@ for (const [a, b, gap] of ORDER) {
 }
 
 const out = (rel: string) => fileURLToPath(new URL(`../${rel}`, import.meta.url));
-writeFileSync(out("scenario.jsonl"), `${story.lines.map((l) => JSON.stringify(l)).join("\n")}\n`);
+// Stop/SessionEnd lines carry a transcript snapshot, so replay prices tool calls as a live session would.
+const lines = story.lines;
+const transcripts = transcriptsFor(lines);
+rmSync(out("transcripts"), { recursive: true, force: true });
+mkdirSync(out("transcripts"));
+for (const [step, jsonl] of transcripts) writeFileSync(out(`transcripts/${step}.jsonl`), jsonl);
+const withTranscripts = lines.map((l) =>
+  transcripts.has(l.step) ? { ...l, transcript: `transcripts/${l.step}.jsonl` } : l,
+);
+writeFileSync(out("scenario.jsonl"), `${withTranscripts.map((l) => JSON.stringify(l)).join("\n")}\n`);
 
 /** One standalone payload per hook event, picked from the story. */
 const samples: Record<string, string> = {

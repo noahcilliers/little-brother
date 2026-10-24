@@ -2,6 +2,7 @@ import { TopicMap } from "@lb/core";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { supersede } from "./resolve";
+import { refreshSavingsFor } from "./savings";
 
 async function ownsTopic(ctx: MutationCtx, agent: Doc<"agents">, topic: string): Promise<boolean> {
   const row = await ctx.db
@@ -45,6 +46,7 @@ export async function resolveByDecision(
       outcome: "owner_decision",
     });
     await supersede(ctx, lose, `Superseded: @${handle} (owner) set ${topic} = ${value}.`);
+    await refreshSavingsFor(ctx, [lose._id]);
     await ctx.db.insert("inbox", {
       agentId: lose.agentId,
       classificationId: c._id,

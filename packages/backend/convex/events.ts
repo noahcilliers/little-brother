@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { upsertAgent } from "./agents";
 import { memberByTokenHash } from "./auth";
-import { onSessionEnd } from "./hooks/end";
+import { onPreCompact, onSessionEnd } from "./hooks/end";
 import { onPostToolUse } from "./hooks/post";
 import { onPreToolUse } from "./hooks/pre";
 import { onUserPromptSubmit } from "./hooks/prompt";
@@ -20,6 +20,7 @@ const HANDLERS: Record<string, HookHandler> = {
   PostToolUseFailure: onPostToolUse,
   Stop: onStop,
   SessionEnd: onSessionEnd,
+  PreCompact: onPreCompact,
   TaskCreated: onTaskEvent,
   TaskCompleted: onTaskEvent,
 };

@@ -12,9 +12,7 @@
   "tool_response": {
     "success": true,
     "taskId": "4",
-    "updatedFields": [
-      "status"
-    ]
+    "updatedFields": ["status"]
   },
   "tool_use_id": "toolu_01iuZE3XHLzSnl4GGBGXICCz"
 }

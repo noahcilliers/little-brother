@@ -12,6 +12,7 @@ import {
   latestActions,
   topicFor,
 } from "../nodes";
+import { refreshSavings } from "../savings";
 import { taskForAction } from "../taskAttribution";
 import { stopOnDeny } from "../tasks";
 import type { HookHandler } from "./types";
@@ -102,5 +103,6 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
   // A denied call never runs, so it must not linger as open work for other agents to collide with.
   await ctx.db.patch(nodeId, { outcome: "superseded" });
   await stopOnDeny(ctx, taskId, reason, now);
+  for (const c of stored) await refreshSavings(ctx, c);
   return { output: deny(fullReason), summary: `denied ${tool} ${target}`, nodeId };
 };

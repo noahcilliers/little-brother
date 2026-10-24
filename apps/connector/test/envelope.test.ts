@@ -73,7 +73,12 @@ describe("transcriptTokens", () => {
 describe("transcriptToolUsage", () => {
   it("attributes each tool call its message's new tokens and puts them on the Stop envelope", () => {
     const p = join(mkdtempSync(join(tmpdir(), "lb-tr-")), "t.jsonl");
-    const usage = { input_tokens: 4, cache_creation_input_tokens: 196, cache_read_input_tokens: 9000, output_tokens: 80 };
+    const usage = {
+      input_tokens: 4,
+      cache_creation_input_tokens: 196,
+      cache_read_input_tokens: 9000,
+      output_tokens: 80,
+    };
     const lines = [
       { type: "user", message: { content: "add search" } },
       { type: "assistant", message: { id: "m1", usage, content: [{ type: "tool_use", id: "toolu_a" }] } },

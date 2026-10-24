@@ -1,11 +1,19 @@
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { runHook } from "../hook/run";
 import { readSessionId } from "../hook/session-file";
 import { callTool } from "../mcp/tools";
 import { applyRecordedEdit } from "./replay-apply";
 import { describeOutput, parseReplay, type ReplayLine } from "./replay-parse";
 
-export type ReplayOptions = { speed: number; timeout: number; apply: boolean; parallel?: boolean };
+export type ReplayOptions = {
+  speed: number;
+  timeout: number;
+  apply: boolean;
+  parallel?: boolean;
+  /** Where relative `transcript` paths resolve; set from the scenario file. */
+  baseDir?: string;
+};
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
@@ -32,7 +40,9 @@ async function replayLine(
       return `MCP ${line.mcp} → failed: ${e instanceof Error ? e.message : String(e)}`;
     }
   }
-  const { input } = line;
+  const input = line.transcript
+    ? { ...line.input, transcript_path: resolve(opts.baseDir ?? process.cwd(), line.transcript) }
+    : line.input;
   if (typeof input.session_id === "string") sessions.set(line.as, input.session_id);
   const cwd = line.cwd ?? (typeof input.cwd === "string" ? input.cwd : process.cwd());
   if (opts.apply) {
@@ -82,6 +92,7 @@ export async function replayCommand(file: string, opts: ReplayOptions): Promise<
   const { lines, errors } = parseReplay(readFileSync(file, "utf8"));
   for (const e of errors) console.error(`line ${e.line}: ${e.message}`);
   const speed = opts.speed > 0 ? opts.speed : 1;
+  opts = { ...opts, baseDir: opts.baseDir ?? dirname(resolve(file)) };
   if (opts.parallel) return replayParallel(lines, opts, speed);
   const sessions = new Map<string, string>();
   for (const [i, line] of lines.entries()) {

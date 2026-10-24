@@ -4,7 +4,7 @@ import { shop } from "./snippets";
 export type Handle = string;
 
 /** One line of scenario.jsonl: a hook payload, or an MCP tool call made by that agent's session. */
-export type ScenarioLine = { step: string; delayMs: number; as: Handle; cwd: string } & (
+export type ScenarioLine = { step: string; delayMs: number; as: Handle; cwd: string; transcript?: string } & (
   | { input: Record<string, unknown> }
   | { mcp: string; args: Record<string, unknown> }
 );

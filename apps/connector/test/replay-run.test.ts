@@ -53,6 +53,11 @@ describe("replayCommand", () => {
       body: { claudeSessionId: "7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d" },
     });
     expect(hits.filter((h) => h.url?.startsWith("/hook/"))).toHaveLength(184);
+    // Stop lines carry their transcript snapshot, so the replayed Stop prices each tool call.
+    const stop = hits.find((h) => h.url === "/hook/Stop" && h.auth === "Bearer tok-noah");
+    const priced = Object.keys((stop?.body.toolTokens ?? {}) as Record<string, number>);
+    expect(priced.length).toBeGreaterThan(5);
+    expect(stop?.body.turnTokens).toBeGreaterThan(0);
     expect(hits.find((h) => h.auth === "Bearer tok-joshua")?.body).toMatchObject({
       session: { cwd: "/tmp/lb-demo/joshua" },
     });
