@@ -7,7 +7,7 @@ import { rise } from "./film-fx";
 type Node = { id: string; x: number; y: number; title: string; sub: string; lit: number };
 const NW = 280;
 const NH = 100;
-const T0 = 41.2;
+const T0 = 0.4;
 
 // biome-ignore format: tabular scenario data
 const NODES: Node[] = [
@@ -93,10 +93,9 @@ export function SceneHow({ s }: { s: number }) {
           y={842}
           textAnchor="middle"
           className="fx-note"
-          style={{ opacity: prog(s, T0 + 6, 0.4) }}
+          style={{ opacity: prog(s, T0 + 5.4, 0.4) }}
         >
-          verdicts reach running sessions on their next step · the judge averaged ≈ 6.9 s, fully off the edit
-          path
+          verdicts reach running sessions on their next step
         </text>
         {PACKETS.map(([a, b, at]) => {
           const p = prog(s, at, 0.5);

@@ -65,3 +65,34 @@
 :root[data-theme="dark"] .lp .fx-qr-card .qr-bg {
   fill: var(--ink);
 }
+
+/* impact beat */
+.lp .im {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+}
+.lp .im-line {
+  font: 600 58px / 1.1 var(--sans);
+  letter-spacing: -0.04em;
+}
+.lp .im-line.accent {
+  color: var(--film-accent);
+}
+.lp .im-num {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 30px;
+}
+.lp .im-num b {
+  font: 800 150px / 1 var(--sans);
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.lp .im-num span {
+  font: 400 20px var(--mono);
+  color: var(--muted);
+}

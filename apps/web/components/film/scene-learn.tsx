@@ -6,7 +6,7 @@ import { LearnTree } from "./learn-tree";
 // (classify/lessons.ts), decisions label verdicts, the judge retrieves labelled examples, thresholds recalibrate
 // (classify/calibrate.ts). The pair model is roadmap and says so.
 
-const T0 = 48.8;
+const T0 = 0.4;
 const STEP_S = 1.1;
 // biome-ignore format: one loop station per row
 const STATIONS: [name: string, how: string][] = [

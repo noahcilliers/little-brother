@@ -3,7 +3,7 @@ import { prog } from "./film-clock";
 import { rise } from "./film-fx";
 
 const SITE = "https://little-brother-gules.vercel.app";
-const T0 = 70.3;
+const T0 = 0.4;
 
 /** Scene 7: the line, and a QR styled like the board's Share dialog. */
 export function SceneClose({ s }: { s: number }) {

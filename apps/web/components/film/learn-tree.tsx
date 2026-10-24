@@ -10,7 +10,7 @@ const ROOT: Pill = [130, 470, "goal: call the API"];
 const FAIL: Pill[] = [[340, 330, "plan: CORS middleware"], [545, 300, "edit cors({ origin: * })"], [750, 270, "npm test ✕"]];
 // biome-ignore format: tabular scenario data
 const WORK: Pill[] = [[340, 610, "plan: Vite proxy"], [545, 640, "edit server.proxy"], [750, 670, "npm test ✓"]];
-const T0 = 48.8;
+const T0 = 0.4;
 
 function PillNode({ p, cls, shown }: { p: Pill; cls: string; shown: number }) {
   const [cx, cy, text] = p;
@@ -85,7 +85,7 @@ export function LearnTree({ s }: { s: number }) {
           failed paths pruned before anyone retried them
         </text>
         <text x={120} y={804} className="lt-src">
-          stale paths avoided · 6-agent replay · part of the ≈ 8.5k tokens saved (estimate)
+          6-agent replay
         </text>
       </g>
     </svg>

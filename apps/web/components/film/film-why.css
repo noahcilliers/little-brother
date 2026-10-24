@@ -1,0 +1,172 @@
+/* "Why not just git? Or a shared .md file?" */
+.lp .wy-first,
+.lp .wy-answer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 34px;
+  padding: 64px 70px 0;
+}
+.lp .wy-title {
+  margin: 0;
+  font: 600 52px / 1.1 var(--sans);
+  letter-spacing: -0.04em;
+}
+.lp .wy-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  width: 100%;
+}
+.lp .wy-panel {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+}
+.lp .wy-chip {
+  justify-self: start;
+  padding: 3px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  font: 500 14px var(--mono);
+}
+.lp .wy-panel h3 {
+  margin: 0;
+  font: 600 25px / 1.25 var(--sans);
+  letter-spacing: -0.02em;
+}
+.lp .wy-svg {
+  width: 100%;
+  height: 200px;
+}
+.lp .wy-main {
+  stroke: var(--line-2);
+  stroke-width: 3;
+}
+.lp .wy-branch,
+.lp .wy-follow,
+.lp .wy-agent {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-dasharray: 1;
+}
+.lp .wy-follow.dim {
+  opacity: 0.5;
+}
+.lp .wy-follow.faint {
+  opacity: 0.25;
+}
+.lp .wy-ok {
+  fill: var(--add);
+}
+.lp .wy-tick {
+  fill: none;
+  stroke: var(--panel);
+  stroke-width: 3;
+}
+.lp .wy-bad {
+  fill: color-mix(in srgb, var(--hot) 14%, var(--panel));
+  stroke: var(--hot);
+  stroke-width: 2;
+}
+.lp .wy-bad-text {
+  font: 700 18px var(--mono);
+  fill: var(--hot);
+}
+.lp .wy-svg-label {
+  font: 500 15px var(--mono);
+  fill: var(--muted);
+}
+.lp .wy-doc {
+  fill: var(--film-bg);
+  stroke: var(--line-2);
+  stroke-width: 2;
+}
+.lp .wy-doc-line {
+  stroke: var(--line-2);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.lp .wy-ask {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 2.5;
+}
+.lp .wy-ask-text {
+  font: 700 24px var(--sans);
+  fill: var(--warn);
+}
+.lp .wy-row,
+.lp .wy-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.lp .wy-big,
+.lp .wy-stats > div {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+.lp .wy-big b,
+.lp .wy-stats b {
+  font: 700 58px / 1 var(--sans);
+  letter-spacing: -0.04em;
+  color: var(--film-accent);
+  font-variant-numeric: tabular-nums;
+}
+.lp .wy-big span,
+.lp .wy-stats span {
+  font-size: 17px;
+  color: var(--muted);
+}
+.lp .wy-panel blockquote {
+  margin: 0;
+  font: 400 19px / 1.4 var(--sans);
+}
+.lp .wy-panel cite,
+.lp .wy-src,
+.lp .wy-stats small {
+  display: block;
+  font: 400 13px var(--mono);
+  font-style: normal;
+  color: var(--faint);
+}
+.lp .wy-nudge {
+  width: 760px;
+  height: 300px;
+}
+.lp .wy-ghost {
+  stroke: var(--line-2);
+  stroke-width: 3;
+  stroke-dasharray: 6 8;
+}
+.lp .wy-wall {
+  fill: var(--hot);
+}
+.lp .wy-nudge-dot,
+.lp .wy-goal {
+  fill: var(--film-accent);
+}
+.lp .wy-agent {
+  stroke: var(--film-accent);
+  stroke-width: 5;
+}
+.lp .wy-stats {
+  width: 1180px;
+  gap: 60px;
+}
+.lp .wy-stats b {
+  font-size: 84px;
+}
+.lp .wy-stats span {
+  font-size: 20px;
+  color: var(--ink);
+}

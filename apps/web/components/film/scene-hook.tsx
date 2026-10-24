@@ -1,8 +1,14 @@
 import { CATCH_ICON, InlineIcon } from "@/components/board/icons";
 import { prog } from "./film-clock";
 import { rise } from "./film-fx";
+import { HookStat, type Stat } from "./hook-stat";
 
-const AGENTS = ["Ash", "Noah", "Joshua", "Maya", "Leo"];
+// biome-ignore format: one stat per row
+const STATS: Stat[] = [
+  { from: 0.15, to: 2.4, value: 42, unit: "%", text: "of committed code is now written by AI", src: "Sonar State of Code 2026" },
+  { from: 2.6, to: 5, lead: "Agents burn", pre: "~", value: 5, unit: "×", text: "the tokens a human does, 70–85% of it re-reading context already seen", src: "OpenRouter / Futurum 2026 · a16z × OpenRouter" },
+  { from: 5.2, to: 7.5, lead: "Teams of coding agents succeed", pre: "~", value: 30, unit: "% less", text: "often than one agent working alone", note: "42% of their failures: misjudging what the partner is doing", src: "CooperBench, Jan 2026" },
+];
 const PROBLEMS = [
   ["redo work", CATCH_ICON.duplicate],
   ["repeat failures", CATCH_ICON.stale],
@@ -41,23 +47,22 @@ function Words({
   );
 }
 
-/** Scene 1: the problem in three beats of kinetic type. */
+/** Scene 1: the scale of the problem in three sourced numbers, then why it happens. */
 export function SceneHook({ s }: { s: number }) {
-  const split = prog(s, 1.9, 0.6);
   return (
     <div className="fh">
       <div className="fh-grid" aria-hidden="true" />
+      {STATS.map((st) => (
+        <HookStat key={st.src} s={s} st={st} />
+      ))}
       <div className="fh-stack">
-        {s < 2.2 ? (
-          <Words text="Your team runs five Claude Code agents." s={s} from={0.15} to={1.75} />
+        {s >= 7.6 && s < 9.7 ? (
+          <Words text="They can't see each other." s={s} from={7.65} to={9.3} accent={["can't", "see"]} />
         ) : null}
-        {s >= 1.8 && s < 3.6 ? (
-          <Words text="They can't see each other." s={s} from={1.85} to={3.3} accent={["can't", "see"]} />
-        ) : null}
-        {s >= 3.3 ? (
+        {s >= 9.3 ? (
           <span className="fh-line fh-three">
             <span className="fh-mask">
-              <span className="fh-word" style={rise(prog(s, 3.35, 0.4))}>
+              <span className="fh-word" style={rise(prog(s, 9.35, 0.4))}>
                 So they
               </span>
             </span>
@@ -65,7 +70,7 @@ export function SceneHook({ s }: { s: number }) {
               <span key={label} className="fh-mask">
                 <span
                   className={i === 2 ? "fh-chip accent" : "fh-chip"}
-                  style={rise(prog(s, 3.6 + i * 0.32, 0.45))}
+                  style={rise(prog(s, 9.55 + i * 0.28, 0.45))}
                 >
                   <InlineIcon name={icon} color="currentColor" size={34} />
                   {label}
@@ -75,18 +80,6 @@ export function SceneHook({ s }: { s: number }) {
             ))}
           </span>
         ) : null}
-      </div>
-      <div className="fh-agents" style={{ gap: `${14 + split * 46}px`, opacity: 1 - prog(s, 3.3, 0.4) }}>
-        {AGENTS.map((name, i) => (
-          <span
-            key={name}
-            className={split > 0.5 ? "fh-agent alone" : "fh-agent"}
-            style={{ ...rise(prog(s, 0.6 + i * 0.09, 0.4)), filter: `blur(${split * 1.2}px)` }}
-          >
-            <i />
-            {name}'s agent
-          </span>
-        ))}
       </div>
     </div>
   );

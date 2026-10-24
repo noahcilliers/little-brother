@@ -50,11 +50,6 @@
   color: var(--fg);
   animation: lp-blink 2s steps(1) infinite;
 }
-.lp .disclaim {
-  font: 400 11px var(--mono);
-  color: var(--faint);
-  text-align: center;
-}
 
 .lp .film-view {
   position: relative;

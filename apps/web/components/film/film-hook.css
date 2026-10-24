@@ -109,11 +109,48 @@
 }
 .lp .fx-how,
 .lp .fx-learn,
-.lp .fx-metrics,
+.lp .wy,
+.lp .ms,
+.lp .im,
 .lp .fx-close {
   position: absolute;
   inset: 0;
 }
-.lp .fx-metrics {
-  transform-origin: 0 0;
+
+/* hook stats: one big sourced number per beat */
+.lp .hs {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.lp .hs-lead {
+  font: 500 30px var(--sans);
+  color: var(--muted);
+}
+.lp .hs-num {
+  font: 700 200px / 0.95 var(--sans);
+  letter-spacing: -0.06em;
+  color: var(--film-accent);
+  font-variant-numeric: tabular-nums;
+}
+.lp .hs-text {
+  max-width: 1100px;
+  font: 600 44px / 1.15 var(--sans);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.lp .hs-note {
+  padding: 6px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  font: 400 18px var(--sans);
+  color: var(--muted);
+}
+.lp .hs-src {
+  font: 400 14px var(--mono);
+  color: var(--faint);
 }
