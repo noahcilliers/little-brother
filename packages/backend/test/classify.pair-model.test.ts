@@ -1,8 +1,7 @@
 import { FEATURE_NAMES, FEATURE_VERSION, type Judge } from "@lb/core";
-import { convexTest } from "convex-test";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { internal } from "../convex/_generated/api";
-import schema from "../convex/schema";
+import { makeT } from "./platformHelpers";
 
 const judgeCalls = vi.fn();
 const fakeJudge: Judge & { distill: () => Promise<string | null> } = {
@@ -25,8 +24,6 @@ vi.mock("../convex/classify/adapters/select", () => ({
   selectJudge: () => fakeJudge,
 }));
 
-const modules = import.meta.glob("../convex/**/*.ts");
-
 /** Ignores its features: always answers repeats_failure with softmax(0, bias). */
 function tinyModel(bias: number, featureVersion = FEATURE_VERSION) {
   const zeros = FEATURE_NAMES.map(() => 0);
@@ -48,7 +45,7 @@ function tinyModel(bias: number, featureVersion = FEATURE_VERSION) {
 }
 
 async function setup() {
-  const t = convexTest(schema, modules);
+  const t = makeT();
   const [noah, ash] = await t.run(async (ctx) => {
     const ids = [];
     for (const handle of ["noah", "ash"]) {

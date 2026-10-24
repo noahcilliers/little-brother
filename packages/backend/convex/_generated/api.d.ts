@@ -18,6 +18,7 @@ import type * as backfillTeams from "../backfillTeams.js";
 import type * as classify_adapters_claude from "../classify/adapters/claude.js";
 import type * as classify_adapters_gemini from "../classify/adapters/gemini.js";
 import type * as classify_adapters_select from "../classify/adapters/select.js";
+import type * as classify_budget from "../classify/budget.js";
 import type * as classify_calibrate from "../classify/calibrate.js";
 import type * as classify_compare from "../classify/compare.js";
 import type * as classify_db from "../classify/db.js";
@@ -29,6 +30,7 @@ import type * as classify_pairModel from "../classify/pairModel.js";
 import type * as classify_pairTier from "../classify/pairTier.js";
 import type * as classify_persist from "../classify/persist.js";
 import type * as classify_persistParts from "../classify/persistParts.js";
+import type * as classify_pool from "../classify/pool.js";
 import type * as classify_priority from "../classify/priority.js";
 import type * as classify_run from "../classify/run.js";
 import type * as classify_scope from "../classify/scope.js";
@@ -123,6 +125,7 @@ declare const fullApi: ApiFromModules<{
   "classify/adapters/claude": typeof classify_adapters_claude;
   "classify/adapters/gemini": typeof classify_adapters_gemini;
   "classify/adapters/select": typeof classify_adapters_select;
+  "classify/budget": typeof classify_budget;
   "classify/calibrate": typeof classify_calibrate;
   "classify/compare": typeof classify_compare;
   "classify/db": typeof classify_db;
@@ -134,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   "classify/pairTier": typeof classify_pairTier;
   "classify/persist": typeof classify_persist;
   "classify/persistParts": typeof classify_persistParts;
+  "classify/pool": typeof classify_pool;
   "classify/priority": typeof classify_priority;
   "classify/run": typeof classify_run;
   "classify/scope": typeof classify_scope;
@@ -238,4 +242,7 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  classifyPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"classifyPool">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+};

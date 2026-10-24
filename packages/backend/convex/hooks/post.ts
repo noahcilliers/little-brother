@@ -9,6 +9,7 @@ import {
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import { classifyPool } from "../classify/pool";
 import { deliverPending } from "../digest";
 import { applyGitOp } from "../git";
 import {
@@ -108,7 +109,7 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
   // Reads are context, not work, and undoing your own change can't collide with anyone: record, don't classify.
   if (verb === "EXPLORE" || verb === "REVERT") return { output: null, summary, nodeId };
 
-  await ctx.scheduler.runAfter(0, internal.classify.run.classifyNode, { nodeId });
+  await classifyPool.enqueueAction(ctx, internal.classify.run.classifyNode, { nodeId });
   // Claude Code only accepts additionalContext tagged PostToolUse; failure hooks leave items queued for the next hook.
   if (hook !== "PostToolUse") return { output: null, summary, nodeId };
   return { output: context("PostToolUse", await deliverPending(ctx, agent._id, ["warn"])), summary, nodeId };

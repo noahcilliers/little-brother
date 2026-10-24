@@ -1,3 +1,5 @@
+import rateLimiter from "@convex-dev/rate-limiter/test";
+import workpool from "@convex-dev/workpool/test";
 import type { IngestEnvelope } from "@lb/core";
 import { convexTest } from "convex-test";
 import { internal } from "../convex/_generated/api";
@@ -5,7 +7,13 @@ import { sha256Hex } from "../convex/hash";
 import schema from "../convex/schema";
 
 export const modules = import.meta.glob("../convex/**/*.ts");
-export const makeT = () => convexTest(schema, modules);
+/** A test backend with the components mounted as convex.config.ts mounts them. */
+export const makeT = () => {
+  const t = convexTest(schema, modules);
+  workpool.register(t, "classifyPool");
+  rateLimiter.register(t, "rateLimiter");
+  return t;
+};
 export type T = ReturnType<typeof makeT>;
 
 /** Every helper member is in one room with this open session, so hooks are recorded. */

@@ -22,10 +22,14 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, internalAction } from "../_generated/server";
 import { selectEmbedder, selectJudge } from "./adapters/select";
+import { type Admission, MAX_CALLS_PER_RUN } from "./budget";
 import { pairModelTier } from "./pairTier";
+import { classifyPool } from "./pool";
 
-const MAX_JUDGE_CALLS = 4;
 const VECTOR_LIMIT = 16;
+
+const admit = (ctx: ActionCtx, calls: number): Promise<Admission> =>
+  ctx.runMutation(internal.classify.budget.admit, { calls });
 
 async function embedAndStore(ctx: ActionCtx, nodeId: Id<"nodes">, text: string): Promise<number[] | null> {
   const embedder = selectEmbedder();
@@ -104,7 +108,10 @@ export const classifyNode = internalAction({
     const tier = { nodeId, nextKind: view.kind, thresholds: c.thresholds };
     const unsettled = await pairModelTier(ctx, tier, open);
     // Commands (tests, builds) are re-run constantly; they are not approaches a model should weigh.
-    const toJudge = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_JUDGE_CALLS) : [];
+    const wanted = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_CALLS_PER_RUN) : [];
+    // Over the call limit the run behaves as if no judge were configured: those pairs stay unsettled.
+    const budget = wanted.length ? await admit(ctx, wanted.length) : ({ ok: true } as const);
+    const toJudge = budget.ok ? wanted : [];
     const examples = toJudge.length
       ? await ctx.runQuery(internal.classify.db.examples, {
           near: structural.pairs.map((p) => p.other.id as Id<"nodes">),
@@ -144,11 +151,11 @@ export const classifyNode = internalAction({
         "; ",
       )}]${unsettled.length > toJudge.length ? `, skipped ${unsettled.length - toJudge.length}` : ""}${
       judge ? "" : " (no judge configured)"
-    }`;
+    }${budget.ok ? "" : ` (judge ${budget.limit} limit reached)`}`;
     console.log(`classify ${summary}`);
     await ctx.runMutation(internal.serverLog.recordForNode, {
       nodeId,
-      level: judgeFailed ? "warn" : "info",
+      level: judgeFailed || !budget.ok ? "warn" : "info",
       kind: judgeFailed ? "judge-failed" : "classify",
       text: summary,
     });
@@ -158,11 +165,19 @@ export const classifyNode = internalAction({
       judgments: [...structural.judgments, ...judged],
     });
     // A busy or flaky model must not silently cost a catch: re-run soon; rules and dedupe make re-runs safe.
-    if (judgeFailed && attempt < MAX_ATTEMPTS) {
-      await ctx.scheduler.runAfter(RETRY_MS * attempt, internal.classify.run.classifyNode, {
-        nodeId,
-        attempt: attempt + 1,
-      });
+    // The per-minute limit frees up within the minute; the daily cap does not, so that one is not retried.
+    const retryIn = judgeFailed
+      ? RETRY_MS * attempt
+      : !budget.ok && budget.limit === "minute"
+        ? budget.retryAfter
+        : null;
+    if (retryIn !== null && attempt < MAX_ATTEMPTS) {
+      await classifyPool.enqueueAction(
+        ctx,
+        internal.classify.run.classifyNode,
+        { nodeId, attempt: attempt + 1 },
+        { runAfter: retryIn },
+      );
     }
     if (judge) await compareEscalations(ctx, nodeId, judge);
   },
@@ -175,6 +190,7 @@ export const classifyNode = internalAction({
 async function compareEscalations(ctx: ActionCtx, nodeId: Id<"nodes">, model: Distiller): Promise<void> {
   const due = await ctx.runQuery(internal.classify.compare.pending, { nodeId });
   for (const item of due) {
+    if (!(await admit(ctx, 1)).ok) return;
     if (
       !(await ctx.runMutation(internal.classify.compare.claim, { classificationId: item.classificationId }))
     )
@@ -216,9 +232,10 @@ export const onTrajectoryEnd = internalAction({
     const lesson = distillTrajectory(intent, t.actions.map(step));
     if (!lesson) return;
     const judge = selectJudge();
-    const text = judge
-      ? acceptDistilled(await judge.distill(distillPrompt(intent, lesson)).catch(() => null), lesson)
-      : lesson.text;
+    const text =
+      judge && (await admit(ctx, 1)).ok
+        ? acceptDistilled(await judge.distill(distillPrompt(intent, lesson)).catch(() => null), lesson)
+        : lesson.text;
     const nodeId = await ctx.runMutation(internal.classify.lessons.insertLesson, {
       intentId,
       text,
