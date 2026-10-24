@@ -5,3 +5,7 @@ dist
 !.env.example
 *.log
 .convex
+*.tsbuildinfo
+# build artifacts of scripts/publish-connector.mjs
+apps/web/public/lb.mjs
+apps/web/public/install.sh

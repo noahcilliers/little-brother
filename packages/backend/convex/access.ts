@@ -7,7 +7,13 @@ import type { QueryCtx } from "./_generated/server";
 declare const process: { env: Record<string, string | undefined> };
 
 /** Env Convex Auth needs before GitHub sign-in can work. Values are never read back to clients. */
-export const SIGN_IN_ENV = ["AUTH_GITHUB_ID", "AUTH_GITHUB_SECRET", "SITE_URL", "JWT_PRIVATE_KEY", "JWKS"] as const;
+export const SIGN_IN_ENV = [
+  "AUTH_GITHUB_ID",
+  "AUTH_GITHUB_SECRET",
+  "SITE_URL",
+  "JWT_PRIVATE_KEY",
+  "JWKS",
+] as const;
 
 export const missingSignInEnv = (): string[] => SIGN_IN_ENV.filter((k) => !process.env[k]);
 

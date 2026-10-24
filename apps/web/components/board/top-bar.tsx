@@ -4,6 +4,7 @@ import type { Board } from "@/lib/api";
 import { type CatchKind, isOpen, lastBefore } from "@/lib/board-time";
 import { CATCH_STYLE } from "@/lib/catch-style";
 import { kTokens } from "@/lib/format";
+import type { ReactNode } from "react";
 import { useTheme } from "@/lib/theme";
 import { CATCH_ICON, InlineIcon } from "./icons";
 
@@ -17,6 +18,8 @@ type Props = {
   /** Open decisions while the modal is closed: the pill reopens it. */
   waiting: number;
   onOpenDecision: () => void;
+  /** Avatar menu, top right. */
+  account?: ReactNode;
 };
 
 function counts(board: Board, t: number) {
@@ -45,7 +48,7 @@ function counts(board: Board, t: number) {
   ].filter((x) => x.show);
 }
 
-export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecision }: Props) {
+export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecision, account }: Props) {
   const { choice, toggle } = useTheme();
   const beat = board ? lastBefore(board.beats, t) : undefined;
   const n = board?.agents.length ?? 0;
@@ -96,6 +99,7 @@ export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecisi
       <button type="button" className="ctl" onClick={toggle} aria-label="Cycle theme: auto, light, dark">
         theme: {choice}
       </button>
+      {account}
     </header>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
+import { ConvexReactClient } from "convex/react";
 import { type ReactNode, useState } from "react";
-
-const DEFAULT_URL = "http://127.0.0.1:3210";
+import { convexUrl } from "@/lib/convex-urls";
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [client] = useState(() => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL ?? DEFAULT_URL));
-  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+  const [client] = useState(() => new ConvexReactClient(convexUrl()));
+  return <ConvexAuthNextjsProvider client={client}>{children}</ConvexAuthNextjsProvider>;
 }

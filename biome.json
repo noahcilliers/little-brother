@@ -1,6 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
-  "files": { "includes": ["**", "!**/_generated", "!**/.convex", "!**/.next", "!**/dist", "!demo"] },
+  "files": { "includes": ["**", "!**/_generated", "!**/.convex", "!**/.next", "!**/dist", "!demo", "!apps/web/public/lb.mjs"] },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 110 },
   "linter": { "rules": { "recommended": true } },
   "javascript": { "formatter": { "quoteStyle": "double" } }

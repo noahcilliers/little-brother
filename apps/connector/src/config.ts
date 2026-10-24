@@ -7,6 +7,8 @@ const Profile = z.object({ token: z.string() });
 export const Config = z.object({
   siteUrl: z.string().default(""),
   convexUrl: z.string().default(""),
+  /** The dashboard's origin, for links; hooks and MCP never call it. */
+  webUrl: z.string().default(""),
   current: z.string().default(""),
   profiles: z.record(Profile).default({}),
 });

@@ -52,9 +52,15 @@ export const create = mutation({
   args: { name: v.string() },
   handler: async (ctx, { name }) => {
     const userId = await signedInUser(ctx);
-    if (await theTeam(ctx)) throw new ConvexError("This deployment already has a team. Ask for an invite link.");
+    if (await theTeam(ctx))
+      throw new ConvexError("This deployment already has a team. Ask for an invite link.");
     const clean = name.trim().slice(0, 60) || "My team";
-    await ctx.db.insert("teams", { name: clean, ownerId: userId, inviteCode: newInvite(), createdAt: Date.now() });
+    await ctx.db.insert("teams", {
+      name: clean,
+      ownerId: userId,
+      inviteCode: newInvite(),
+      createdAt: Date.now(),
+    });
     const member = await ensureMember(ctx, userId);
     return { handle: member.handle };
   },

@@ -40,7 +40,8 @@ export const join = httpAction(async (ctx, req) => {
       tokenHash: await sha256Hex(token),
       machine: byToken.data.machine,
     });
-    if (!joined) return json(401, { error: "connect token is invalid, used or expired; create a new one on /start" });
+    if (!joined)
+      return json(401, { error: "connect token is invalid, used or expired; create a new one on /start" });
     return json(200, { token, handle: joined.handle, name: joined.name, ...urls() });
   }
   const byInvite = InviteJoin.safeParse(raw);
@@ -54,5 +55,10 @@ export const join = httpAction(async (ctx, req) => {
     name: byInvite.data.name,
     tokenHash: await sha256Hex(token),
   });
-  return json(200, { token, handle: byInvite.data.handle, name: byInvite.data.name ?? byInvite.data.handle, ...urls() });
+  return json(200, {
+    token,
+    handle: byInvite.data.handle,
+    name: byInvite.data.name ?? byInvite.data.handle,
+    ...urls(),
+  });
 });

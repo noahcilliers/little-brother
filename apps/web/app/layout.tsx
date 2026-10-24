@@ -1,10 +1,11 @@
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Little Brother",
-  description: "Live coordination graph for teams of Claude Code agents.",
+  description: "Coordination for teams of Claude Code agents: stops duplicate work, repeated failures and conflicting changes.",
 };
 
 // Applied before paint so a saved theme never flashes the wrong one.
@@ -12,7 +13,8 @@ const themeBoot = `try{var t=localStorage.getItem("lb-theme");if(t)document.docu
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -24,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
       <body>{children}</body>
-    </html>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

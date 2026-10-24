@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { layoutBoard } from "@/lib/board-layout";
 import type { CatchKind } from "@/lib/board-time";
@@ -17,7 +17,7 @@ import { Sessions } from "./sessions";
 import { TopBar } from "./top-bar";
 
 /** The whole dashboard: every agent's tasks on one time axis, agents and the selected task beside it, sessions below. */
-export function Board() {
+export function Board({ account }: { account?: ReactNode }) {
   const board = useQuery(api.dashboard.board);
   const [selected, setSelected] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
@@ -39,6 +39,7 @@ export function Board() {
         onHighlight={setHighlight}
         waiting={decisions.open ? 0 : decisions.count}
         onOpenDecision={() => decisions.show()}
+        account={account}
       />
       <div className="grid">
         {board && layout && !empty ? (
@@ -55,11 +56,14 @@ export function Board() {
           />
         ) : (
           <div className="card graph">
-            <p className="empty">
-              {empty
-                ? "No activity yet. Each Claude Code session with the plugin shows up here."
-                : "Connecting…"}
-            </p>
+            {empty ? (
+              <p className="empty">
+                No agents have connected yet. Each Claude Code session with the plugin shows up here.{" "}
+                <a href="/start#connect">Connect a laptop →</a>
+              </p>
+            ) : (
+              <p className="empty">Connecting…</p>
+            )}
           </div>
         )}
         {board ? (

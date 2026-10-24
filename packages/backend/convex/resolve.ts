@@ -2,12 +2,13 @@ import { primarySymbol } from "@lb/core";
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
+import { assertViewer } from "./access";
 import { subjectThing } from "./dashboardQueries/labels";
 import { insertNode, topicFor } from "./nodes";
 import { refreshSavingsFor } from "./savings";
 import { supersedeTaskOf } from "./tasks";
 
-// Human decisions from the dashboard resolve panel. Unauthenticated for the hackathon.
+// Human decisions from the dashboard resolve panel: team members only, except in local open mode.
 
 // Without a topic map, name the topic after the contested file: src/auth/session.ts → auth.session.
 function topicFromPath(path: string | undefined): string {
@@ -53,6 +54,7 @@ export async function supersede(ctx: MutationCtx, lose: Doc<"nodes">, note = "Su
 export const approve = mutation({
   args: { classificationId: v.id("classifications"), keepNodeId: v.id("nodes") },
   handler: async (ctx, { classificationId, keepNodeId }) => {
+    await assertViewer(ctx);
     const c = await ctx.db.get(classificationId);
     if (!c) throw new ConvexError("classification not found");
     if (c.status !== "open") throw new ConvexError(`classification already ${c.status}`);
@@ -127,6 +129,7 @@ export const approve = mutation({
 export const dismiss = mutation({
   args: { classificationId: v.id("classifications") },
   handler: async (ctx, { classificationId }) => {
+    await assertViewer(ctx);
     const c = await ctx.db.get(classificationId);
     if (!c) throw new ConvexError("classification not found");
     await ctx.db.patch(c._id, { status: "dismissed", feedback: "false_positive", resolution: "dismissed" });

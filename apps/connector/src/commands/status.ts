@@ -34,6 +34,7 @@ export async function statusCommand(): Promise<void> {
   );
   console.log(`site:     ${p.siteUrl}`);
   console.log(`convex:   ${p.convexUrl || "-"}`);
+  console.log(`web:      ${cfg.webUrl || "-"}`);
   console.log(`backend:  ${await reachability(p.siteUrl)}`);
   console.log(`outbox:   ${outboxCount()} queued`);
 }
