@@ -23,7 +23,12 @@ describe("interventionAction", () => {
 
   it("never downgrades correctness conflicts", () => {
     expect(
-      interventionAction({ relation: "semantic_conflict", action: "serialize", confidence: 0.9, avoidedTokens: 10 }),
+      interventionAction({
+        relation: "semantic_conflict",
+        action: "serialize",
+        confidence: 0.9,
+        avoidedTokens: 10,
+      }),
     ).toBe("serialize");
   });
 });
@@ -33,7 +38,8 @@ describe("contractCard", () => {
     const card = contractCard({
       files: ["db/schema/users.ts"],
       touches: [{ path: "db/schema/users.ts", symbol: "users", op: "create" }],
-      preview: "@@ -0,0 +1,4 @@\n+import { table } from './t'\n+export const users = table('users', {\n+  id: text(),\n+  email: text(),",
+      preview:
+        "@@ -0,0 +1,4 @@\n+import { table } from './t'\n+export const users = table('users', {\n+  id: text(),\n+  email: text(),",
     });
     expect(card).toContain("db/schema/users.ts");
     expect(card).toContain("exports users");

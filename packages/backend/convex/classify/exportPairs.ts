@@ -5,8 +5,8 @@ import {
   type LabelledPair,
   labelPair,
   pairMeta,
-  type Relation,
   RELATIONS,
+  type Relation,
   reasonsFromEvidence,
   toClassifiedNode,
 } from "@lb/core";
@@ -47,7 +47,11 @@ async function rowFor(ctx: QueryCtx, c: Doc<"classifications">): Promise<Labelle
     judge: c.source === "llm" ? { relation, confidence: c.confidence, latencyMs: c.latencyMs } : null,
     goldFrom: (features) =>
       goldFromOutcome(
-        { relation, ...(c.feedback ? { feedback: c.feedback } : {}), ...(c.gitStatus ? { gitStatus: c.gitStatus } : {}) },
+        {
+          relation,
+          ...(c.feedback ? { feedback: c.feedback } : {}),
+          ...(c.gitStatus ? { gitStatus: c.gitStatus } : {}),
+        },
         features,
       ),
     meta: { ...pairMeta(next, other), at: c.at },

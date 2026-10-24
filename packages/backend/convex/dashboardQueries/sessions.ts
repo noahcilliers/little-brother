@@ -49,12 +49,15 @@ function target(e: Doc<"events">): string {
   return clip(e.files[0] ?? cmd ?? "", 48);
 }
 
+// Lines Claude Code itself appends to a Bash result; they say nothing about how the command went.
+const HARNESS_NOISE = [/^Shell cwd was reset to /, /^\(no output\)$/i, /^<\/?(bash-)?std(out|err)>$/];
+
 /** The line of a command's output that says how it went: a test summary or an error, else the last line. */
-function resultLine(text: string | undefined): string {
+export function resultLine(text: string | undefined): string {
   const lines = (text ?? "")
     .split("\n")
     .map((l) => l.trim())
-    .filter(Boolean);
+    .filter((l) => l && !HARNESS_NOISE.some((re) => re.test(l)));
   const pick =
     [...lines].reverse().find((l) => /\d+ (passed|failed)\b|\bError:/.test(l)) ?? lines.pop() ?? "";
   return clip(pick.replace(/^Tests?\s+/, ""), 90);

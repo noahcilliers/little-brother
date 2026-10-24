@@ -10,6 +10,7 @@
       "!**/dist",
       "!demo",
       "!apps/evals/results",
+      "!packages/core/test/fixtures",
       "!cooperbench-*",
       "!apps/web/public/lb.mjs"
     ]

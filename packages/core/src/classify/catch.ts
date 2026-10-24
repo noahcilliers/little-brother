@@ -59,7 +59,9 @@ const CARD_MAX = 240;
 export function contractCard(n: CardNode): string {
   const files = [...new Set([...n.touches.map((t) => t.path), ...n.files])].slice(0, 2);
   const symbols = [
-    ...new Set(n.touches.filter((t) => t.symbol && t.op !== "delete").map((t) => t.symbol?.split("::").pop())),
+    ...new Set(
+      n.touches.filter((t) => t.symbol && t.op !== "delete").map((t) => t.symbol?.split("::").pop()),
+    ),
   ].slice(0, 4);
   const code = (n.preview ?? "")
     .split("\n")

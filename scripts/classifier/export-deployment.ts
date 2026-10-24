@@ -16,8 +16,11 @@ type Page = { lines: string[]; continueCursor: string; isDone: boolean };
 
 /** The local backend's name, e.g. "anonymous:anonymous-agent", from the config `npx convex dev` wrote. */
 export function localDeployment(): string {
-  const config = JSON.parse(readFileSync(resolve(BACKEND, ".convex/local/default/config.json"), "utf8")) as { deploymentName?: string };
-  if (!config.deploymentName) throw new Error("no local Convex deployment: run `npx convex dev` in packages/backend");
+  const config = JSON.parse(readFileSync(resolve(BACKEND, ".convex/local/default/config.json"), "utf8")) as {
+    deploymentName?: string;
+  };
+  if (!config.deploymentName)
+    throw new Error("no local Convex deployment: run `npx convex dev` in packages/backend");
   return `anonymous:${config.deploymentName}`;
 }
 
@@ -25,12 +28,18 @@ function main(): void {
   const argv = process.argv.slice(2);
   const out = resolve(flag(argv, "out", "pairs.jsonl"));
   const pageSize = Number(flag(argv, "page", "200"));
-  const env = argv.includes("--local") ? { ...process.env, CONVEX_DEPLOYMENT: localDeployment() } : process.env;
+  const env = argv.includes("--local")
+    ? { ...process.env, CONVEX_DEPLOYMENT: localDeployment() }
+    : process.env;
   const lines: string[] = [];
   let cursor: string | null = null;
   for (;;) {
     const args = JSON.stringify({ paginationOpts: { numItems: pageSize, cursor } });
-    const raw = execFileSync("npx", ["convex", "run", "classify/exportPairs:page", args], { cwd: BACKEND, env, maxBuffer: 512 * 1024 * 1024 });
+    const raw = execFileSync("npx", ["convex", "run", "classify/exportPairs:page", args], {
+      cwd: BACKEND,
+      env,
+      maxBuffer: 512 * 1024 * 1024,
+    });
     const page = JSON.parse(raw.toString()) as Page;
     lines.push(...page.lines);
     if (page.isDone) break;

@@ -7,5 +7,8 @@ import { FEATURE_NAMES, FEATURE_VERSION } from "../../packages/core/src/index";
 //   npx tsx scripts/classifier/feature-names.ts
 
 const out = resolve(dirname(fileURLToPath(import.meta.url)), "feature-names.json");
-writeFileSync(out, `${JSON.stringify({ featureVersion: FEATURE_VERSION, featureNames: FEATURE_NAMES }, null, 2)}\n`);
+writeFileSync(
+  out,
+  `${JSON.stringify({ featureVersion: FEATURE_VERSION, featureNames: FEATURE_NAMES }, null, 2)}\n`,
+);
 console.log(`${FEATURE_NAMES.length} features (v${FEATURE_VERSION}) → ${out}`);

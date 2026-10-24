@@ -73,7 +73,11 @@ export function shuffle<T>(xs: T[], r: () => number): T[] {
   return out;
 }
 
-export async function pool<T, R>(items: T[], size: number, fn: (item: T, i: number) => Promise<R>): Promise<R[]> {
+export async function pool<T, R>(
+  items: T[],
+  size: number,
+  fn: (item: T, i: number) => Promise<R>,
+): Promise<R[]> {
   const out: R[] = new Array(items.length);
   let next = 0;
   const worker = async () => {

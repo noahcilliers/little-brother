@@ -4,6 +4,7 @@ import { ruleDirection } from "../src/classify/pair-direction";
 import { applyRules } from "../src/classify/pipeline";
 import type { CandidatePair } from "../src/classify/types";
 import { node, pair } from "./classify-fixtures";
+import { medianMs } from "./pair-model-fixtures";
 
 const features = (p: CandidatePair) => featureMap(pairFeatures(p, applyRules(p).hints));
 
@@ -33,7 +34,15 @@ describe("pairFeatures", () => {
   });
 
   it("flags a signature change against a caller, and derives the caller as the side that must adapt", () => {
-    const changer = node({ touches: [{ path: "src/auth/issue-token.ts", symbol: "src/auth/issue-token.ts::issueToken", op: "signature_change" }] });
+    const changer = node({
+      touches: [
+        {
+          path: "src/auth/issue-token.ts",
+          symbol: "src/auth/issue-token.ts::issueToken",
+          op: "signature_change",
+        },
+      ],
+    });
     const caller = node({ agentId: "b", references: ["src/auth/issue-token.ts::issueToken"] });
     const p = pair(caller, changer);
     expect(features(p).signature_change_vs_call).toBe(1);
@@ -43,9 +52,23 @@ describe("pairFeatures", () => {
   });
 
   it("reads intent similarity from the retrieval reason and spots opposed plans", () => {
-    const a = node({ kind: "intent", verb: "PLAN", text: "PLAN implement auth with JWT bearer tokens, no cookies", topic: "auth.mechanism" });
-    const b = node({ kind: "intent", verb: "PLAN", agentId: "b", text: "PLAN implement auth with a session cookie instead of JWT", topic: "auth.mechanism" });
-    const p: CandidatePair = { ...pair(a, b), reasons: ["same topic auth.mechanism", "similar intent (0.84)"] };
+    const a = node({
+      kind: "intent",
+      verb: "PLAN",
+      text: "PLAN implement auth with JWT bearer tokens, no cookies",
+      topic: "auth.mechanism",
+    });
+    const b = node({
+      kind: "intent",
+      verb: "PLAN",
+      agentId: "b",
+      text: "PLAN implement auth with a session cookie instead of JWT",
+      topic: "auth.mechanism",
+    });
+    const p: CandidatePair = {
+      ...pair(a, b),
+      reasons: ["same topic auth.mechanism", "similar intent (0.84)"],
+    };
     const f = features(p);
     expect(f.embedding_similarity).toBeCloseTo(0.84);
     expect(f.both_intent).toBe(1);
@@ -55,17 +78,27 @@ describe("pairFeatures", () => {
   });
 
   it("marks failure memory and exact signature repeats", () => {
-    const lesson = node({ kind: "knowledge", verb: "LEARN", outcome: "succeeded", signature: "s1", text: "LEARN api.cors: tried EDIT → FAIL" });
+    const lesson = node({
+      kind: "knowledge",
+      verb: "LEARN",
+      outcome: "succeeded",
+      signature: "s1",
+      text: "LEARN api.cors: tried EDIT → FAIL",
+    });
     const f = features(pair(node({ signature: "s1" }), lesson, true));
     expect([f.failed_memory, f.other_failed, f.signature_match]).toEqual([1, 1, 1]);
   });
 
   it("is fast enough for the hot path", () => {
-    const a = node({ touches: [{ path: "src/a.ts", symbol: "src/a.ts::f", op: "write", lines: [1, 9] }], references: ["src/b.ts::g"] });
-    const b = node({ agentId: "b", touches: [{ path: "src/a.ts", symbol: "src/a.ts::f", op: "write", lines: [3, 4] }] });
+    const a = node({
+      touches: [{ path: "src/a.ts", symbol: "src/a.ts::f", op: "write", lines: [1, 9] }],
+      references: ["src/b.ts::g"],
+    });
+    const b = node({
+      agentId: "b",
+      touches: [{ path: "src/a.ts", symbol: "src/a.ts::f", op: "write", lines: [3, 4] }],
+    });
     const p = pair(a, b);
-    const t0 = performance.now();
-    for (let i = 0; i < 1000; i++) pairFeatures(p, []);
-    expect((performance.now() - t0) / 1000).toBeLessThan(1);
+    expect(medianMs(() => pairFeatures(p, []))).toBeLessThan(2);
   });
 });

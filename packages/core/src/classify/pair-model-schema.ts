@@ -18,7 +18,12 @@ const LogReg = z.object({
 });
 
 /** A split goes left when the feature (as float32, like scikit-learn) is ≤ the threshold. */
-const Split = z.object({ f: z.number().int().min(0), t: num, l: z.number().int().min(1), r: z.number().int().min(1) });
+const Split = z.object({
+  f: z.number().int().min(0),
+  t: num,
+  l: z.number().int().min(1),
+  r: z.number().int().min(1),
+});
 const Leaf = z.object({ v: num });
 
 /** Gradient-boosted trees: raw score of class c = base[c] + Σ leaf values of the trees for c (learning rate folded in). */
@@ -63,7 +68,8 @@ export const PairModelSchema = z
     const bad = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
     if (new Set(m.classes).size !== k) bad("duplicate classes");
     if (m.calibration && m.calibration.length !== k) bad("calibration must have one entry per class");
-    for (const c of m.calibration ?? []) if (c.kind === "isotonic" && c.x.length !== c.y.length) bad("isotonic x/y differ");
+    for (const c of m.calibration ?? [])
+      if (c.kind === "isotonic" && c.x.length !== c.y.length) bad("isotonic x/y differ");
     const e = m.estimator;
     if (e.kind === "logreg") {
       if (e.mean.length !== f || e.scale.length !== f) bad("mean/scale length must match featureNames");
@@ -76,7 +82,8 @@ export const PairModelSchema = z
     for (const t of e.trees) {
       if (t.c >= k) bad("tree class out of range");
       for (const n of t.nodes) {
-        if ("f" in n && (n.f >= f || n.l >= t.nodes.length || n.r >= t.nodes.length)) bad("tree index out of range");
+        if ("f" in n && (n.f >= f || n.l >= t.nodes.length || n.r >= t.nodes.length))
+          bad("tree index out of range");
       }
     }
   });

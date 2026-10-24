@@ -101,7 +101,8 @@ export const classifyNode = internalAction({
           a.pair.other.at - b.pair.other.at,
       );
     // Step 4 (behind CLASSIFIER_PAIR_MODEL=1): the learned model settles confident pairs; the rest go to the judge.
-    const unsettled = await pairModelTier(ctx, { nodeId, nextKind: view.kind, thresholds: c.thresholds }, open);
+    const tier = { nodeId, nextKind: view.kind, thresholds: c.thresholds };
+    const unsettled = await pairModelTier(ctx, tier, open);
     // Commands (tests, builds) are re-run constantly; they are not approaches a model should weigh.
     const toJudge = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_JUDGE_CALLS) : [];
     const examples = toJudge.length

@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "types": ["node"], "typeRoots": ["../../apps/evals/node_modules/@types"] },
+  "include": ["*.ts", "datasets/*.ts"]
+}

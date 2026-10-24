@@ -23,7 +23,8 @@ function rawScores(model: PairModel, x: readonly number[]): number[] {
   if (e.kind === "logreg") {
     return e.weights.map((w, k) => {
       let z = e.bias[k] ?? 0;
-      for (let i = 0; i < w.length; i++) z += (w[i] ?? 0) * (((x[i] ?? 0) - (e.mean[i] ?? 0)) / (e.scale[i] ?? 1));
+      for (let i = 0; i < w.length; i++)
+        z += (w[i] ?? 0) * (((x[i] ?? 0) - (e.mean[i] ?? 0)) / (e.scale[i] ?? 1));
       return z;
     });
   }
@@ -99,7 +100,9 @@ export function predict(model: PairModel, features: readonly number[]): Predicti
 }
 
 export function settleThreshold(model: Pick<PairModel, "thresholds">, relation: Relation): number {
-  return model.thresholds?.[relation] ?? (BLOCKING_RELATIONS.has(relation) ? SEVERE_THRESHOLD : DEFAULT_THRESHOLD);
+  return (
+    model.thresholds?.[relation] ?? (BLOCKING_RELATIONS.has(relation) ? SEVERE_THRESHOLD : DEFAULT_THRESHOLD)
+  );
 }
 
 /** The model settles a pair only when it is sure and the runner-up is not close; otherwise the judge decides. */
@@ -110,7 +113,10 @@ export function settles(model: Pick<PairModel, "thresholds" | "minMargin">, p: P
 const KINDS = ["intent", "action", "knowledge"] as const;
 
 /** "next>other" kinds and the failure-memory flag, read back from a feature vector. */
-export function pairKind(names: readonly string[], x: readonly number[]): { kinds: string; failedMemory: boolean } {
+export function pairKind(
+  names: readonly string[],
+  x: readonly number[],
+): { kinds: string; failedMemory: boolean } {
   const at = (n: string) => x[names.indexOf(n)] ?? 0;
   const kind = (side: string) => KINDS.find((k) => at(`${side}_${k}`) === 1) ?? "action";
   return { kinds: `${kind("next")}>${kind("other")}`, failedMemory: at("failed_memory") === 1 };

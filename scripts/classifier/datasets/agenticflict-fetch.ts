@@ -30,7 +30,8 @@ export type FetchedPr = {
   error?: string;
 };
 
-export const cachePath = (prKey: string) => join(CACHE, `${createHash("sha1").update(prKey).digest("hex")}.json`);
+export const cachePath = (prKey: string) =>
+  join(CACHE, `${createHash("sha1").update(prKey).digest("hex")}.json`);
 
 const slim = (files: CompareFile[] = []): CompareFile[] =>
   files.map((f) => ({
@@ -41,14 +42,23 @@ const slim = (files: CompareFile[] = []): CompareFile[] =>
   }));
 
 async function fetchOne(row: Record<string, string>): Promise<FetchedPr> {
-  const base = { prKey: row.pr_key ?? "", repo: row.repo_full_name ?? "", conflict: row.conflict_label === "TRUE", agent: row.agent ?? "" };
+  const base = {
+    prKey: row.pr_key ?? "",
+    repo: row.repo_full_name ?? "",
+    conflict: row.conflict_label === "TRUE",
+    agent: row.agent ?? "",
+  };
   try {
-    const head = JSON.parse(await ghApi(`repos/${base.repo}/compare/${row.base_oid}...${row.head_oid}`)) as Compare;
+    const head = JSON.parse(
+      await ghApi(`repos/${base.repo}/compare/${row.base_oid}...${row.head_oid}`),
+    ) as Compare;
     const mergeBase = head.merge_base_commit?.sha;
     if (!mergeBase) return { ...base, error: "no merge base" };
     // No drift means nothing concurrent to pair with; the merge is trivially clean.
     if (mergeBase === row.base_oid) return { ...base, mergeBase, pr: slim(head.files), drift: [] };
-    const drift = JSON.parse(await ghApi(`repos/${base.repo}/compare/${mergeBase}...${row.base_oid}`)) as Compare;
+    const drift = JSON.parse(
+      await ghApi(`repos/${base.repo}/compare/${mergeBase}...${row.base_oid}`),
+    ) as Compare;
     return { ...base, mergeBase, pr: slim(head.files), drift: slim(drift.files) };
   } catch (e) {
     return { ...base, error: String(e).replace(/\s+/g, " ").slice(0, 200) };
@@ -70,9 +80,15 @@ export function sample(
     return x.status_code?.startsWith("OK_") && files >= 1 && files <= MAX_FILES && x.base_oid && x.head_oid;
   });
   const out: Record<string, string>[] = [];
-  for (const [label, want] of [["TRUE", conflicts], ["FALSE", clean]] as const) {
+  for (const [label, want] of [
+    ["TRUE", conflicts],
+    ["FALSE", clean],
+  ] as const) {
     const perRepo = new Map<string, number>();
-    for (const x of shuffle(ok.filter((y) => y.conflict_label === label), r)) {
+    for (const x of shuffle(
+      ok.filter((y) => y.conflict_label === label),
+      r,
+    )) {
       const n = perRepo.get(x.repo_full_name ?? "") ?? 0;
       if (n >= PER_REPO) continue;
       perRepo.set(x.repo_full_name ?? "", n + 1);
@@ -90,7 +106,13 @@ async function main(): Promise<void> {
   const clean = Number(flag(argv, "clean", "1800"));
   const seed = Number(flag(argv, "seed", "1"));
   mkdirSync(CACHE, { recursive: true });
-  const picked = sample(parseCsv(readFileSync(CSV, "utf8")), conflicts, clean, seed, flag(argv, "state", "") || undefined).filter((x) => !existsSync(cachePath(x.pr_key ?? "")));
+  const picked = sample(
+    parseCsv(readFileSync(CSV, "utf8")),
+    conflicts,
+    clean,
+    seed,
+    flag(argv, "state", "") || undefined,
+  ).filter((x) => !existsSync(cachePath(x.pr_key ?? "")));
   console.log(`${picked.length} PRs to fetch`);
   let budget = await ghRemaining();
   let done = 0;
@@ -105,7 +127,8 @@ async function main(): Promise<void> {
   console.log(`fetched ${done}; remaining budget ${await ghRemaining()}`);
 }
 
-if (process.argv[1]?.endsWith("agenticflict-fetch.ts")) main().catch((e: unknown) => {
-  console.error(e);
-  process.exitCode = 1;
-});
+if (process.argv[1]?.endsWith("agenticflict-fetch.ts"))
+  main().catch((e: unknown) => {
+    console.error(e);
+    process.exitCode = 1;
+  });

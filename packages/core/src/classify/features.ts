@@ -83,7 +83,10 @@ const SPEC: [string, (c: Ctx) => number][] = [
   ["generated_shared", (c) => b(sharedGenerated(c.next, c.other))],
   ["identical_change", (c) => b(identicalChange(c.next, c.other))],
   ["topic_match", (c) => b(!!c.next.topic && c.next.topic === c.other.topic)],
-  ["topic_area_match", (c) => b(!!c.next.topic && c.next.topic.split(".")[0] === c.other.topic?.split(".")[0])],
+  [
+    "topic_area_match",
+    (c) => b(!!c.next.topic && c.next.topic.split(".")[0] === c.other.topic?.split(".")[0]),
+  ],
   [
     "topic_consumed",
     (c) =>
@@ -97,7 +100,10 @@ const SPEC: [string, (c: Ctx) => number][] = [
   ["text_overlap", (c) => lexicalSimilarity(c.next.text, c.other.text)],
   ["text_cosine", (c) => tokenCosine(c.next.text, c.other.text)],
   ["target_overlap", (c) => c.targetOverlap],
-  ["preview_cosine", (c) => (c.next.preview && c.other.preview ? tokenCosine(c.next.preview, c.other.preview) : 0)],
+  [
+    "preview_cosine",
+    (c) => (c.next.preview && c.other.preview ? tokenCosine(c.next.preview, c.other.preview) : 0),
+  ],
   ["intent_text_cosine", (c) => (bothKind(c, "intent") ? tokenCosine(c.next.text, c.other.text) : 0)],
   ["opposed_actions", (c) => b(opposed(c.next, c.other))],
   ["negation_either", (c) => b(negates(c.next.text) || negates(c.other.text))],

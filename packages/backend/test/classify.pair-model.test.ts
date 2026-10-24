@@ -36,7 +36,13 @@ function tinyModel(bias: number, featureVersion = FEATURE_VERSION) {
     featureVersion,
     featureNames: [...FEATURE_NAMES],
     classes: ["independent", "repeats_failure"],
-    estimator: { kind: "logreg", mean: zeros, scale: zeros.map(() => 1), weights: [zeros, zeros], bias: [0, bias] },
+    estimator: {
+      kind: "logreg",
+      mean: zeros,
+      scale: zeros.map(() => 1),
+      weights: [zeros, zeros],
+      bias: [0, bias],
+    },
     synthetic: true,
   };
 }
@@ -46,7 +52,12 @@ async function setup() {
   const [noah, ash] = await t.run(async (ctx) => {
     const ids = [];
     for (const handle of ["noah", "ash"]) {
-      const memberId = await ctx.db.insert("members", { name: handle, handle, tokenHash: handle, revoked: false });
+      const memberId = await ctx.db.insert("members", {
+        name: handle,
+        handle,
+        tokenHash: handle,
+        revoked: false,
+      });
       ids.push(
         await ctx.db.insert("agents", {
           memberId,
@@ -125,9 +136,9 @@ test("with the flag off, or no model stored, the judge decides", async () => {
 
 test("upload refuses a model trained on other features; rollback restores the previous one", async () => {
   const { t } = await setup();
-  await expect(t.mutation(internal.classify.pairModel.upload, { model: tinyModel(6, FEATURE_VERSION + 1) })).rejects.toThrow(
-    /feature version/,
-  );
+  await expect(
+    t.mutation(internal.classify.pairModel.upload, { model: tinyModel(6, FEATURE_VERSION + 1) }),
+  ).rejects.toThrow(/feature version/);
   await t.mutation(internal.classify.pairModel.upload, { model: tinyModel(1) });
   await t.mutation(internal.classify.pairModel.upload, { model: tinyModel(2) });
   expect(await t.mutation(internal.classify.pairModel.rollback, {})).toEqual({ rolledBack: true });
@@ -140,7 +151,9 @@ test("the training export recomputes features and carries the judge verdict as t
   const [c] = await classify();
   if (!c) throw new Error("no classification");
   await t.run((ctx) => ctx.db.patch(c._id, { feedback: "confirmed" }));
-  const page = await t.query(internal.classify.exportPairs.page, { paginationOpts: { numItems: 50, cursor: null } });
+  const page = await t.query(internal.classify.exportPairs.page, {
+    paginationOpts: { numItems: 50, cursor: null },
+  });
   expect(page.isDone).toBe(true);
   const row = JSON.parse(page.lines[0] ?? "{}");
   expect(row.features).toHaveLength(FEATURE_NAMES.length);

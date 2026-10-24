@@ -16,7 +16,8 @@ export type Unit = {
 export type Planted = { caseId: string; a: Unit; b: Unit; relation: Relation; control: boolean };
 
 const FILE = /\b(?:[\w-]+\/)+[\w.-]+\.(?:ts|tsx|js|json)\b|\b[\w-]+\.config\.ts\b/g;
-const SYMBOL = /\b([a-z][A-Za-z0-9]{3,})\(|interface\s+(\w+)|`(\w+)`|\b(require[A-Z]\w+|issueToken|sendMail)\b/g;
+const SYMBOL =
+  /\b([a-z][A-Za-z0-9]{3,})\(|interface\s+(\w+)|`(\w+)`|\b(require[A-Z]\w+|issueToken|sendMail)\b/g;
 const NOT_SYMBOLS = new Set(["origin", "cors", "test", "name", "proxy", "displayName"]);
 
 export function filesIn(text: string): string[] {
@@ -68,7 +69,17 @@ export function plantedPairs(): Planted[] {
   return CASES.flatMap((c): Planted[] => {
     if (c.expect.length === 0) {
       const [a, b] = c.agents;
-      return a && b ? [{ caseId: c.id, a: unitOf(c, a.handle), b: unitOf(c, b.handle), relation: "independent", control: true }] : [];
+      return a && b
+        ? [
+            {
+              caseId: c.id,
+              a: unitOf(c, a.handle),
+              b: unitOf(c, b.handle),
+              relation: "independent",
+              control: true,
+            },
+          ]
+        : [];
     }
     return c.expect.map((e) => ({
       caseId: c.id,
@@ -90,8 +101,11 @@ export function scenarioUnits(path: string): Unit[] {
     const handle = r.as ?? "?";
     const u = by.get(handle) ?? { source: "scenario", handle, prompts: [], files: [], symbols: [] };
     by.set(handle, u);
-    if (input.hook_event_name === "UserPromptSubmit" && typeof input.prompt === "string") u.prompts.push(input.prompt);
-    const tool = input.tool_input as { file_path?: unknown; content?: unknown; new_string?: unknown } | undefined;
+    if (input.hook_event_name === "UserPromptSubmit" && typeof input.prompt === "string")
+      u.prompts.push(input.prompt);
+    const tool = input.tool_input as
+      | { file_path?: unknown; content?: unknown; new_string?: unknown }
+      | undefined;
     if (input.hook_event_name === "PreToolUse" && typeof tool?.file_path === "string") {
       const rel = tool.file_path.replace(/^\/tmp\/lb-demo\/\w+\//, "");
       if (!u.files.includes(rel)) u.files.push(rel);

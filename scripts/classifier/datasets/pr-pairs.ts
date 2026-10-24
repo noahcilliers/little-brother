@@ -27,7 +27,8 @@ function nodeOf(side: Side): ClassifiedNode {
     agentId: side.agentId,
     kind: "action",
     verb: "EDIT",
-    text: side.text ?? `EDIT ${paths.slice(0, 3).join(" ")}${paths.length > 3 ? ` +${paths.length - 3}` : ""}`,
+    text:
+      side.text ?? `EDIT ${paths.slice(0, 3).join(" ")}${paths.length > 3 ? ` +${paths.length - 3}` : ""}`,
     outcome: "open",
     touches,
     references,

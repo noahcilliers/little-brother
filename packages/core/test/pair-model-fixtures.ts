@@ -27,3 +27,16 @@ export function constantModel(
   if (!parsed.ok) throw new Error(parsed.error);
   return parsed.model;
 }
+
+/** Median wall time of one call after a warm-up: robust to other suites running in parallel. */
+export function medianMs(fn: () => void, iterations = 400, warmup = 100): number {
+  for (let i = 0; i < warmup; i++) fn();
+  const times: number[] = [];
+  for (let i = 0; i < iterations; i++) {
+    const t0 = performance.now();
+    fn();
+    times.push(performance.now() - t0);
+  }
+  times.sort((a, b) => a - b);
+  return times[Math.floor(times.length / 2)] ?? 0;
+}

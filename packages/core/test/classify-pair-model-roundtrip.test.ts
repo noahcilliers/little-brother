@@ -6,7 +6,9 @@ import { RELATIONS } from "../src/classify/types";
 
 // Written by `train.py --roundtrip` from the SYNTHETIC fixture (scripts/classifier/fixtures/synthetic.jsonl):
 // both estimator kinds, with the probabilities Python's reference predict computed for sample rows.
-type Fixture = { models: { model: unknown; cases: { features: number[]; probs: Record<string, number> }[] }[] };
+type Fixture = {
+  models: { model: unknown; cases: { features: number[]; probs: Record<string, number> }[] }[];
+};
 const fixture = JSON.parse(
   readFileSync(new URL("./fixtures/pair-model-roundtrip.json", import.meta.url), "utf8"),
 ) as Fixture;

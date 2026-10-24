@@ -30,7 +30,9 @@ export const LabelledPairSchema = z.object({
   /** The judge's own verdict when one was stored: what "LLM on every pair" would have said. */
   judge: z.object({ relation: Rel, confidence: z.number(), latencyMs: z.number() }).nullable(),
   /** Ground truth: human feedback, lb verify, an eval's evidence checks, a public dataset, or the generator. */
-  gold: z.object({ relation: Rel, origin: z.enum(["feedback", "git", "eval", "dataset", "synthetic"]) }).nullable(),
+  gold: z
+    .object({ relation: Rel, origin: z.enum(["feedback", "git", "eval", "dataset", "synthetic"]) })
+    .nullable(),
   synthetic: z.boolean().default(false),
   meta: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
@@ -45,7 +47,9 @@ const at = (f: readonly number[], name: string) => f[idx(name)] ?? 0;
 /** A gold "nothing here": compatible overlap when the two share files, symbols or a topic, else independent. */
 export function negativeRelation(features: readonly number[]): Relation {
   const overlap =
-    at(features, "path_jaccard") > 0 || at(features, "same_symbol_mutation") > 0 || at(features, "topic_match") > 0;
+    at(features, "path_jaccard") > 0 ||
+    at(features, "same_symbol_mutation") > 0 ||
+    at(features, "topic_match") > 0;
   return overlap ? "overlap_compatible" : "independent";
 }
 

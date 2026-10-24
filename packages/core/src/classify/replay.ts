@@ -43,7 +43,13 @@ type Decision = { relation: Relation; judgeCalls: number; modelRan: boolean; imp
 
 type Predictor = (row: LabelledPair) => Prediction;
 
-function decideRow(arch: Architecture, row: LabelledPair, model: PairModel, oracle: Relation | null, predictOf: Predictor): Decision {
+function decideRow(
+  arch: Architecture,
+  row: LabelledPair,
+  model: PairModel,
+  oracle: Relation | null,
+  predictOf: Predictor,
+): Decision {
   const ruled = row.rule?.relation;
   const judged = row.judge?.relation;
   const base = { judgeCalls: 0, modelRan: false, imputed: false };
@@ -53,7 +59,8 @@ function decideRow(arch: Architecture, row: LabelledPair, model: PairModel, orac
     return { ...base, judgeCalls: 1, imputed: !judged, relation: judged ?? oracle ?? ruled ?? "independent" };
   if (ruled) return { ...base, relation: ruled };
   const p = predictOf(row);
-  if (inDomain(model, row.features) && settles(model, p)) return { ...base, modelRan: true, relation: p.relation };
+  if (inDomain(model, row.features) && settles(model, p))
+    return { ...base, modelRan: true, relation: p.relation };
   return { judgeCalls: 1, modelRan: true, imputed: !judged, relation: judged ?? oracle ?? "independent" };
 }
 
@@ -126,7 +133,8 @@ export function replay(
 }
 
 const pct = (x: number | null) => (x === null ? "–" : x.toFixed(2));
-const ms = (x: number) => (x < 1 ? `${x.toFixed(2)} ms` : x < 1000 ? `${x.toFixed(0)} ms` : `${(x / 1000).toFixed(1)} s`);
+const ms = (x: number) =>
+  x < 1 ? `${x.toFixed(2)} ms` : x < 1000 ? `${x.toFixed(0)} ms` : `${(x / 1000).toFixed(1)} s`;
 
 export function replayMarkdown(r: ReplayReport, title: string): string {
   const head = [
@@ -146,7 +154,8 @@ export function replayMarkdown(r: ReplayReport, title: string): string {
     ? [
         "",
         ...imputed.map(
-          (s) => `- ${s.architecture}: ${s.imputed} pairs had no stored judge verdict (imputed as ${r.missingJudge}).`,
+          (s) =>
+            `- ${s.architecture}: ${s.imputed} pairs had no stored judge verdict (imputed as ${r.missingJudge}).`,
         ),
       ]
     : [];

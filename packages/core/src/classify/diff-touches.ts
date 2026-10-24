@@ -22,7 +22,8 @@ const DEFS: RegExp[] = [
   /^func\s+(?:\([^)]*\)\s*)?([A-Za-z_]\w*)\s*\(([^)]*)/,
 ];
 const HUNK = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)$/;
-const GENERATED = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|Cargo\.lock|go\.sum)$|(^|\/)(dist|build|vendor|node_modules)\/|\.min\.(js|css)$/;
+const GENERATED =
+  /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|Cargo\.lock|go\.sum)$|(^|\/)(dist|build|vendor|node_modules)\/|\.min\.(js|css)$/;
 const NOT_REFS = new Set(
   "self this super print len range str int float bool dict list tuple set isinstance hasattr getattr setattr super return await async lambda assert require import export from function const typeof instanceof append extend format items keys values join split strip replace startswith endswith console log error warn push slice filter map reduce forEach then catch resolve reject Promise Object Array String Number Boolean JSON Math Error Date".split(
     " ",
@@ -63,7 +64,12 @@ export function parseUnifiedDiff(text: string): DiffFile[] {
   return out;
 }
 
-const FILE_OP: Record<DiffFile["status"], Op> = { added: "create", removed: "delete", renamed: "rename", modified: "write" };
+const FILE_OP: Record<DiffFile["status"], Op> = {
+  added: "create",
+  removed: "delete",
+  renamed: "rename",
+  modified: "write",
+};
 
 function fileTouches(f: DiffFile, refs: Set<string>, defined: Set<string>): Touch[] {
   const fileOp = FILE_OP[f.status];
@@ -79,7 +85,8 @@ function fileTouches(f: DiffFile, refs: Set<string>, defined: Set<string>): Touc
     const oldLen = m[2] === undefined ? 1 : Number(m[2]);
     const newLen = m[4] === undefined ? 1 : Number(m[4]);
     // Base-side coordinates: both sides of a pair share the merge base, so their ranges are comparable.
-    const range: [number, number] = oldStart === 0 ? [1, Math.max(1, newLen)] : [oldStart, oldStart + Math.max(oldLen, 1) - 1];
+    const range: [number, number] =
+      oldStart === 0 ? [1, Math.max(1, newLen)] : [oldStart, oldStart + Math.max(oldLen, 1) - 1];
     out.push({ path: f.path, op: fileOp, lines: range, ...(generated ? { generated } : {}) });
     const removed = new Map<string, string>();
     const added = new Map<string, string>();
@@ -90,13 +97,21 @@ function fileTouches(f: DiffFile, refs: Set<string>, defined: Set<string>): Touc
       if (line[0] !== "+") continue;
       for (const c of line.matchAll(/\b([A-Za-z_][\w]{3,})\s*\(/g)) if (c[1]) refs.add(c[1]);
       const imp = /^\+\s*(?:from\s+\S+\s+)?import\s+(?:\{([^}]*)\}|(.+?))(?:\s+from\b|$)/.exec(line);
-      for (const name of (imp?.[1] ?? imp?.[2] ?? "").split(/[,\s]+/)) if (/^[A-Za-z_]\w{3,}$/.test(name)) refs.add(name);
+      for (const name of (imp?.[1] ?? imp?.[2] ?? "").split(/[,\s]+/))
+        if (/^[A-Za-z_]\w{3,}$/.test(name)) refs.add(name);
     }
-    const symbol = (name: string, op: Op): Touch => ({ path: f.path, symbol: `${f.path}::${name}`, op, lines: range });
+    const symbol = (name: string, op: Op): Touch => ({
+      path: f.path,
+      symbol: `${f.path}::${name}`,
+      op,
+      lines: range,
+    });
     for (const [name, params] of added) {
       defined.add(name);
       const before = removed.get(name);
-      out.push(symbol(name, before === undefined ? "create" : before === params ? "write" : "signature_change"));
+      out.push(
+        symbol(name, before === undefined ? "create" : before === params ? "write" : "signature_change"),
+      );
     }
     for (const name of removed.keys()) if (!added.has(name)) out.push(symbol(name, "delete"));
     const enclosing = definition(m[5] ?? "")?.name;

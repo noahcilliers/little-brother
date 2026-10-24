@@ -39,7 +39,12 @@ export function agenticflictRows(pr: FetchedPr, conflicted: ReadonlySet<string>)
   // Clean PRs are kept only when they share files with the drift: "same area, merged clean".
   if (!pr.conflict && shared.length === 0) return [];
   const meta = { source: "agenticflict", repo: pr.repo, agent: pr.agent };
-  const side = (suffix: string, agentId: string, fs: DiffFile[], at: number) => ({ id: `${pr.prKey}:${suffix}`, agentId, files: fs, at });
+  const side = (suffix: string, agentId: string, fs: DiffFile[], at: number) => ({
+    id: `${pr.prKey}:${suffix}`,
+    agentId,
+    files: fs,
+    at,
+  });
   const out: LabelledPair[] = [];
   const whole = prPair(
     `af:${pr.prKey}`,
@@ -68,7 +73,9 @@ export function agenticflictRows(pr: FetchedPr, conflicted: ReadonlySet<string>)
 
 function conflictFiles(): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>();
-  for (const r of parseCsv(readFileSync(join(DATASETS, "agenticflict/data/clean/agenticflict_conflict_files_clean.csv"), "utf8"))) {
+  for (const r of parseCsv(
+    readFileSync(join(DATASETS, "agenticflict/data/clean/agenticflict_conflict_files_clean.csv"), "utf8"),
+  )) {
     const key = r.pr_key ?? "";
     out.set(key, (out.get(key) ?? new Set()).add(r.file_path ?? ""));
   }
@@ -86,7 +93,9 @@ function main(): void {
   }
   const out = join(PAIRS_DIR, "agenticflict.jsonl");
   writeJsonl(out, rows);
-  console.log(`agenticflict: ${seen} fetched PRs → ${rows.length} pairs ${JSON.stringify(tally(rows))} → ${out}`);
+  console.log(
+    `agenticflict: ${seen} fetched PRs → ${rows.length} pairs ${JSON.stringify(tally(rows))} → ${out}`,
+  );
 }
 
 main();

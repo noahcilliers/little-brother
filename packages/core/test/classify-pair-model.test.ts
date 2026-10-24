@@ -4,7 +4,7 @@ import { predict, settles, settleThreshold } from "../src/classify/pair-model";
 import { parsePairModel } from "../src/classify/pair-model-schema";
 import { settleByPairModel } from "../src/classify/pair-tier";
 import { node, pair } from "./classify-fixtures";
-import { constantModel, zeros } from "./pair-model-fixtures";
+import { constantModel, medianMs, zeros } from "./pair-model-fixtures";
 
 const F = FEATURE_NAMES.length;
 
@@ -66,14 +66,26 @@ describe("predict", () => {
       version: "big",
       featureVersion: FEATURE_VERSION,
       featureNames: [...FEATURE_NAMES],
-      classes: ["independent", "overlap_compatible", "duplicate", "textual_conflict", "semantic_conflict", "intent_contradiction", "ordering_dependency", "repeats_failure"],
-      estimator: { kind: "gbdt", base: new Array(8).fill(0), trees: Array.from({ length: 800 }, (_, i) => tree(i % 8)) },
+      classes: [
+        "independent",
+        "overlap_compatible",
+        "duplicate",
+        "textual_conflict",
+        "semantic_conflict",
+        "intent_contradiction",
+        "ordering_dependency",
+        "repeats_failure",
+      ],
+      estimator: {
+        kind: "gbdt",
+        base: new Array(8).fill(0),
+        trees: Array.from({ length: 800 }, (_, i) => tree(i % 8)),
+      },
     });
     if (!parsed.ok) throw new Error(parsed.error);
     const x = zeros().map((_, i) => (i % 3) / 2);
-    const t0 = performance.now();
-    for (let i = 0; i < 500; i++) predict(parsed.model, x);
-    expect((performance.now() - t0) / 500).toBeLessThan(1);
+    // Typically ~0.1 ms; the bound leaves room for parallel suites (the real budget is the 150 ms edit path).
+    expect(medianMs(() => predict(parsed.model, x))).toBeLessThan(2);
   });
 });
 
@@ -104,11 +116,20 @@ describe("gating", () => {
     expect(settles(sure, predict(sure, zeros()))).toBe(true);
     expect(settles(unsure, predict(unsure, zeros()))).toBe(false);
     const a = node({ kind: "intent", verb: "PLAN", text: "PLAN add retry to the http client" });
-    const b = node({ kind: "intent", verb: "PLAN", agentId: "b", text: "PLAN add retries to the http client" });
+    const b = node({
+      kind: "intent",
+      verb: "PLAN",
+      agentId: "b",
+      text: "PLAN add retries to the http client",
+    });
     const u = [{ pair: { ...pair(a, b), reasons: ["similar intent (0.93)"] }, hints: [] }];
     const settled = settleByPairModel(sure, u, { nextKind: "action" });
     expect(settled.rest).toHaveLength(0);
-    expect(settled.judgments[0]).toMatchObject({ relation: "duplicate", source: "pair_model", action: "warn" });
+    expect(settled.judgments[0]).toMatchObject({
+      relation: "duplicate",
+      source: "pair_model",
+      action: "warn",
+    });
     expect(settleByPairModel(unsure, u, { nextKind: "action" }).rest).toEqual(u);
   });
 
@@ -116,17 +137,33 @@ describe("gating", () => {
     const m = constantModel([0, 6], ["independent", "intent_contradiction"]);
     const a = node({ kind: "action" });
     const b = node({ agentId: "b" });
-    const [j] = settleByPairModel(m, [{ pair: { ...pair(a, b), reasons: ["similar intent (0.9)"] }, hints: [] }], { nextKind: "action" }).judgments;
+    const [j] = settleByPairModel(
+      m,
+      [{ pair: { ...pair(a, b), reasons: ["similar intent (0.9)"] }, hints: [] }],
+      { nextKind: "action" },
+    ).judgments;
     expect(j?.action).toBe("warn");
-    const [k] = settleByPairModel(m, [{ pair: { ...pair(a, b), reasons: ["both mutate src/a.ts"] }, hints: [] }], { nextKind: "action" }).judgments;
+    const [k] = settleByPairModel(
+      m,
+      [{ pair: { ...pair(a, b), reasons: ["both mutate src/a.ts"] }, hints: [] }],
+      { nextKind: "action" },
+    ).judgments;
     expect(k?.action).toBe("block");
   });
 });
 
 describe("domain", () => {
   it("sends pairs of kinds the model never trained on to the judge", () => {
-    const m = constantModel([0, 6], ["independent", "duplicate"], { domain: { kindPairs: ["action>action"], failedMemory: false } });
-    const plans = { pair: pair(node({ kind: "intent", verb: "PLAN" }), node({ kind: "intent", verb: "PLAN", agentId: "b" })), hints: [] };
+    const m = constantModel([0, 6], ["independent", "duplicate"], {
+      domain: { kindPairs: ["action>action"], failedMemory: false },
+    });
+    const plans = {
+      pair: pair(
+        node({ kind: "intent", verb: "PLAN" }),
+        node({ kind: "intent", verb: "PLAN", agentId: "b" }),
+      ),
+      hints: [],
+    };
     const edits = { pair: pair(node(), node({ agentId: "b" })), hints: [] };
     const r = settleByPairModel(m, [plans, edits], { nextKind: "action" });
     expect(r.rest).toEqual([plans]);

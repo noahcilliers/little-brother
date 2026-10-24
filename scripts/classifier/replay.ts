@@ -6,8 +6,8 @@ import {
   type Prediction,
   parsePairModel,
   predict,
-  type Relation,
   RELATIONS,
+  type Relation,
   replay,
   replayMarkdown,
 } from "../../packages/core/src/index";
@@ -39,7 +39,12 @@ function oofPredictions(path: string): Map<string, Prediction> {
     const full = Object.fromEntries(RELATIONS.map((r) => [r, probs[r] ?? 0])) as Record<Relation, number>;
     const [first, second] = [...RELATIONS].sort((a, b) => full[b] - full[a]);
     if (!first || !second) continue;
-    out.set(id, { relation: first, probs: full, confidence: full[first], margin: full[first] - full[second] });
+    out.set(id, {
+      relation: first,
+      probs: full,
+      confidence: full[first],
+      margin: full[first] - full[second],
+    });
   }
   return out;
 }
@@ -74,7 +79,10 @@ function main(): void {
   const out = flag(argv, "out", "");
   if (out) {
     writeFileSync(`${out}.md`, `${md}\n`);
-    writeFileSync(`${out}.json`, JSON.stringify({ title, synthetic, model: model.model.version, latency, lower, upper }, null, 2));
+    writeFileSync(
+      `${out}.json`,
+      JSON.stringify({ title, synthetic, model: model.model.version, latency, lower, upper }, null, 2),
+    );
   }
 }
 

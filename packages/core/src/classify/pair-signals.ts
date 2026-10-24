@@ -36,7 +36,23 @@ export function targetTokens(n: ClassifiedNode): Set<string> {
 }
 
 const NEGATION = /\b(don'?t|do not|no|not|never|without|avoid)\b/i;
-const RULE_OUT = new Set(["no", "not", "never", "without", "avoid", "instead", "remove", "removes", "drop", "dont", "don", "deprecate", "replace", "disable", "stop"]);
+const RULE_OUT = new Set([
+  "no",
+  "not",
+  "never",
+  "without",
+  "avoid",
+  "instead",
+  "remove",
+  "removes",
+  "drop",
+  "dont",
+  "don",
+  "deprecate",
+  "replace",
+  "disable",
+  "stop",
+]);
 const SKIP = new Set(["use", "using", "the", "a", "an", "any", "of", "to", "t", "add", "touch", "with"]);
 
 export const negates = (text: string): boolean => NEGATION.test(text);
