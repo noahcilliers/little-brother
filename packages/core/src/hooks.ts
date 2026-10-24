@@ -43,6 +43,9 @@ export const HookInput = z.discriminatedUnion("hook_event_name", [
   z
     .object({ ...common, hook_event_name: z.literal("SessionEnd"), reason: z.string().optional() })
     .passthrough(),
+  z
+    .object({ ...common, hook_event_name: z.literal("PreCompact"), trigger: z.string().optional() })
+    .passthrough(),
   // Task-list hooks. Field shapes are only partly documented, so every task field is optional and ids may be numbers.
   z
     .object({

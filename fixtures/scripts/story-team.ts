@@ -8,14 +8,26 @@ import * as t from "./snippets-team";
 
 /** Maya: the Order type, an orders table and the Stripe webhook, with a passing test. */
 export function maya(story: Story) {
-  const order = story.task("MT1-maya-order", 700, "maya", "Order type", "Shared Order contract for checkout and emails");
+  const order = story.task(
+    "MT1-maya-order",
+    700,
+    "maya",
+    "Order type",
+    "Shared Order contract for checkout and emails",
+  );
   story.read("M01-maya-read-products", 800, "maya", "db/schema/products.ts");
   story.write("M02-maya-order-type", 1500, "maya", "src/contracts/order.ts", t.mayaOrderType);
   order("MT1-maya-order.done", 500);
   const table = story.task("MT2-maya-orders", 600, "maya", "Orders table", "In-memory orders with markPaid");
   story.write("M03-maya-orders-table", 1600, "maya", "db/schema/orders.ts", t.mayaOrdersTable);
   table("MT2-maya-orders.done", 500);
-  const hook = story.task("MT3-maya-webhook", 700, "maya", "Stripe webhook", "Verify the signature, mark the order paid");
+  const hook = story.task(
+    "MT3-maya-webhook",
+    700,
+    "maya",
+    "Stripe webhook",
+    "Verify the signature, mark the order paid",
+  );
   story.read("M04-maya-read-stripe", 700, "maya", "src/payments/stripe-client.ts");
   story.write("M05-maya-webhook", 1800, "maya", "src/payments/stripe-webhook.ts", t.mayaWebhook);
   hook("MT3-maya-webhook.done", 500);
@@ -41,7 +53,13 @@ export function mayaTest(story: Story) {
 
 /** Priya, first prompt: mailer, then a global jsdom test env that fails, then rendering without a DOM. */
 export function priyaFirstPrompt(story: Story) {
-  const mailer = story.task("PT1-priya-mailer", 800, "priya", "Mailer transport", "Dev outbox behind sendMail");
+  const mailer = story.task(
+    "PT1-priya-mailer",
+    800,
+    "priya",
+    "Mailer transport",
+    "Dev outbox behind sendMail",
+  );
   story.read("P01-priya-read-mailer", 700, "priya", "src/notify/mailer.ts");
   story.edit("P02-priya-mailer", 1500, "priya", "src/notify/mailer.ts", t.priyaMailerOld, t.priyaMailerNew);
   mailer("PT1-priya-mailer.done", 500);
@@ -76,10 +94,28 @@ export function priyaFirstPrompt(story: Story) {
 export function priyaOrders(story: Story) {
   story.after("priya", "M02-maya-order-type.post", 2000);
   story.prompt("P11-priya-prompt", 1500, "priya", "send an order confirmation email when an order is paid");
-  story.task("PT4-priya-order-email", 700, "priya", "Order confirmation email", "Email the receipt when paid");
+  story.task(
+    "PT4-priya-order-email",
+    700,
+    "priya",
+    "Order confirmation email",
+    "Email the receipt when paid",
+  );
   story.write("P12-priya-order-email", 1500, "priya", "src/notify/order-email.ts", t.priyaOrderEmail, true);
-  const ship = story.task("PT5-priya-shipping", 800, "priya", "Shipping notice", "Email when the order ships");
-  story.write("P13-priya-shipping-email", 1500, "priya", "src/notify/shipping-email.ts", t.priyaShippingEmail);
+  const ship = story.task(
+    "PT5-priya-shipping",
+    800,
+    "priya",
+    "Shipping notice",
+    "Email when the order ships",
+  );
+  story.write(
+    "P13-priya-shipping-email",
+    1500,
+    "priya",
+    "src/notify/shipping-email.ts",
+    t.priyaShippingEmail,
+  );
   ship("PT5-priya-shipping.done", 500);
   story.stop(
     "P14-priya-stop",

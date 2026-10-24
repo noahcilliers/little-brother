@@ -20,6 +20,8 @@ export type BoardCatch = {
   /** Short label for the chip on the edge: "conflict · auth.mechanism", "needs JWT tokens first". */
   chip: string;
   text: string;
+  /** Tokens this catch saved (recorded, or estimated from the attempt it prevented repeating). */
+  saved?: number;
 };
 
 // A catch with no recorded settle time stays drawn this long after it fired.
@@ -74,7 +76,11 @@ export function buildCatches(
     const fromTask = taskById.get(from);
     // Only a conflict nobody has a claim on waits for a person; everything else settles when the step ends.
     const waits = kind === "conflict" && c.status === "open" && !c.winnerAgentId;
-    const settled = resolvedAt.get(c._id) ?? (waits ? null : Math.max(fromTask?.t1 ?? 0, c.at + SETTLE_MS));
+    // An ordering wait lasts as long as the waiting step does.
+    const ordering = kind === "ordering" && c.status === "open";
+    const settled =
+      resolvedAt.get(c._id) ??
+      (waits ? null : ordering ? (fromTask?.t1 ?? null) : Math.max(fromTask?.t1 ?? 0, c.at + SETTLE_MS));
     const key = `${kind}:${from}:${to}`;
     const prev = byPair.get(key);
     if (prev) {

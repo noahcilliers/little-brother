@@ -42,7 +42,9 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
     const out = new Map<string, number>();
     const lane = (id: string) => layout.laneOf.get(id) ?? 0;
     for (const k of board.tasks) {
-      const next = board.tasks.find((o) => o.agentId === k.agentId && lane(o.id) === lane(k.id) && o.t0 > k.t0);
+      const next = board.tasks.find(
+        (o) => o.agentId === k.agentId && lane(o.id) === lane(k.id) && o.t0 > k.t0,
+      );
       out.set(k.id, next ? layout.xAt(next.t0) : layout.width - 20);
     }
     return out;
@@ -84,7 +86,9 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
             const loose = board.loose.filter((x) => x.agentId === a.id);
             if (!row || loose.length === 0) return null;
             const y = laneY(row, 0) + BAR_H / 2;
-            return <ActionTicks key={a.id} actions={loose} layout={layout} t={t} y={y} color="var(--faint)" grey />;
+            return (
+              <ActionTicks key={a.id} actions={loose} layout={layout} t={t} y={y} color="var(--faint)" grey />
+            );
           })}
           {board.tasks.map((k) => (
             <TaskBar
@@ -102,7 +106,13 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
             />
           ))}
           <GraphShared shared={board.shared} lookup={lookup} t={t} colorOf={colorOf} onSelect={toggle} />
-          <GraphCatches catches={board.catches} lookup={lookup} t={t} selected={selected} highlight={highlight} />
+          <GraphCatches
+            catches={board.catches}
+            lookup={lookup}
+            t={t}
+            selected={selected}
+            highlight={highlight}
+          />
           <NowLine x={nowX} height={layout.height} />
           <VerifyBadges verifies={board.verifies} lookup={lookup} t={t} />
         </svg>

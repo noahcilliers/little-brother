@@ -22,8 +22,10 @@ export function useDecisions(decisions: BoardDecision[] | undefined) {
     const fresh = ids.split(",").filter((id) => id && !seen.current.has(id));
     for (const id of fresh) seen.current.add(id);
     const first = fresh[0];
+    // `?decisions=later` loads the board with the queue parked in the top-bar pill (screenshots, wall displays).
+    const parked = new URLSearchParams(window.location.search).get("decisions") === "later";
     if (first) {
-      setOpen(true);
+      if (!parked) setOpen(true);
       setCurrentId((cur) => cur ?? first);
     }
   }, [ids]);

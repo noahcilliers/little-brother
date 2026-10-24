@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
 import { EXTRA_GOALS, EXTRA_TASKS, INBOX } from "./devSeedExtra";
-import { writeLoose, writeOrdering, writeVerdict, writeVerify } from "./devSeedRows";
+import { writeLoose, writeOrdering, writeTopicMap, writeVerdict, writeVerify } from "./devSeedRows";
 import { CATCHES, DECISION, EXTRA_HANDLES, GOALS, HANDLES, LESSON, TASKS, VERIFY_AT } from "./devSeedStory";
 import { startStory, TAG, writeEvent, writeNode, writeTask } from "./devSeedWrite";
 
@@ -16,6 +16,7 @@ export const story = internalMutation({
     const extra = Math.max(0, Math.min(EXTRA_HANDLES.length, (args.agents ?? 3) - HANDLES.length));
     const handles = [...HANDLES, ...EXTRA_HANDLES.slice(0, extra)];
     const s = await startStory(ctx, args.at ?? 24, handles);
+    await writeTopicMap(s);
     const present = (t: { a: (typeof handles)[number] }) => handles.includes(t.a);
 
     const goals: Id<"nodes">[] = [];
@@ -140,6 +141,9 @@ export const clear = internalMutation({
       for (const r of owned) await ctx.db.delete(r._id);
       await ctx.db.delete(a._id);
       rows += owned.length + 1;
+    }
+    for (const row of await ctx.db.query("settings").take(200)) {
+      if (row.value?.[TAG] === true) await ctx.db.delete(row._id);
     }
     for (const m of await ctx.db.query("members").take(200)) {
       if (m.tokenHash.startsWith(`${TAG}:`)) await ctx.db.delete(m._id);

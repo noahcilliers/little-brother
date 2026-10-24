@@ -10,7 +10,7 @@ import { type RepoInfo, repoInfo } from "./git";
 import { baseRev, gitOpFor } from "./git-state";
 import { appendOutbox, flushOutbox, type OutboxEntry } from "./outbox";
 import { writeSessionId } from "./session-file";
-import { transcriptTokens } from "./transcript";
+import { transcriptTokens, transcriptToolUsage } from "./transcript";
 
 export type HookRunOptions = {
   /** Profile handle; replay uses it to act as several members from one machine. */
@@ -45,6 +45,7 @@ async function normalizeFor(input: HookInput, root: string): Promise<Normalized 
   });
 }
 
+const USAGE_HOOKS = new Set(["Stop", "SessionEnd", "PreCompact"]);
 const WORK_TOOLS = new Set(["Edit", "Write", "MultiEdit", "Bash"]);
 
 /** baseRev on every work tool; the git op (with fresh HEAD state) once a Bash command has finished. */
@@ -99,6 +100,8 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
       machine: hostname(),
       normalized: await normalizeFor(input, repo.root),
       tokens: input.hook_event_name === "Stop" ? transcriptTokens(input.transcript_path) : undefined,
+      // The transcript can lag mid-turn; by Stop, SessionEnd and PreCompact the turn's usage is written.
+      usage: USAGE_HOOKS.has(input.hook_event_name) ? transcriptToolUsage(input.transcript_path) : undefined,
       now: Date.now(),
     });
     if (input.hook_event_name === "SessionStart") envelope.topicMap = loadTopicMap(repo.root);

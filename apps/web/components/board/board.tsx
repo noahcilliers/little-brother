@@ -4,9 +4,12 @@ import { useQuery } from "convex/react";
 import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { layoutBoard } from "@/lib/board-layout";
+import type { CatchKind } from "@/lib/board-time";
 import { agentColor } from "@/lib/format";
+import { useDecisions } from "@/lib/use-decisions";
 import { usePlayback } from "@/lib/use-playback";
 import { AgentsPanel } from "./agents-panel";
+import { DecisionModal } from "./decision-modal";
 import { Graph } from "./graph";
 import { PlaybackBar } from "./playback-bar";
 import { SelectedPanel } from "./selected-panel";
@@ -18,8 +21,10 @@ export function Board() {
   const board = useQuery(api.dashboard.board);
   const [selected, setSelected] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
+  const [highlight, setHighlight] = useState<CatchKind | null>(null);
   const layout = useMemo(() => (board ? layoutBoard(board, Date.now()) : undefined), [board]);
   const play = usePlayback(layout?.axis);
+  const decisions = useDecisions(board?.decisions);
   const colors = useMemo(() => new Map(board?.agents.map((a) => [a.id, a.color])), [board]);
   const colorOf = (agentId: string) => agentColor(colors.get(agentId));
   const start = layout?.axis.start ?? 0;
@@ -27,7 +32,14 @@ export function Board() {
 
   return (
     <div className="app">
-      <TopBar board={board} t={play.t} />
+      <TopBar
+        board={board}
+        t={play.t}
+        highlight={highlight}
+        onHighlight={setHighlight}
+        waiting={decisions.open ? 0 : decisions.count}
+        onOpenDecision={() => decisions.show()}
+      />
       <div className="grid">
         {board && layout && !empty ? (
           <Graph
@@ -37,6 +49,7 @@ export function Board() {
             follow={play.mode !== "paused"}
             selected={selected}
             focus={focus}
+            highlight={highlight}
             onSelect={setSelected}
             colorOf={colorOf}
           />
@@ -52,7 +65,14 @@ export function Board() {
         {board ? (
           <div className="side">
             <AgentsPanel board={board} t={play.t} focus={focus} onFocus={setFocus} colorOf={colorOf} />
-            <SelectedPanel board={board} selected={selected} t={play.t} start={start} colorOf={colorOf} />
+            <SelectedPanel
+              board={board}
+              selected={selected}
+              t={play.t}
+              start={start}
+              colorOf={colorOf}
+              onOpenDecision={(id) => decisions.show(id)}
+            />
           </div>
         ) : null}
       </div>
@@ -77,6 +97,7 @@ export function Board() {
         onReplay={play.replay}
         onScrub={play.scrub}
       />
+      <DecisionModal queue={decisions} colorOf={colorOf} />
     </div>
   );
 }

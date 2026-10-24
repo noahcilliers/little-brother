@@ -197,7 +197,10 @@ export class Story {
       permission_mode: "default",
       tool_name: "Read",
       tool_input: { file_path },
-      tool_response: { type: "text", file: { filePath: file_path, content, numLines: content.split("\n").length } },
+      tool_response: {
+        type: "text",
+        file: { filePath: file_path, content, numLines: content.split("\n").length },
+      },
       tool_use_id: toolUseId(step),
     });
   }

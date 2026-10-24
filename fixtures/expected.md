@@ -1,8 +1,10 @@
 # Expected Little Brother output for `scenario.jsonl`
 
-Acceptance oracle for the end-to-end replay (`lb replay fixtures/scenario.jsonl`, with `--parallel` in
-`scripts/e2e.sh`). Step ids match the `step`
-field of each line; `.pre` / `.post` are the PreToolUse / PostToolUse(Failure) halves of one tool call.
+Acceptance oracle for the end-to-end replay (`lb replay fixtures/scenario.jsonl --parallel`, as `scripts/e2e.sh`
+runs it). Six agents start within the same second and work at once for about a minute at speed 1. Step ids match
+the `step` field of each line; `.pre` / `.post` are the PreToolUse / PostToolUse(Failure) halves of one tool call.
+Numbered steps (`01`–`32`) are noah, joshua and ash (PLAN §8); `M…`, `L…`, `P…` are maya (payments), leo (search)
+and priya (notifications). Times below are seconds from the start at speed 1.
 
 **Output** is what `lb hook` prints to stdout (contract 3):
 - **silent**: prints nothing (exit 0).
@@ -40,6 +42,22 @@ inbox item delivered as context is never a failure.
 | 26–28       | all    | Stop                                                             | silent                               | —                                                                     | —                   | No open blocking items, so no `decision: "block"`                                                                                                                                                                                                                                                                        |
 | 29–31       | all    | SessionEnd                                                       | silent                               | —                                                                     | —                   | Agents marked offline                                                                                                                                                                                                                                                                                                    |
 
+## Six-agent beats
+
+| Step (≈ s)          | Agent  | Hook · target                                                   | Output   | Relation (rule)                                           | Type          | Must mention / notes                                                                                                                                     |
+| ------------------- | ------ | --------------------------------------------------------------- | -------- | --------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M00, L00, P00 (< 1) | team   | SessionStart, UserPromptSubmit                                  | silent   | —                                                         | normal        | Same second as noah, joshua, ash                                                                                                                         |
+| M02, M03, M05       | maya   | Write `src/contracts/order.ts` (`Order`), orders table, webhook | silent   | —                                                         | normal        | Labels `create OrderStatus, Order`, `create verifyStripeSignature(), handleStripeWebhook()`                                                              |
+| **32.pre** (≈ 23)   | joshua | Write `src/payments/stripe-webhook.ts`                          | **deny** | `textual_conflict` (R2, 0.95) → serialize                 | **duplicate** | "src/payments/stripe-webhook.ts is already being created", maya (owner of `payments.webhook`). No `.post`. Joshua's "Stripe webhook" task ends `stopped` |
+| M06–M07             | maya   | Webhook test, `npm test` → pass                                 | silent   | —                                                         | normal        | Written after 32, so joshua's denied create never pairs with it                                                                                          |
+| P04–P06             | priya  | Edit `vitest.config.ts` → `jsdom`; `npm test` fails; revert     | silent   | —                                                         | normal        | "Cannot find package 'jsdom'"                                                                                                                            |
+| P10 (≈ 34)          | priya  | Stop                                                            | silent   | —                                                         | —             | Distills a lesson (topic `tooling.test-env`): tried jsdom → FAIL → worked: render without a DOM                                                          |
+| **L06.pre** (≈ 39)  | leo    | Edit `vitest.config.ts`: the same `jsdom` change as P04         | **deny** | `repeats_failure` (R10 exact signature, 0.95) → serialize | **stale**     | "already failed for priya", the jsdom error, what worked. No `.post`. Leo's "Search box test setup" task ends `stopped`                                  |
+| **P12.pre** (≈ 40)  | priya  | Write `src/notify/order-email.ts` using `Order`                 | **deny** | `ordering_dependency` (R6, 0.8) → serialize               | conflict      | "src/contracts/order.ts::Order is used before its creation lands", maya. No `.post`. Priya's "Order confirmation email" task ends `stopped`              |
+| P13                 | priya  | Write `src/notify/shipping-email.ts`                            | silent   | —                                                         | normal        |                                                                                                                                                          |
+| M08, L09, P14       | team   | Stop                                                            | silent   | —                                                         | —             | No `decision: "block"`                                                                                                                                   |
+| M99, L99, P99       | team   | SessionEnd                                                      | silent   | —                                                         | —             | Agents marked offline                                                                                                                                    |
+
 ## Task lines and the `tasks` table
 
 Lines whose step starts with `T` are the agents' own task list: `.created` is a `TaskCreated` hook, `.start` a
@@ -47,26 +65,43 @@ Lines whose step starts with `T` are the agents' own task list: `.created` is a 
 action nodes and no classifications. Steps `06a`/`06b` are Ash's `Read`s (PostToolUse only, `EXPLORE`, not
 classified). Every action node gets `taskId` = its agent's in-progress task and a `label` (verb + primary symbol).
 
-| Agent  | Task (subject)        | Actions     | Final status | Why                                                                                   |
-| ------ | --------------------- | ----------- | ------------ | ------------------------------------------------------------------------------------- |
-| noah   | Create users table    | 07          | `completed`  | TaskCompleted                                                                         |
-| noah   | Allow storefront CORS | 08, 09, 10  | `abandoned`  | Its last test (09) failed and the agent started the next task; note names the failure |
-| noah   | Proxy /api in Vite    | 11, 12      | `completed`  | TaskCompleted after a passing test                                                    |
-| noah   | Issue JWT tokens      | 21          | `completed`  | TaskCompleted                                                                         |
-| ash    | Build pages           | 06a, 06b    | `completed`  | TaskCompleted                                                                         |
-| ash    | API client            | —           | `completed`  | TaskCompleted                                                                         |
-| ash    | CORS middleware       | 17 (denied) | `stopped`    | Denied before any successful action; note = first sentence of the denial              |
-| ash    | Use the Vite proxy    | 18          | `completed`  | TaskCompleted                                                                         |
-| joshua | Create users table    | 14 (denied) | `stopped`    | Duplicate denial                                                                      |
-| joshua | Cart model            | 15          | `completed`  | TaskCompleted                                                                         |
-| joshua | Session handling      | 19          | `superseded` | Step 23's decision supersedes step 19 (the conflict's losing side); note names it     |
-| joshua | Checkout routes       | 22 (denied) | `stopped`    | Conflict denial                                                                       |
-| joshua | Session on JWT        | 24          | `completed`  | TaskCompleted                                                                         |
-| joshua | Checkout routes       | 25          | `completed`  | A second task with the same subject (new task id)                                     |
+| Agent  | Task (subject)           | Actions      | Final status | Why                                                                                   |
+| ------ | ------------------------ | ------------ | ------------ | ------------------------------------------------------------------------------------- |
+| noah   | Create users table       | 07           | `completed`  | TaskCompleted                                                                         |
+| noah   | Allow storefront CORS    | 08, 09, 10   | `abandoned`  | Its last test (09) failed and the agent started the next task; note names the failure |
+| noah   | Proxy /api in Vite       | 11, 12       | `completed`  | TaskCompleted after a passing test                                                    |
+| noah   | Issue JWT tokens         | 21           | `completed`  | TaskCompleted                                                                         |
+| ash    | Build pages              | 06a, 06b     | `completed`  | TaskCompleted                                                                         |
+| ash    | API client               | —            | `completed`  | TaskCompleted                                                                         |
+| ash    | CORS middleware          | 17 (denied)  | `stopped`    | Denied before any successful action; note = first sentence of the denial              |
+| ash    | Use the Vite proxy       | 18           | `completed`  | TaskCompleted                                                                         |
+| joshua | Create users table       | 14 (denied)  | `stopped`    | Duplicate denial                                                                      |
+| joshua | Cart model               | 15           | `completed`  | TaskCompleted                                                                         |
+| joshua | Session handling         | 19           | `superseded` | Step 23's decision supersedes step 19 (the conflict's losing side); note names it     |
+| joshua | Checkout routes          | 22 (denied)  | `stopped`    | Conflict denial                                                                       |
+| joshua | Session on JWT           | 24           | `completed`  | TaskCompleted                                                                         |
+| joshua | Checkout routes          | 25           | `completed`  | A second task with the same subject (new task id)                                     |
+| joshua | Stripe webhook           | 32 (denied)  | `stopped`    | Duplicate of maya's webhook                                                           |
+| maya   | Order type               | M01, M02     | `completed`  | TaskCompleted                                                                         |
+| maya   | Orders table             | M03          | `completed`  | TaskCompleted                                                                         |
+| maya   | Stripe webhook           | M04, M05     | `completed`  | TaskCompleted                                                                         |
+| maya   | Webhook test             | M06, M07     | `completed`  | TaskCompleted after a passing test                                                    |
+| priya  | Mailer transport         | P01, P02     | `completed`  | TaskCompleted                                                                         |
+| priya  | DOM test environment     | P03–P06      | `abandoned`  | Its last test failed and the agent moved on                                           |
+| priya  | Render without a DOM     | P07–P09      | `completed`  | TaskCompleted                                                                         |
+| priya  | Order confirmation email | P12 (denied) | `stopped`    | Ordering: maya's `Order` hasn't landed                                                |
+| priya  | Shipping notice          | P13          | `completed`  | TaskCompleted                                                                         |
+| leo    | Search function          | L01, L02     | `completed`  | TaskCompleted                                                                         |
+| leo    | Search endpoint          | L03–L05      | `completed`  | TaskCompleted                                                                         |
+| leo    | Search box test setup    | L06 (denied) | `stopped`    | Stale: priya's jsdom lesson                                                           |
+| leo    | Test search without DOM  | L07, L08     | `completed`  | TaskCompleted after a passing test                                                    |
 
 ## Totals after a clean run
 
-- Classifications: 1 `duplicate` (14), 1–2 `stale` (16 intent warn, 17 R10 deny; one row is fine if deduped by pair), 1 `conflict` (21, deduped). Nothing else.
-- Denies: exactly steps 14, 17, 22.
-- Catches before push: 3.
-- Tokens saved > 0 for the stale catch (credited from noah's failed trajectory, steps 08–10).
+- Classifications: 2 `duplicate` (14, 32); 2–3 `stale` (16 intent warn, 17 and L06 R10 denies); 2 `conflict` (21
+  judged, P12 R6 ordering). Each R10 deny also records an R1 `textual_conflict` against the reverted lines (17 vs
+  10, L06 vs P06); it doesn't change any output. Nothing else.
+- Denies: exactly steps 14, 17, 22, 32, L06, P12.
+- Catches before push: 6.
+- Tokens saved > 0 for the stale catches (credited from noah's steps 08–10 and priya's P04–P06).
+- Only step 21's conflict needs the LLM judge; every other catch comes from exact rules.

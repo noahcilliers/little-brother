@@ -14,7 +14,8 @@ export function DeliveryNote({ decided, onDone }: { decided: Decided; onDone: ()
   const items = useQuery(api.dashboard.delivery, { classificationId: decided.decision.classificationId });
   // Only the items the decision itself queued; earlier warnings on the same conflict were delivered long ago.
   const fresh = items?.filter((i) => i.at >= decided.at - 5000);
-  const loser = fresh?.find((i) => i.action === "block") ?? fresh?.find((i) => i.handle === decided.loserHandle);
+  const loser =
+    fresh?.find((i) => i.action === "block") ?? fresh?.find((i) => i.handle === decided.loserHandle);
   const delivered = loser !== undefined && loser.state !== "queued";
 
   // The board re-renders several times a second; the timer must not restart with it.
@@ -29,7 +30,9 @@ export function DeliveryNote({ decided, onDone }: { decided: Decided; onDone: ()
   const who = loser?.handle ?? decided.loserHandle ?? "the other";
   return (
     <p className={delivered ? "delivery done" : "delivery"}>
-      {delivered ? `Delivered to ${who}'s session` : `Queued for ${who}'s session · delivered on its next step`}
+      {delivered
+        ? `Delivered to ${who}'s session`
+        : `Queued for ${who}'s session · delivered on its next step`}
     </p>
   );
 }

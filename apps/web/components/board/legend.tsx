@@ -16,7 +16,13 @@ function Svg({ children }: { children: ReactNode }) {
 const icon = (name: IconName, color: string) => <InlineIcon name={name} color={color} size={14} />;
 const edge = (kind: keyof typeof CATCH_STYLE) => (
   <Svg>
-    <path d="M2 10 Q14 0 26 10" fill="none" stroke={CATCH_STYLE[kind].color} strokeWidth={2} strokeDasharray={CATCH_STYLE[kind].dash} />
+    <path
+      d="M2 10 Q14 0 26 10"
+      fill="none"
+      stroke={CATCH_STYLE[kind].color}
+      strokeWidth={2}
+      strokeDasharray={CATCH_STYLE[kind].dash}
+    />
   </Svg>
 );
 
@@ -45,10 +51,34 @@ const ITEMS: [ReactNode, string][] = [
     "action",
   ],
   [icon("wall", "var(--warn)"), "stopped"],
-  [<span key="c">{icon("bolt", "var(--hot)")}{edge("conflict")}</span>, "conflict"],
-  [<span key="d">{icon("squares", "var(--warn)")}{edge("duplicate")}</span>, "duplicate"],
-  [<span key="s">{icon("retry", "var(--warn)")}{edge("stale")}</span>, "stale (already failed)"],
-  [<span key="o">{icon("arrowBar", "var(--muted)")}{edge("ordering")}</span>, "ordering"],
+  [
+    <span key="c">
+      {icon("bolt", "var(--hot)")}
+      {edge("conflict")}
+    </span>,
+    "conflict",
+  ],
+  [
+    <span key="d">
+      {icon("squares", "var(--warn)")}
+      {edge("duplicate")}
+    </span>,
+    "duplicate",
+  ],
+  [
+    <span key="s">
+      {icon("retry", "var(--warn)")}
+      {edge("stale")}
+    </span>,
+    "stale (already failed)",
+  ],
+  [
+    <span key="o">
+      {icon("arrowBar", "var(--muted)")}
+      {edge("ordering")}
+    </span>,
+    "ordering",
+  ],
   [icon("diamond", SAMPLE), "decision"],
   [icon("hexagon", "var(--ink)"), "lesson"],
 ];
@@ -57,7 +87,7 @@ const ITEMS: [ReactNode, string][] = [
 export function Legend() {
   return (
     <div className="legend">
-      <b>How to read</b>
+      <b className="how">How to read</b>
       {ITEMS.map(([svg, label]) => (
         <span key={label}>
           {svg}

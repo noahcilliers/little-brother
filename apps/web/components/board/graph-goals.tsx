@@ -61,10 +61,17 @@ export function GoalRegions({ goals, tasks, layout, t, focus, colorOf }: Props) 
               stroke={`color-mix(in srgb, ${color} 55%, transparent)`}
             />
             <Icon name="flag" x={x0 + 16} y={pillY + 10} size={12} color={color} />
-            <text x={x0 + 26} y={pillY + 14} fontFamily="var(--sans)" fontSize={11} fontWeight={500} fill="var(--ink)">
+            <text
+              x={x0 + 26}
+              y={pillY + 14}
+              fontFamily="var(--sans)"
+              fontSize={11}
+              fontWeight={500}
+              fill="var(--ink)"
+            >
               {g.label}
             </text>
-            <g transform={`translate(${x1 - 12} ${pillY + 10})`}>
+            <g transform={`translate(${Math.max(x1 - 12, x0 + pillW + 16)} ${pillY + 10})`}>
               {mark === "running" ? <Icon name="pulse" x={0} y={0} size={11} color={color} /> : null}
               {mark === "done" ? <Icon name="check" x={0} y={0} size={13} color={color} /> : null}
               {mark === "failed" ? <Icon name="cross" x={0} y={0} size={12} color="var(--hot)" /> : null}

@@ -88,6 +88,7 @@ export default defineSchema({
     toolUseId: v.optional(v.string()),
     taskId: v.optional(v.id("tasks")), // the agent's own plan step this action belongs to
     label: v.optional(v.string()), // short behavior label: verb + primary symbol, e.g. "edit issueToken()"
+    tokens: v.optional(v.number()), // actions: tokens the tool call cost (from the transcript); intents: rollup of their actions
     preview: v.optional(v.string()),
     consumes: v.optional(v.array(v.string())),
     baseRev: v.optional(v.string()),
@@ -125,6 +126,7 @@ export default defineSchema({
     startedAt: v.number(),
     endedAt: v.optional(v.number()),
     note: v.optional(v.string()), // why it stopped / was superseded, or the closing summary
+    tokens: v.optional(v.number()), // rollup of its actions' tokens
   })
     .index("by_agent", ["agentId", "startedAt"])
     .index("by_key", ["agentId", "taskKey"]),
@@ -170,6 +172,7 @@ export default defineSchema({
     outcome: v.optional(v.string()),
     winnerAgentId: v.optional(v.id("agents")), // collisions: whose claim held under the priority policy
     comparison: v.optional(v.string()), // escalations: LLM side-by-side once both sides have code
+    tokensSaved: v.optional(v.number()), // estimate: tokens the catch spared (see convex/savings.ts)
     gitStatus: v.optional(v.union(v.literal("confirmed"), v.literal("clean"), v.literal("missed"))),
     latencyMs: v.number(),
     at: v.number(),

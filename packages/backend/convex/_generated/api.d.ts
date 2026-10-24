@@ -37,6 +37,7 @@ import type * as dashboardQueries_sessions from "../dashboardQueries/sessions.js
 import type * as dashboardQueries_shared from "../dashboardQueries/shared.js";
 import type * as dashboardQueries_source from "../dashboardQueries/source.js";
 import type * as dashboardQueries_tasks from "../dashboardQueries/tasks.js";
+import type * as dashboardQueries_tokens from "../dashboardQueries/tokens.js";
 import type * as debugPairs from "../debugPairs.js";
 import type * as decisions from "../decisions.js";
 import type * as devSeed from "../devSeed.js";
@@ -64,9 +65,11 @@ import type * as mcp from "../mcp.js";
 import type * as members from "../members.js";
 import type * as nodes from "../nodes.js";
 import type * as resolve from "../resolve.js";
+import type * as savings from "../savings.js";
 import type * as seed from "../seed.js";
 import type * as taskAttribution from "../taskAttribution.js";
 import type * as tasks from "../tasks.js";
+import type * as tokens from "../tokens.js";
 import type * as verify from "../verify.js";
 
 import type {
@@ -105,6 +108,7 @@ declare const fullApi: ApiFromModules<{
   "dashboardQueries/shared": typeof dashboardQueries_shared;
   "dashboardQueries/source": typeof dashboardQueries_source;
   "dashboardQueries/tasks": typeof dashboardQueries_tasks;
+  "dashboardQueries/tokens": typeof dashboardQueries_tokens;
   debugPairs: typeof debugPairs;
   decisions: typeof decisions;
   devSeed: typeof devSeed;
@@ -132,9 +136,11 @@ declare const fullApi: ApiFromModules<{
   members: typeof members;
   nodes: typeof nodes;
   resolve: typeof resolve;
+  savings: typeof savings;
   seed: typeof seed;
   taskAttribution: typeof taskAttribution;
   tasks: typeof tasks;
+  tokens: typeof tokens;
   verify: typeof verify;
 }>;
 

@@ -68,9 +68,10 @@ function lanes(b: Board, xAt: (t: number) => number) {
   for (const k of [...b.tasks].sort((p, q) => p.t0 - q.t0)) {
     const used = ends.get(k.agentId) ?? [];
     const x0 = xAt(k.t0);
-    let lane = used.findIndex((end) => x0 >= end + 6);
+    // Only bars that really overlap stack; a label under a short bar is cut at the next bar instead.
+    let lane = used.findIndex((end) => x0 >= end);
     if (lane < 0) lane = used.length;
-    used[lane] = k.t1 === null ? Number.POSITIVE_INFINITY : Math.max(xAt(k.t1), x0 + 6) + 14;
+    used[lane] = k.t1 === null ? Number.POSITIVE_INFINITY : Math.max(xAt(k.t1), x0 + 6) + 2;
     ends.set(k.agentId, used);
     laneOf.set(k.id, lane);
     count.set(k.agentId, used.length);

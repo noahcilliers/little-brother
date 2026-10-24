@@ -11,7 +11,7 @@ function Diff({ preview, tokens }: { preview?: string; tokens: string[] }) {
         // Lines of one preview never reorder, so the index is a stable key.
         // biome-ignore lint/suspicious/noArrayIndexKey: see above
         <span key={i} className={`dl ${lineKind(line)}`}>
-          {markTokens(line, tokens).map((part, j) =>
+          {markTokens(line, lineKind(line) === "add" ? tokens : []).map((part, j) =>
             part.mark ? (
               // biome-ignore lint/suspicious/noArrayIndexKey: parts of one line never reorder
               <mark key={j}>{part.text}</mark>
@@ -27,7 +27,17 @@ function Diff({ preview, tokens }: { preview?: string; tokens: string[] }) {
 }
 
 /** One side of a decision: whose change, which task, which file, and the code itself. */
-export function DecisionSide({ side, color, keyHint, tokens }: { side: Side; color: string; keyHint: string; tokens: string[] }) {
+export function DecisionSide({
+  side,
+  color,
+  keyHint,
+  tokens,
+}: {
+  side: Side;
+  color: string;
+  keyHint: string;
+  tokens: string[];
+}) {
   return (
     <section className="dside">
       <header>

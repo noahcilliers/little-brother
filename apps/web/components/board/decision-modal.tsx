@@ -96,7 +96,13 @@ export function DecisionModal({ queue, colorOf }: Props) {
         <p className="rationale">{d.rationale}</p>
         <div className="dcols">
           {d.sides.map((s, i) => (
-            <DecisionSide key={s.nodeId} side={s} color={colorOf(s.agentId)} keyHint={String(i + 1)} tokens={tokens[i] ?? []} />
+            <DecisionSide
+              key={s.nodeId}
+              side={s}
+              color={colorOf(s.agentId)}
+              keyHint={String(i + 1)}
+              tokens={tokens[i] ?? []}
+            />
           ))}
         </div>
         {d.comparison ? <pre className="compare">{d.comparison}</pre> : null}

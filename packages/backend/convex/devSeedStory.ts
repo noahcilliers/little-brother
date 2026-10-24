@@ -13,6 +13,7 @@ export type SeedAct = {
   tail?: string;
   deny?: string;
   preview?: string;
+  tokens?: number;
 };
 type Status = "completed" | "abandoned" | "stopped" | "superseded";
 export type SeedTask = {
@@ -93,14 +94,14 @@ const TEST = "npm test";
 // biome-ignore format: one story row per line reads as a table
 export const TASKS: SeedTask[] = [
   task(["n1", "noah", 0, 0.6, 2.3, "Create users table", "completed", "db.users", [
-    ok([1.1, "Write", "db/schema/users.ts", "create users"]),
+    { ...ok([1.1, "Write", "db/schema/users.ts", "create users"]), tokens: 2600 },
     ok([1.8, "Edit", "db/schema/users.ts", "create findUserByEmail()"]),
   ]]),
   task(["n2", "noah", 0, 2.6, 5.2, "Allow storefront CORS", "abandoned", "api.cors", [
     ok([2.8, "Read", "src/server.ts", "read server.ts"]),
-    ok([3.0, "Edit", "src/server.ts", "edit app.use(cors)"]),
-    fail([4.2, "Bash", TEST, "run npm test", "browsers reject * with credentials"]),
-    ok([5.0, "Edit", "src/server.ts", "revert app.use(cors)"]),
+    { ...ok([3.0, "Edit", "src/server.ts", "edit app.use(cors)"]), tokens: 3400 },
+    { ...fail([4.2, "Bash", TEST, "run npm test", "browsers reject * with credentials"]), tokens: 2100 },
+    { ...ok([5.0, "Edit", "src/server.ts", "revert app.use(cors)"]), tokens: 1800 },
   ], "Tests failed: browsers reject * with credentials."]),
   task(["n3", "noah", 0, 5.4, 6.9, "Proxy /api in Vite", "completed", "web.proxy", [
     ok([6.0, "Edit", "web/vite.config.ts", "edit server.proxy"]),

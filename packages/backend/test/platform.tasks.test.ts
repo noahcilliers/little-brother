@@ -272,7 +272,7 @@ describe("evidenced endings", () => {
     expect((await bySubject(t, "n1", "Create users table"))?.status).toBe("in_progress");
   });
 
-  test("approval supersedes the losing node's task and labels the decision with the winner's symbol", async () => {
+  test("approval supersedes the losing node's task and labels the decision with what the winner built", async () => {
     await send(t, joshua, "TaskCreated", "j1", { task: { key: "3", subject: "Session handling" } });
     await editBoth(t, joshua, "j1", edit("src/checkout/session.ts", [], "tu-session"));
     await send(t, joshua, "TaskCompleted", "j1", { task: { key: "3", status: "completed" } });
@@ -314,11 +314,11 @@ describe("evidenced endings", () => {
       keepNodeId: keep._id,
     });
     const decision = await t.run((ctx) => ctx.db.get(decisionNodeId));
-    expect(decision?.text).toBe("DECIDE auth.mechanism = issueToken()");
+    expect(decision?.text).toBe("DECIDE auth.mechanism = JWT tokens");
 
     const session = await bySubject(t, "j1", "Session handling");
     expect(session?.status).toBe("superseded");
-    expect(session?.note).toBe("Superseded: owner chose auth.mechanism = issueToken().");
+    expect(session?.note).toBe("Superseded: owner chose auth.mechanism = JWT tokens.");
     expect((await bySubject(t, "n1", "Issue JWT tokens"))?.status).toBe("in_progress");
   });
 

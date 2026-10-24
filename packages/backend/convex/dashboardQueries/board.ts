@@ -3,10 +3,12 @@ import { buildCatches } from "./catches";
 import { buildDecisions } from "./decisions";
 import { buildGoals, buildShared } from "./goals";
 import { capitalize } from "./labels";
+import type { LooseAction } from "./routine";
 import { buildSessions } from "./sessions";
 import { type Ctx, payloadField, payloadString } from "./shared";
 import { loadSource, type Source } from "./source";
-import { buildTasks } from "./tasks";
+import { type BoardTask, buildTasks } from "./tasks";
+import { agentTokens, fillSavings, fillTokens } from "./tokens";
 
 function verifyBadges(src: Source) {
   return src.events
@@ -27,7 +29,7 @@ function verifyBadges(src: Source) {
     });
 }
 
-function agentRows(src: Source) {
+function agentRows(src: Source, tasks: BoardTask[], loose: LooseAction[]) {
   return src.agents.map((a) => {
     const handle = src.handles.get(a._id) ?? "agent";
     return {
@@ -37,6 +39,7 @@ function agentRows(src: Source) {
       color: src.colors.get(a._id) ?? 1,
       branch: a.branch,
       active: a.status === "active",
+      tokens: agentTokens(tasks, loose, a._id),
     };
   });
 }
@@ -45,6 +48,7 @@ function agentRows(src: Source) {
 export async function board(ctx: Ctx) {
   const src = await loadSource(ctx);
   const { tasks, taskOfNode, loose } = buildTasks(src);
+  fillTokens(src, tasks, loose);
   const goals = buildGoals(src, tasks);
   const shared = buildShared(src, tasks, taskOfNode);
   const catches = buildCatches(src, tasks, taskOfNode, new Set(shared.map((s) => s.id)));
@@ -55,10 +59,11 @@ export async function board(ctx: Ctx) {
     const at = settled.map((c) => c.until ?? 0).reduce((a, b) => Math.max(a, b), 0);
     t.supersededAt = Math.max(t.t1 ?? t.t0, at);
   }
+  fillSavings(src, catches, tasks, shared);
   const live = src.recentVerdicts.filter((c) => c.type !== "normal");
   return {
     repo: src.agents[0]?.repo ?? "",
-    agents: agentRows(src),
+    agents: agentRows(src, tasks, loose),
     goals,
     tasks,
     loose,
@@ -72,6 +77,7 @@ export async function board(ctx: Ctx) {
       // Git-found misses never fired live, so they are not catches; they are what recall is measured against.
       caught: live.filter((c) => c.status !== "dismissed" && c.gitStatus !== "missed").length,
       missed: live.filter((c) => c.gitStatus === "missed").length,
+      saved: catches.reduce((n, c) => n + (c.saved ?? 0), 0),
     },
   };
 }

@@ -45,8 +45,10 @@ describe("parseReplay", () => {
     const text = readFileSync(join(__dirname, "../../../fixtures/scenario.jsonl"), "utf8");
     const r = parseReplay(text);
     expect(r.errors).toEqual([]);
-    expect(r.lines).toHaveLength(83);
-    expect(new Set(r.lines.map((l) => l.as))).toEqual(new Set(["noah", "joshua", "ash"]));
+    expect(r.lines).toHaveLength(185);
+    expect(new Set(r.lines.map((l) => l.as))).toEqual(
+      new Set(["noah", "joshua", "ash", "maya", "leo", "priya"]),
+    );
     const steps = r.lines.map((l) => l.step);
     expect(steps).toContain("14-joshua-users.pre");
     expect(steps).not.toContain("14-joshua-users.post");

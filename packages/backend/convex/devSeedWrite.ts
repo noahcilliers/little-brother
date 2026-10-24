@@ -61,6 +61,7 @@ type EventRest = Partial<{
   nodeId: Id<"nodes">;
   summary: string;
   source: "hook" | "human";
+  tokens: number;
   payload: unknown;
 }>;
 export function writeEvent(s: Story, a: Handle, t: number, hook: string, rest: EventRest) {
@@ -95,6 +96,13 @@ export async function writeNode(
     outcome: row.kind === "intent" ? "open" : "succeeded",
     at: s.T(t),
   });
+}
+
+// Until the schema carries per-action token counts, the seed puts a plausible one on the hook event.
+function tokenGuess(x: SeedAct): number {
+  if (x.tool === "Read") return 220 + x.target.length * 6;
+  if (x.tool === "Bash") return 380;
+  return 520 + x.label.length * 38;
 }
 
 /** One tool call: the action node, its PreToolUse event (with the denial, if any) and a Bash result. */
@@ -137,6 +145,7 @@ async function writeAct(
     : null;
   const summary = `${x.deny ? "denied " : ""}${x.tool} ${x.target}`;
   await writeEvent(s, k.a, x.t, "PreToolUse", {
+    tokens: x.tokens ?? tokenGuess(x),
     tool: x.tool,
     files,
     nodeId,

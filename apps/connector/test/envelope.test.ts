@@ -5,7 +5,7 @@ import { HookInput, IngestEnvelope } from "@lb/core";
 import { describe, expect, it } from "vitest";
 import { buildEnvelope } from "../src/hook/envelope";
 import { repoInfo } from "../src/hook/git";
-import { transcriptTokens } from "../src/hook/transcript";
+import { transcriptTokens, transcriptToolUsage } from "../src/hook/transcript";
 import * as fx from "./fixtures/hooks";
 import { tempRepo } from "./helpers";
 
@@ -67,6 +67,24 @@ describe("transcriptTokens", () => {
     writeFileSync(p, fx.transcriptLines);
     expect(transcriptTokens(p)).toBe(125);
     expect(transcriptTokens("/does/not/exist")).toBeUndefined();
+  });
+});
+
+describe("transcriptToolUsage", () => {
+  it("attributes each tool call its message's new tokens and puts them on the Stop envelope", () => {
+    const p = join(mkdtempSync(join(tmpdir(), "lb-tr-")), "t.jsonl");
+    const usage = { input_tokens: 4, cache_creation_input_tokens: 196, cache_read_input_tokens: 9000, output_tokens: 80 };
+    const lines = [
+      { type: "user", message: { content: "add search" } },
+      { type: "assistant", message: { id: "m1", usage, content: [{ type: "tool_use", id: "toolu_a" }] } },
+      { type: "assistant", message: { id: "m1", usage, content: [{ type: "tool_use", id: "toolu_b" }] } },
+    ];
+    writeFileSync(p, `${lines.map((l) => JSON.stringify(l)).join("\n")}\n{"type":"assist`);
+    const u = transcriptToolUsage(p);
+    expect(u).toEqual({ toolTokens: { toolu_a: 140, toolu_b: 140 }, turnTokens: 280 });
+    expect(transcriptToolUsage("/does/not/exist")).toBeUndefined();
+    const e = build(fx.stop, { usage: u });
+    expect(e).toMatchObject({ toolTokens: { toolu_a: 140, toolu_b: 140 }, turnTokens: 280 });
   });
 });
 

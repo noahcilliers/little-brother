@@ -16,3 +16,10 @@ export function elapsed(at: number, start: number): string {
 export function agentColor(index: number | undefined): string {
   return index ? `var(--agent-${index})` : "var(--ink)";
 }
+
+/** Token counts the way the board prints them: 840, 2.1k, 41k. */
+export function kTokens(n: number): string {
+  if (n < 1000) return String(Math.round(n));
+  const k = n / 1000;
+  return `${k < 10 ? k.toFixed(1).replace(/\.0$/, "") : Math.round(k)}k`;
+}

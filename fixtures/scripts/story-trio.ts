@@ -8,7 +8,13 @@ import * as team from "./snippets-team";
 
 /** Noah: users table, the CORS dead end and the proxy that works. */
 export function noahFirstPrompt(story: Story) {
-  const users = story.task("T07-noah-users", 900, "noah", "Create users table", "In-memory users table for login");
+  const users = story.task(
+    "T07-noah-users",
+    900,
+    "noah",
+    "Create users table",
+    "In-memory users table for login",
+  );
   story.read("07a-noah-read-index", 600, "noah", "src/index.ts");
   story.write("07-noah-users", 1200, "noah", "db/schema/users.ts", s.solution("db/schema/users.ts"));
   users("T07-noah-users.done", 600);
@@ -18,7 +24,13 @@ export function noahFirstPrompt(story: Story) {
   story.bash("09-noah-test", 1500, "noah", "npm test", "Run unit tests", s.noahFailedTestOutput, false);
   story.edit("10-noah-revert-cors", 2500, "noah", "src/server.ts", s.serverWithCors, s.shop("src/server.ts"));
   // Moving on while the CORS task's last test failed: that task ends abandoned.
-  const proxy = story.task("T11-noah-proxy", 800, "noah", "Proxy /api in Vite", "Same-origin /api via the dev server");
+  const proxy = story.task(
+    "T11-noah-proxy",
+    800,
+    "noah",
+    "Proxy /api in Vite",
+    "Same-origin /api via the dev server",
+  );
   story.edit("11-noah-proxy", 1200, "noah", "web/vite.config.ts", s.viteProxyOld, s.viteProxyNew);
   story.bash("12-noah-test", 1500, "noah", "npm test", "Run unit tests", s.noahPassedTestOutput, true);
   proxy("T11-noah-proxy.done", 500);
@@ -32,7 +44,13 @@ export function noahFirstPrompt(story: Story) {
 
 /** Ash's first prompt: two tasks of routine reads (files nobody else touches). */
 export function ashFirstPrompt(story: Story) {
-  const pages = story.task("T06-ash-pages", 800, "ash", "Build pages", "Product list, cart and checkout pages");
+  const pages = story.task(
+    "T06-ash-pages",
+    800,
+    "ash",
+    "Build pages",
+    "Product list, cart and checkout pages",
+  );
   story.read("06a-ash-read-index", 900, "ash", "web/index.html");
   story.read("06b-ash-read-package", 1500, "ash", "package.json");
   pages("T06-ash-pages.done", 1800);
@@ -63,7 +81,13 @@ export function joshuaUntilSession(story: Story) {
   cart("T15-joshua-cart.done", 600);
   // Duplicate beat 2: checkout writes its own Stripe webhook at the path Maya's agent just created.
   story.after("joshua", "M05-maya-webhook.post", 800);
-  story.task("T32-joshua-webhook", 0, "joshua", "Stripe webhook", "Mark the order paid when Stripe calls back");
+  story.task(
+    "T32-joshua-webhook",
+    0,
+    "joshua",
+    "Stripe webhook",
+    "Mark the order paid when Stripe calls back",
+  );
   story.write("32-joshua-webhook", 600, "joshua", "src/payments/stripe-webhook.ts", team.joshuaWebhook, true);
   // Conflict beat, part 1: checkout reads a session cookie while auth has not chosen a mechanism yet.
   const session = story.task("T19-joshua-session", 900, "joshua", "Session handling", "Identify the shopper");
@@ -74,13 +98,29 @@ export function joshuaUntilSession(story: Story) {
 /** Stale beat: Ash's agent sets out to add the CORS middleware Noah's agent proved fails. */
 export function ashCors(story: Story) {
   story.after("ash", "13-noah-stop", 3500);
-  story.prompt("16-ash-cors-prompt", 0, "ash", "add CORS middleware to the API so the storefront can call it");
+  story.prompt(
+    "16-ash-cors-prompt",
+    0,
+    "ash",
+    "add CORS middleware to the API so the storefront can call it",
+  );
   story.task("T17-ash-cors", 1500, "ash", "CORS middleware", "cors() on the Express app");
   story.edit("17-ash-cors", 900, "ash", "src/server.ts", s.shop("src/server.ts"), s.serverWithCors, true);
-  const proxy = story.task("T18-ash-proxy", 700, "ash", "Use the Vite proxy", "Route /api through the dev server");
+  const proxy = story.task(
+    "T18-ash-proxy",
+    700,
+    "ash",
+    "Use the Vite proxy",
+    "Route /api through the dev server",
+  );
   story.edit("18-ash-proxy", 1200, "ash", "web/vite.config.ts", s.viteProxyOld, s.viteProxyNew);
   proxy("T18-ash-proxy.done", 600);
-  story.stop("27-ash-stop", 900, "ash", "Storefront calls the API through the Vite `/api` proxy; no CORS middleware needed.");
+  story.stop(
+    "27-ash-stop",
+    900,
+    "ash",
+    "Storefront calls the API through the Vite `/api` proxy; no CORS middleware needed.",
+  );
 }
 
 /** Conflict beat, part 2: auth moves to JWT bearer; Joshua's next cookie-based step is denied; Noah decides. */
@@ -116,13 +156,24 @@ export function conflict(story: Story) {
     rationale:
       "Stateless JWT in `Authorization: Bearer`; no session store. Checkout must use requireUser/currentUser from src/auth/require-user.ts.",
   });
-  story.stop("28-noah-stop", 1500, "noah", "Login issues a JWT (`jwt.sign({ userId })`); `/api/me` is protected by `requireUser`.");
+  story.stop(
+    "28-noah-stop",
+    1500,
+    "noah",
+    "Login issues a JWT (`jwt.sign({ userId })`); `/api/me` is protected by `requireUser`.",
+  );
 }
 
 /** Joshua rebuilds on JWT once Noah decides. */
 export function joshuaAfterDecision(story: Story) {
   story.after("joshua", "23-noah-decision", 1000);
-  const onJwt = story.task("T24-joshua-session-jwt", 0, "joshua", "Session on JWT", "Reuse auth's requireUser");
+  const onJwt = story.task(
+    "T24-joshua-session-jwt",
+    0,
+    "joshua",
+    "Session on JWT",
+    "Reuse auth's requireUser",
+  );
   story.edit(
     "24-joshua-session-fix",
     1400,

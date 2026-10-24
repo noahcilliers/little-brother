@@ -179,7 +179,8 @@ export function searchProducts(query: string): Product[] {
 
 const catalogRoutes = shop("src/catalog/routes.ts");
 export const leoRoutesOld = 'import { products } from "../../db/schema/products";';
-export const leoRoutesNew = 'import { products } from "../../db/schema/products";\nimport { searchProducts } from "./search";';
+export const leoRoutesNew =
+  'import { products } from "../../db/schema/products";\nimport { searchProducts } from "./search";';
 export const leoRouteOld = catalogRoutes.slice(catalogRoutes.indexOf("catalogRouter.get")).trimEnd();
 export const leoRouteNew = `${leoRouteOld}
 

@@ -1,6 +1,6 @@
 import type { BoardCatch } from "@/lib/api";
 import { type CatchKind, isOpen } from "@/lib/board-time";
-import { CATCH_STYLE } from "@/lib/catch-style";
+import { CATCH_STYLE, chipText } from "@/lib/catch-style";
 import { CATCH_ICON, Icon } from "./icons";
 
 /** The catches a task is part of, as seen at t: open ones in their colour, settled ones grey. */
@@ -21,10 +21,14 @@ export function CatchBadges({ items, x, y, highlight }: Props) {
         const lit = open || highlight === c.kind;
         const color = lit ? style.color : "var(--faint)";
         return (
-          <g key={c.id} className={open ? "badge pulse" : "badge"} transform={`translate(${x - i * 19} ${y})`}>
+          <g
+            key={c.id}
+            className={open ? "badge pulse" : "badge"}
+            transform={`translate(${x - i * 19} ${y})`}
+          >
             <circle r={8.5} fill="var(--panel)" stroke={color} strokeWidth={1.4} />
             <Icon name={CATCH_ICON[c.kind]} x={0} y={0} size={11} color={color} />
-            <title>{`${c.chip}${open ? "" : " (settled)"}`}</title>
+            <title>{`${chipText(c)}${open ? "" : " (settled)"}`}</title>
           </g>
         );
       })}

@@ -1,4 +1,4 @@
-import type { HookInput, IngestEnvelope } from "@lb/core";
+import type { HookInput, IngestEnvelope, TranscriptUsage } from "@lb/core";
 import { sha1 } from "../hash";
 import type { Normalized } from "../normalize";
 import { capLines, tailLines } from "../normalize/text";
@@ -10,6 +10,7 @@ export type EnvelopeContext = {
   machine: string;
   normalized?: Normalized;
   tokens?: number;
+  usage?: TranscriptUsage;
   now: number;
 };
 
@@ -61,6 +62,8 @@ export function buildEnvelope(input: HookInput, ctx: EnvelopeContext): IngestEnv
   const { task, todos } = taskFields(input);
   if (task) env.task = task;
   if (todos) env.todos = todos;
+  if (ctx.usage && Object.keys(ctx.usage.toolTokens).length) env.toolTokens = ctx.usage.toolTokens;
+  if (ctx.usage) env.turnTokens = ctx.usage.turnTokens;
 
   switch (input.hook_event_name) {
     case "UserPromptSubmit":

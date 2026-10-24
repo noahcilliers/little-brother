@@ -13,6 +13,38 @@ npx tsx fixtures/scripts/build-scenario.ts   # regenerate scenario.jsonl + hooks
 npx vitest run fixtures                       # validate
 ```
 
+## The demo story
+
+Six agents on lb-demo-shop start within the same second and work at once for about a minute (speed 1): noah
+(auth), joshua (checkout), ash (storefront), maya (payments), leo (search), priya (notifications). Six catches:
+two duplicates (users table, Stripe webhook), two stale repeats (wildcard CORS, a global jsdom test env), one
+conflict (JWT vs cookie session, the owner decides) and one ordering dependency (an order email using `Order`
+before it lands). `expected.md` lists every step.
+
+`scripts/story-trio.ts` and `scripts/story-team.ts` write each agent's lines with that agent's own delays;
+`story.after(...)` pins the cross-agent beats, and `build-scenario.ts` checks the gaps the classifier needs (for
+example 8 s from 21 to 22 for the judge) before writing.
+
+## Swarm scenarios
+
+`scripts/swarm.ts` (repo root) generates a scenario for any number of agents. Each one loops tasks → reads →
+edits → tests on the demo repo. A seeded random and `--overlap` (0–1) decide how often a step collides on
+purpose:
+- creating a shared `src/shared/*.ts` file someone else creates (duplicate)
+- retrying a known-failing edit after its lesson exists (stale)
+- running the same failing `npm run db:migrate`
+
+Collisions that must be denied get only their `.pre` line, and the script prints them with the setup commands.
+
+```sh
+npx tsx scripts/swarm.ts --agents 12 --overlap 0.3 --seed 7 --out /tmp/swarm.jsonl
+demo/setup.sh /tmp/lb-demo/shop --worktrees --agents ava,ben,cam   # the script prints the exact list
+for who in ava ben cam; do lb join --url "$LB_SITE_URL" --as "$who"; done
+lb replay /tmp/swarm.jsonl --parallel --apply
+```
+
+Options: `--agents` (default 8), `--overlap` (0.25), `--seed` (1), `--tasks` per agent (`3-5`), `--out` (`swarm.jsonl`).
+
 ## `scenario.jsonl` format
 
 One JSON object per line, in order:
@@ -24,7 +56,7 @@ One JSON object per line, in order:
 
 - `delayMs`: wait this long after the previous line before sending this one. With `lb replay --parallel` the
   running sum of delays is each line's due time, and each agent replays its own lines on its own timeline.
-- `as`: which agent (`noah` | `joshua` | `ash`); each has its own fixed `session_id`.
+- `as`: which agent (`noah` | `joshua` | `ash` | `maya` | `leo` | `priya`); each has its own fixed `session_id`.
 - `input`: pipe to `lb hook` as stdin, run with `cwd` as the working directory (so repo/branch resolve per agent).
 - `mcp` + `args`: an MCP tool call by that agent's session (call it as `lb mcp` would for `session_id` of `as`).
   Lines without `input` are MCP calls; a replayer that can't do MCP may skip them.
@@ -37,13 +69,14 @@ One JSON object per line, in order:
 
 ## Per-agent repos on one machine
 
-The `cwd`s are `/tmp/lb-demo/{noah,joshua,ash}`: three worktrees of one demo repo, one per branch.
+The `cwd`s are `/tmp/lb-demo/<handle>`: six worktrees of one demo repo, one per branch.
 
 ```sh
-demo/setup.sh /tmp/lb-demo/shop --worktrees   # repo on main + worktrees noah (noah/auth), joshua (joshua/checkout), ash (ash/frontend)
+demo/setup.sh /tmp/lb-demo/shop --worktrees   # repo on main + one worktree per agent (noah/auth, joshua/checkout,
+                                              # ash/frontend, maya/payments, leo/search, priya/notifications)
 ```
 
 which is the same as `demo/setup.sh /tmp/lb-demo/shop` followed by
-`git -C /tmp/lb-demo/shop worktree add /tmp/lb-demo/noah noah/auth` (and likewise for joshua, ash).
-Replay sends hook payloads only; it doesn't write files into the worktrees. On macOS a live Claude Code session
+`git -C /tmp/lb-demo/shop worktree add /tmp/lb-demo/noah noah/auth` (and likewise for the other five).
+Replay sends hook payloads only; it writes files into the worktrees only with `--apply`. On macOS a live Claude Code session
 would report `/private/tmp/...` as `cwd`; the fixtures use `/tmp/...`.

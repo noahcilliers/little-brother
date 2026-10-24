@@ -29,8 +29,26 @@ function glyph(name: IconName, color: string): ReactNode {
     case "squares":
       return (
         <>
-          <rect x={-6.5} y={-6.5} width={8.5} height={8.5} rx={1.5} fill="none" stroke={color} strokeWidth={1.6} />
-          <rect x={-2} y={-2} width={8.5} height={8.5} rx={1.5} fill="none" stroke={color} strokeWidth={1.6} />
+          <rect
+            x={-6.5}
+            y={-6.5}
+            width={8.5}
+            height={8.5}
+            rx={1.5}
+            fill="none"
+            stroke={color}
+            strokeWidth={1.6}
+          />
+          <rect
+            x={-2}
+            y={-2}
+            width={8.5}
+            height={8.5}
+            rx={1.5}
+            fill="none"
+            stroke={color}
+            strokeWidth={1.6}
+          />
         </>
       );
     case "retry":
@@ -84,7 +102,10 @@ function glyph(name: IconName, color: string): ReactNode {
       return (
         <polygon
           points={[0, 1, 2, 3, 4, 5]
-            .map((i) => `${6.5 * Math.cos((Math.PI / 3) * i + Math.PI / 6)},${6.5 * Math.sin((Math.PI / 3) * i + Math.PI / 6)}`)
+            .map(
+              (i) =>
+                `${6.5 * Math.cos((Math.PI / 3) * i + Math.PI / 6)},${6.5 * Math.sin((Math.PI / 3) * i + Math.PI / 6)}`,
+            )
             .join(" ")}
           fill="none"
           stroke={color}
@@ -97,7 +118,19 @@ function glyph(name: IconName, color: string): ReactNode {
 }
 
 /** An icon inside an SVG, centred at x,y; size is the box edge in px. */
-export function Icon({ name, x, y, size = 16, color }: { name: IconName; x: number; y: number; size?: number; color: string }) {
+export function Icon({
+  name,
+  x,
+  y,
+  size = 16,
+  color,
+}: {
+  name: IconName;
+  x: number;
+  y: number;
+  size?: number;
+  color: string;
+}) {
   return <g transform={`translate(${x} ${y}) scale(${size / 16})`}>{glyph(name, color)}</g>;
 }
 

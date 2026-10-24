@@ -1,6 +1,6 @@
 import type { BoardCatch } from "@/lib/api";
 import { anchor, type CatchKind, catchOpacity, isOpen, type Lookup } from "@/lib/board-time";
-import { CATCH_STYLE } from "@/lib/catch-style";
+import { CATCH_STYLE, chipText } from "@/lib/catch-style";
 import { CATCH_ICON, Icon } from "./icons";
 
 type Props = {
@@ -13,13 +13,14 @@ type Props = {
 
 /** A labelled chip at the middle of a catch edge: icon plus "conflict · auth.mechanism". */
 function EdgeChip({ c, x, y, color }: { c: BoardCatch; x: number; y: number; color: string }) {
-  const w = 30 + c.chip.length * 6.1;
+  const text = chipText(c);
+  const w = 30 + text.length * 6.1;
   return (
     <g transform={`translate(${x - w / 2} ${y - 10})`}>
       <rect width={w} height={20} rx={10} fill="var(--panel)" stroke={color} strokeWidth={1.3} />
       <Icon name={CATCH_ICON[c.kind]} x={13} y={10} size={11} color={color} />
       <text x={24} y={14} fontFamily="var(--mono)" fontSize={10.5} fill="var(--ink)">
-        {c.chip}
+        {text}
       </text>
     </g>
   );
@@ -52,12 +53,26 @@ export function GraphCatches({ catches, lookup, t, selected, highlight }: Props)
               strokeDasharray={style.dash}
             >
               {open ? (
-                <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="0.9s" repeatCount="indefinite" />
+                <animate
+                  attributeName="stroke-dashoffset"
+                  from="0"
+                  to="-24"
+                  dur="0.9s"
+                  repeatCount="indefinite"
+                />
               ) : null}
             </path>
             {open
               ? [a, b].map((p) => (
-                  <circle key={`${p.x}:${p.y}`} cx={p.x} cy={p.y} r={14} fill="none" stroke={style.color} strokeWidth={2}>
+                  <circle
+                    key={`${p.x}:${p.y}`}
+                    cx={p.x}
+                    cy={p.y}
+                    r={14}
+                    fill="none"
+                    stroke={style.color}
+                    strokeWidth={2}
+                  >
                     <animate attributeName="r" values="12;26" dur="1.3s" repeatCount="indefinite" />
                     <animate attributeName="opacity" values="0.9;0" dur="1.3s" repeatCount="indefinite" />
                   </circle>

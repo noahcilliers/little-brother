@@ -13,10 +13,10 @@ function added(preview: string): string {
 
 /** Tokens to mark on each side, in side order. */
 export function conflictTokens(previews: (string | undefined)[]): string[][] {
-  const texts = previews.map((p) => p ?? "");
+  const texts = previews.map((p) => added(p ?? ""));
   return texts.map((text, i) => {
     const others = texts.filter((_, j) => j !== i).join("\n");
-    const mine = [...new Set(added(text || "").match(DOTTED) ?? [])];
+    const mine = [...new Set(text.match(DOTTED) ?? [])];
     return mine.filter((tok) => !others.includes(tok)).slice(0, MAX_TOKENS);
   });
 }
@@ -33,7 +33,10 @@ export function lineKind(line: string): DiffKind {
 /** A line split into plain and marked parts. */
 export function markTokens(line: string, tokens: string[]): { text: string; mark: boolean }[] {
   if (tokens.length === 0) return [{ text: line, mark: false }];
-  const pattern = new RegExp(`(${tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
+  const pattern = new RegExp(
+    `(${tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+    "g",
+  );
   return line
     .split(pattern)
     .filter(Boolean)

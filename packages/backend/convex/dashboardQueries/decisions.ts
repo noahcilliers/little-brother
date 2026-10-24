@@ -80,7 +80,7 @@ export function buildDecisions(
       topic,
       owner: src.topicOwners.get(topic),
       t: c.at,
-      detectedAfterMs: Math.max(0, c.at - b.at),
+      detectedAfterMs: Math.max(0, c.at - Math.max(a.at, b.at)),
       rationale: clip(lbSentence(c.reason).replace(/^judge:\s*/i, ""), 240),
       comparison: c.comparison,
       sides: [a, b],

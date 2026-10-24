@@ -35,8 +35,12 @@ writeFileSync(out, `${lines.map((l) => JSON.stringify(l)).join("\n")}\n`);
 
 const handles = swarmHandles(opts.agents);
 const seconds = lines.reduce((t, l) => t + l.delayMs, 0) / 1000;
-const denied = lines.filter((l) => l.step.endsWith(".pre") && !lines.some((m) => m.step === l.step.replace(/\.pre$/, ".post")));
-console.log(`wrote ${lines.length} lines for ${handles.length} agents (${seconds.toFixed(1)} s at speed 1) to ${out}`);
+const denied = lines.filter(
+  (l) => l.step.endsWith(".pre") && !lines.some((m) => m.step === l.step.replace(/\.pre$/, ".post")),
+);
+console.log(
+  `wrote ${lines.length} lines for ${handles.length} agents (${seconds.toFixed(1)} s at speed 1) to ${out}`,
+);
 console.log(`predicted denials: ${denied.map((l) => l.step.replace(/\.pre$/, "")).join(", ") || "none"}`);
 console.log(`
 setup (once per run):

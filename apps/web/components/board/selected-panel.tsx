@@ -1,7 +1,7 @@
 import type { Board, BoardTask } from "@/lib/api";
 import { isOpen, stateAt, stateLabel, stopColor } from "@/lib/board-time";
-import { CATCH_STYLE } from "@/lib/catch-style";
-import { elapsed } from "@/lib/format";
+import { CATCH_STYLE, chipText } from "@/lib/catch-style";
+import { elapsed, kTokens } from "@/lib/format";
 import { CATCH_ICON, InlineIcon } from "./icons";
 import { StoryList } from "./story-list";
 
@@ -14,7 +14,14 @@ type Props = {
   onOpenDecision: (id: string) => void;
 };
 
-function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: Omit<Props, "selected"> & { k: BoardTask }) {
+function TaskDetail({
+  board,
+  k,
+  t,
+  start,
+  colorOf,
+  onOpenDecision,
+}: Omit<Props, "selected"> & { k: BoardTask }) {
   const state = stateAt(k, t);
   const agent = board.agents.find((a) => a.id === k.agentId);
   const goal = board.goals.find((g) => g.id === k.goalId);
@@ -44,6 +51,11 @@ function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: Omit<Props,
           {stateLabel(k, state)}
         </span>
       </div>
+      {k.tokens !== undefined ? (
+        <div className="meta">
+          spent {kTokens(k.tokens)} tokens{state === "abandoned" || state === "superseded" ? " · wasted" : ""}
+        </div>
+      ) : null}
       {k.note && state !== "running" && !pendingSupersede ? <p className="empty">{k.note}</p> : null}
       <StoryList lines={lines} start={start} />
       {catches.length > 0 ? (
@@ -54,8 +66,10 @@ function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: Omit<Props,
               <li key={c.id}>
                 <InlineIcon name={CATCH_ICON[c.kind]} color={color} size={13} />
                 <span>
-                  <b style={{ color }}>{c.chip}</b>
-                  <small>{c.text}</small>
+                  <b className="chip" style={{ color }}>
+                    {chipText(c)}
+                  </b>
+                  <small className="why">{c.text}</small>
                 </span>
               </li>
             );
@@ -81,7 +95,14 @@ export function SelectedPanel({ board, selected, t, start, colorOf, onOpenDecisi
   );
   if (task && task.t0 <= t) {
     body = (
-      <TaskDetail board={board} k={task} t={t} start={start} colorOf={colorOf} onOpenDecision={onOpenDecision} />
+      <TaskDetail
+        board={board}
+        k={task}
+        t={t}
+        start={start}
+        colorOf={colorOf}
+        onOpenDecision={onOpenDecision}
+      />
     );
   } else if (shared && shared.t <= t) {
     body = (

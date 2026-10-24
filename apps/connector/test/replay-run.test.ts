@@ -27,7 +27,9 @@ describe("replayCommand", () => {
     });
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     const siteUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    const profiles = Object.fromEntries(["noah", "joshua", "ash"].map((h) => [h, { token: `tok-${h}` }]));
+    const profiles = Object.fromEntries(
+      ["noah", "joshua", "ash", "maya", "leo", "priya"].map((h) => [h, { token: `tok-${h}` }]),
+    );
     process.env.LB_HOME = tempHome({ siteUrl, convexUrl: "", current: "ash", profiles });
     process.env.LB_SESSION_DIR = join(process.env.LB_HOME, "sessions");
 
@@ -40,7 +42,7 @@ describe("replayCommand", () => {
     });
     log.mockRestore();
 
-    expect(out).toHaveLength(83);
+    expect(out).toHaveLength(185);
     expect(out.find((l) => l.startsWith("14-joshua-users.pre"))).toContain("[joshua]");
     expect(out.find((l) => l.startsWith("23-noah-decision"))).toContain(
       "MCP post_decision → decision recorded",
@@ -50,11 +52,12 @@ describe("replayCommand", () => {
       auth: "Bearer tok-noah",
       body: { claudeSessionId: "7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d" },
     });
-    expect(hits.filter((h) => h.url?.startsWith("/hook/"))).toHaveLength(82);
+    expect(hits.filter((h) => h.url?.startsWith("/hook/"))).toHaveLength(184);
     expect(hits.find((h) => h.auth === "Bearer tok-joshua")?.body).toMatchObject({
       session: { cwd: "/tmp/lb-demo/joshua" },
     });
-  });
+    // 185 lines through the real hook pipeline (TS normalization included): slow on a busy machine.
+  }, 30_000);
 
   it("--parallel runs each agent on its own timeline: a slow agent delays only itself", async () => {
     server = createServer((req, res) => {

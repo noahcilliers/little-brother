@@ -78,3 +78,19 @@ export async function writeVerify(s: Story, t: number) {
     at: s.T(t),
   });
 }
+
+/** A topic map for the demo repo, so a decision names its owner. Left alone if the repo already has one. */
+export async function writeTopicMap(s: Story) {
+  const key = `topics:${REPO}`;
+  const have = await s.ctx.db
+    .query("settings")
+    .withIndex("by_key", (q) => q.eq("key", key))
+    .first();
+  if (have) return;
+  const topics = {
+    "auth.mechanism": { owner: "noah", files: ["src/auth/**"], consumers: ["src/checkout/**"] },
+    "db.users": { owner: "noah", files: ["db/schema/users.ts"], consumers: [] },
+    "api.cors": { owner: "noah", files: ["src/server.ts"], consumers: [] },
+  };
+  await s.ctx.db.insert("settings", { key, value: { topics, [TAG]: true } });
+}

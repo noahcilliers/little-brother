@@ -1,8 +1,9 @@
 import type { BoardCatch, BoardTask } from "@/lib/api";
 import { BAR_H, type Layout } from "@/lib/board-layout";
 import { barEnd, barTop, type CatchKind, stateAt } from "@/lib/board-time";
+import { kTokens } from "@/lib/format";
 import { CatchBadges, catchesOf, catchOutline } from "./catch-badges";
-import { ActionTicks, EndCap } from "./task-marks";
+import { ActionTicks, EndCap, TokenCount } from "./task-marks";
 
 type Props = {
   k: BoardTask;
@@ -31,7 +32,9 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
   const w = Math.max(6, x1 - x0);
   const superseded = state === "superseded";
   const grey = state === "abandoned" || superseded;
-  const fill = grey ? GREY_FILL : `color-mix(in srgb, ${color} ${state === "stopped" ? 8 : 16}%, transparent)`;
+  const fill = grey
+    ? GREY_FILL
+    : `color-mix(in srgb, ${color} ${state === "stopped" ? 8 : 16}%, transparent)`;
   // Inside the bar when it fits; otherwise just below it, using the room up to the next task in the lane.
   const inside = Math.floor((w - 26) / 6.4) >= k.subject.length;
   const below = Math.floor((nextX - x0 - 6) / 5.8);
@@ -57,7 +60,16 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
       }}
     >
       {outline ? (
-        <rect x={x0 - 3} y={y - 3} width={w + 6} height={BAR_H + 6} rx={9} fill="none" stroke={outline} strokeWidth={2} />
+        <rect
+          x={x0 - 3}
+          y={y - 3}
+          width={w + 6}
+          height={BAR_H + 6}
+          rx={9}
+          fill="none"
+          stroke={outline}
+          strokeWidth={2}
+        />
       ) : null}
       <rect
         className="tb"
@@ -72,7 +84,17 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
         strokeDasharray={grey ? "5 4" : undefined}
       />
       {running ? (
-        <rect x={x0} y={y} width={w} height={BAR_H} rx={7} fill="none" stroke={color} strokeWidth={2} opacity={0.6}>
+        <rect
+          x={x0}
+          y={y}
+          width={w}
+          height={BAR_H}
+          rx={7}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+          opacity={0.6}
+        >
           <animate attributeName="opacity" values="0.7;0.15;0.7" dur="1.2s" repeatCount="indefinite" />
         </rect>
       ) : null}
@@ -102,6 +124,7 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
       )}
       <ActionTicks actions={k.actions} layout={layout} t={t} y={y + BAR_H} color={color} grey={grey} />
       <EndCap k={k} state={state} x1={x1} y={y} color={color} />
+      <TokenCount k={k} state={state} x1={x1} y={y} room={nextX - x1} />
       {selected ? (
         <rect
           x={x0 - 6}
@@ -116,7 +139,7 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
         />
       ) : null}
       <CatchBadges items={mine} x={x0 + w - 2} y={y - 2} highlight={highlight} />
-      <title>{k.subject}</title>
+      <title>{k.tokens === undefined ? k.subject : `${k.subject} · ${kTokens(k.tokens)} tokens`}</title>
     </g>
   );
 }

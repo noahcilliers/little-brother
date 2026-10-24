@@ -46,7 +46,9 @@ describe("fixtures/scenario.jsonl", () => {
     let t = 0;
     const at = scenario.map((l) => (t += Number(l.delayMs)));
     const starts = scenario.flatMap((l, i) =>
-      (l.input as { hook_event_name?: string } | undefined)?.hook_event_name === "SessionStart" ? [at[i] ?? 0] : [],
+      (l.input as { hook_event_name?: string } | undefined)?.hook_event_name === "SessionStart"
+        ? [at[i] ?? 0]
+        : [],
     );
     expect(starts).toHaveLength(AGENTS.length);
     expect(Math.max(...starts)).toBeLessThan(1000);
@@ -56,7 +58,8 @@ describe("fixtures/scenario.jsonl", () => {
 
   it.each(AGENTS)("%s keeps a task list of at least three tasks, plus routine reads", (as) => {
     const mine = scenario.filter((l) => l.as === as);
-    const hook = (l: Record<string, unknown>) => (l.input as { hook_event_name?: string } | undefined)?.hook_event_name;
+    const hook = (l: Record<string, unknown>) =>
+      (l.input as { hook_event_name?: string } | undefined)?.hook_event_name;
     const tool = (l: Record<string, unknown>) => (l.input as { tool_name?: string } | undefined)?.tool_name;
     expect(mine.filter((l) => hook(l) === "TaskCreated").length).toBeGreaterThanOrEqual(3);
     expect(mine.filter((l) => tool(l) === "Read").length).toBeGreaterThanOrEqual(1);

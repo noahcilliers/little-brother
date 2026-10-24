@@ -12,6 +12,7 @@ export type BoardAction = {
   outcome: Doc<"nodes">["outcome"];
   /** Reads and plan bookkeeping: drawn as small grey ticks. */
   routine: boolean;
+  tokens?: number;
 };
 export type StopKind = "duplicate" | "stale" | "conflict";
 export type TaskState = "running" | "done" | "abandoned" | "stopped" | "superseded";
@@ -28,6 +29,8 @@ export type BoardTask = {
   /** For a stopped task: which kind of catch stopped it. */
   stopKind?: StopKind;
   supersededAt?: number;
+  /** Tokens the agent spent on this step. */
+  tokens?: number;
   inferred: boolean;
   actions: BoardAction[];
 };

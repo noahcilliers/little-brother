@@ -74,6 +74,8 @@ export const IngestEnvelope = z.object({
   tokens: z.number().optional(),
   task: TaskRef.optional(), // TaskCreated / TaskCompleted, or a TaskCreate / TaskUpdate tool call
   todos: z.array(TodoItem).max(100).optional(), // TodoWrite snapshot
+  toolTokens: z.record(z.number().nonnegative()).optional(), // Stop/SessionEnd/PreCompact: tool_use id → tokens
+  turnTokens: z.number().nonnegative().optional(), // new tokens of the latest turn
   at: z.number(),
 });
 export type IngestEnvelope = z.infer<typeof IngestEnvelope>;

@@ -13,7 +13,13 @@ function StatusIcon({ status, color, y }: { status: AgentStatus; color: string; 
   return <Icon name="idle" x={x} y={y} size={13} color="var(--faint)" />;
 }
 
-type Props = { board: Board; layout: Layout; t: number; focus: string | null; colorOf: (id: string) => string };
+type Props = {
+  board: Board;
+  layout: Layout;
+  t: number;
+  focus: string | null;
+  colorOf: (id: string) => string;
+};
 
 /** The sticky left column: agent names with a one-icon status, and the band label under each row. */
 export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
@@ -27,7 +33,14 @@ export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
         return (
           <g key={a.id} opacity={focus && focus !== a.id ? 0.35 : 1}>
             <rect x={0} y={row.top} width={3} height={row.bottom - row.top} rx={1.5} fill={colorOf(a.id)} />
-            <text x={14} y={y + 4} fontFamily="var(--mono)" fontSize={12} fontWeight={500} fill={colorOf(a.id)}>
+            <text
+              x={14}
+              y={y + 4}
+              fontFamily="var(--mono)"
+              fontSize={12}
+              fontWeight={500}
+              fill={colorOf(a.id)}
+            >
               {a.name}
             </text>
             <text x={14} y={y + BAR_H / 2 + 6} fontFamily="var(--mono)" fontSize={9.5} fill="var(--muted)">

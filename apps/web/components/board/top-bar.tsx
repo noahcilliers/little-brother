@@ -3,6 +3,7 @@
 import type { Board } from "@/lib/api";
 import { type CatchKind, isOpen, lastBefore } from "@/lib/board-time";
 import { CATCH_STYLE } from "@/lib/catch-style";
+import { kTokens } from "@/lib/format";
 import { useTheme } from "@/lib/theme";
 import { CATCH_ICON, InlineIcon } from "./icons";
 
@@ -25,13 +26,24 @@ function counts(board: Board, t: number) {
   const plural = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
   return [
     { kind: "conflict" as const, text: plural(open, "open conflict", "open conflicts"), show: true },
-    { kind: "duplicate" as const, text: `${plural(n("duplicate"), "duplicate", "duplicates")} stopped`, show: true },
+    {
+      kind: "duplicate" as const,
+      text: `${plural(n("duplicate"), "duplicate", "duplicates")} stopped`,
+      show: true,
+    },
     { kind: "stale" as const, text: `${n("stale")} stale avoided`, show: true },
-    { kind: "ordering" as const, text: plural(n("ordering"), "ordering wait", "ordering waits"), show: n("ordering") > 0 },
-    { kind: "takeover" as const, text: plural(n("takeover"), "takeover", "takeovers"), show: n("takeover") > 0 },
+    {
+      kind: "ordering" as const,
+      text: plural(n("ordering"), "ordering wait", "ordering waits"),
+      show: n("ordering") > 0,
+    },
+    {
+      kind: "takeover" as const,
+      text: plural(n("takeover"), "takeover", "takeovers"),
+      show: n("takeover") > 0,
+    },
   ].filter((x) => x.show);
 }
-
 
 export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecision }: Props) {
   const { choice, toggle } = useTheme();
@@ -43,7 +55,6 @@ export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecisi
       {board ? (
         <span className="repo">
           {board.repo || "no repo"} · {n} agent{n === 1 ? "" : "s"}
-          {n > 1 ? " working in parallel" : ""}
         </span>
       ) : null}
       {board ? (
@@ -61,6 +72,14 @@ export function TopBar({ board, t, highlight, onHighlight, waiting, onOpenDecisi
               {c.text}
             </button>
           ))}
+          {board.counts.saved > 0 ? (
+            <span
+              className="saved"
+              title="Estimated tokens the catches saved: work not duplicated or repeated"
+            >
+              ~{kTokens(board.counts.saved)} tokens saved
+            </span>
+          ) : null}
           {board.counts.missed > 0 ? <span className="repo">{board.counts.missed} missed</span> : null}
         </span>
       ) : null}

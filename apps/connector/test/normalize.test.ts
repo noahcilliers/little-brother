@@ -134,7 +134,7 @@ describe("normalizeTool", () => {
     const n = await pre(root, "Write", {
       file_path: "src/notify/order-email.ts",
       content:
-        'import type { Order } from "../contracts/order";\n\nexport function subject(order: Order): string {\n  return `Order ${order.id}`;\n}\n',
+        'import type { Order } from "../contracts/order";\n\nexport function subject(order: Order): string {\n  return order.id;\n}\n',
     });
     expect(n.references).toContain("src/contracts/order.ts::Order");
   });

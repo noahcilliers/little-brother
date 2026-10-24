@@ -1,6 +1,7 @@
 import { agentStatus, STATUS_LABEL } from "@/lib/agent-status";
 import type { Board } from "@/lib/api";
 import { isRunning, lastBefore } from "@/lib/board-time";
+import { kTokens } from "@/lib/format";
 import { InlineIcon } from "./icons";
 
 const STATUS_ICON = { decision: "bolt", working: "pulse", blocked: "wall", idle: "idle" } as const;
@@ -43,7 +44,20 @@ export function AgentsPanel({ board, t, focus, onFocus, colorOf }: Props) {
                   {live ? now.subject : goal ? `${goal.label} · ${STATUS_LABEL[status]}` : "not started"}
                 </small>
               </span>
-              <InlineIcon name={STATUS_ICON[status]} color={status === "decision" ? "var(--hot)" : status === "blocked" ? "var(--warn)" : status === "working" ? color : "var(--faint)"} size={13} />
+              {a.tokens !== undefined ? <span className="tok">{kTokens(a.tokens)}</span> : null}
+              <InlineIcon
+                name={STATUS_ICON[status]}
+                color={
+                  status === "decision"
+                    ? "var(--hot)"
+                    : status === "blocked"
+                      ? "var(--warn)"
+                      : status === "working"
+                        ? color
+                        : "var(--faint)"
+                }
+                size={13}
+              />
             </button>
           );
         })}

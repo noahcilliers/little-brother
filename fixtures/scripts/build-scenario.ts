@@ -24,9 +24,19 @@ story.sessionStart("P00-priya-start", 500, "priya");
 story.prompt("04-noah-prompt", 900, "noah", "build the user auth workflow");
 story.prompt("05-joshua-prompt", 900, "joshua", "build the checkout backend");
 story.prompt("06-ash-prompt", 900, "ash", "build the frontend");
-story.prompt("M00-maya-prompt", 900, "maya", "add Stripe payments: an Order type and a webhook that marks orders paid");
+story.prompt(
+  "M00-maya-prompt",
+  900,
+  "maya",
+  "add Stripe payments: an Order type and a webhook that marks orders paid",
+);
 story.prompt("L00-leo-prompt", 900, "leo", "add product search: an API endpoint and a search box");
-story.prompt("P00-priya-prompt", 900, "priya", "set up the mailer and tested templates for transactional mail");
+story.prompt(
+  "P00-priya-prompt",
+  900,
+  "priya",
+  "set up the mailer and tested templates for transactional mail",
+);
 
 // Everyone works at once; story.after() inside each part waits for the beat it depends on.
 trio.noahFirstPrompt(story);
@@ -72,7 +82,9 @@ const ORDER: [string, string, number][] = [
 for (const [a, b, gap] of ORDER) {
   const d = story.atOf(b) - story.atOf(a);
   if (d < gap) throw new Error(`${a} → ${b} is ${d} ms, needs ≥ ${gap} ms`);
-  console.log(`${(story.atOf(b) / 1000).toFixed(1).padStart(5)} s  ${b} (${(d / 1000).toFixed(1)} s after ${a})`);
+  console.log(
+    `${(story.atOf(b) / 1000).toFixed(1).padStart(5)} s  ${b} (${(d / 1000).toFixed(1)} s after ${a})`,
+  );
 }
 
 const out = (rel: string) => fileURLToPath(new URL(`../${rel}`, import.meta.url));
