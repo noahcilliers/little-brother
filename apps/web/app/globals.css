@@ -747,3 +747,77 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* account menu (top right) and the members-only gate */
+.account {
+  position: relative;
+}
+.account-btn {
+  display: inline-flex;
+  border-radius: 999px;
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font: 600 11px var(--mono);
+  object-fit: cover;
+}
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  min-width: 220px;
+  display: grid;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px -12px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.account-menu a,
+.account-menu button {
+  text-align: left;
+  padding: 7px 8px;
+  border-radius: 5px;
+  font: 400 12px var(--mono);
+  color: var(--ink);
+  text-decoration: none;
+}
+.account-menu a:hover,
+.account-menu button:hover {
+  background: var(--bg);
+}
+.account-who {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.account-who span {
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.empty a {
+  color: var(--ink);
+}
+.gate {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 24px;
+  max-width: 520px;
+}
+.gate p {
+  margin: 0;
+  color: var(--muted);
+}
+a.ctl {
+  color: var(--ink);
+  text-decoration: none;
+}

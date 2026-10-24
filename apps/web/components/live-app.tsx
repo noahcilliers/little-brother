@@ -1,12 +1,12 @@
 "use client";
 
-import { Board } from "./board/board";
+import { AppShell } from "./app-shell";
 import { Providers } from "./providers";
 
 export function LiveApp() {
   return (
     <Providers>
-      <Board />
+      <AppShell />
     </Providers>
   );
 }

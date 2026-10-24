@@ -28,7 +28,7 @@ npx convex login
 npx convex deploy            # first run creates the project's production deployment and pushes functions
 ```
 
-Note the two URLs it prints. The deployment URL is `https://<name>.convex.cloud`. The HTTP actions URL is `https://<name>.convex.site`, which is `<convex-site>`. If you miss them, both are under **Settings → URL & Deploy Key** in the Convex dashboard.
+Note the two URLs it prints. The deployment URL is `https://<name>.convex.cloud`. The HTTP actions URL is `https://<name>.convex.site`, which is `<convex-site>`. If you miss them, both are in the production deployment's settings in the Convex dashboard.
 
 ### A2. Create the GitHub OAuth app
 
@@ -75,7 +75,7 @@ If `npx @convex-dev/auth` can't run non-interactively, generate the key pair wit
 
    | Name | Value | Environments |
    | --- | --- | --- |
-   | `CONVEX_DEPLOY_KEY` | In the Convex dashboard, open the production deployment's **Settings → URL & Deploy Key** and generate a production deploy key | Production only |
+   | `CONVEX_DEPLOY_KEY` | In the Convex dashboard, open the production deployment's **Deployment Settings → General** and generate a production deploy key | Production only |
    | `LB_PUBLIC_ORIGIN` | `<web>`. Optional: when unset it defaults to the production Vercel domain. Set it once you use a custom domain | Production |
    | `NEXT_PUBLIC_CONVEX_SITE_URL` | `<convex-site>`. Optional: by default it is derived from the cloud URL | Production |
 
@@ -154,7 +154,7 @@ On a laptop that has finished Part B:
 1. `lb --version` prints `0.1.0`. `command -v lb` prints `~/.local/bin/lb`.
 2. `lb status` shows your handle, `site: <convex-site>`, `backend: reachable (HTTP 200, …)` and `outbox: 0 queued`.
 3. In any git repo, start `claude` with the flags above, then:
-   - Run `/mcp`. `plugin:little-brother:lb` shows as **connected**.
+   - Run `/mcp`. The little-brother `lb` server shows as **connected**.
    - Ask: *"call the little-brother status tool"*. It answers with the team's activity, not "unavailable".
 4. Open `<web>/app`. Your session appears with the prompt you just typed.
 5. Optionally test with two people. Both edit the same function in the same repo on different branches. The second person gets a `[little-brother]` notice, and the dashboard shows the overlap.
