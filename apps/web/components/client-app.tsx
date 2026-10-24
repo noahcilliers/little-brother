@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 export const ClientApp = dynamic(() => import("./live-app").then((m) => m.LiveApp), {
   ssr: false,
   loading: () => (
-    <div className="empty" style={{ height: "100dvh" }}>
-      <span className="label">little brother · connecting</span>
+    <div className="app">
+      <p className="empty">little brother · connecting</p>
     </div>
   ),
 });

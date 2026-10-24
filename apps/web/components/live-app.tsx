@@ -1,12 +1,12 @@
 "use client";
 
-import { Dashboard } from "./dashboard";
+import { Board } from "./board/board";
 import { Providers } from "./providers";
 
 export function LiveApp() {
   return (
     <Providers>
-      <Dashboard />
+      <Board />
     </Providers>
   );
 }
