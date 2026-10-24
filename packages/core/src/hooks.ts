@@ -43,6 +43,18 @@ export const HookInput = z.discriminatedUnion("hook_event_name", [
   z
     .object({ ...common, hook_event_name: z.literal("SessionEnd"), reason: z.string().optional() })
     .passthrough(),
+  // Task-list hooks. Field shapes are only partly documented, so every task field is optional and ids may be numbers.
+  z
+    .object({
+      ...common,
+      hook_event_name: z.enum(["TaskCreated", "TaskCompleted"]),
+      task_id: z.union([z.string(), z.number()]).optional(),
+      task_subject: z.string().optional(),
+      task_description: z.string().optional(),
+      teammate_name: z.string().optional(),
+      team_name: z.string().optional(),
+    })
+    .passthrough(),
 ]);
 export type HookInput = z.infer<typeof HookInput>;
 export type HookEventName = HookInput["hook_event_name"];

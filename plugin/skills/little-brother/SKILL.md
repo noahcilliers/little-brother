@@ -24,6 +24,10 @@ How to respond:
    - `rejected`: you think it's wrong. Add a one-line `note` explaining why. A human will review it.
 4. If a turn ends while blocking items are unacked, the Stop hook sends you back. Ack them; don't ignore them.
 
+## Keep a task list
+
+For any multi-step piece of work, keep your plan in the task list: `TaskCreate` one task per step (a short subject in your own words, like "Issue JWT tokens"), `TaskUpdate` it to `in_progress` when you start it and to `completed` when it's done. Teammates see your work as these tasks, and Little Brother attributes each edit and command to the task in progress. If those tools aren't available, use `TodoWrite` the same way.
+
 ## When to call the tools yourself
 
 | Situation                                                                                                                                  | Tool                                                                                              |

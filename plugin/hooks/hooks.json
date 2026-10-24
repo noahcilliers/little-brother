@@ -37,7 +37,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob",
+        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|TaskCreate|TaskUpdate|TodoWrite",
         "hooks": [
           {
             "type": "command",
@@ -56,6 +56,28 @@
             "command": "lb hook PostToolUseFailure",
             "timeout": 3,
             "async": true
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lb hook TaskCreated",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lb hook TaskCompleted",
+            "timeout": 3
           }
         ]
       }

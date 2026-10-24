@@ -13,7 +13,8 @@ function resolveModule(spec: string, fileRel: string, repoRoot: string): string 
   if (!spec.startsWith(".")) return spec;
   const base = posix.normalize(posix.join(posix.dirname(fileRel), spec));
   for (const ext of EXTS) if (existsSync(join(repoRoot, base + ext))) return base + ext;
-  return base.replace(/\.js$/, ".ts");
+  // Not on this branch (yet): another agent may be creating it, and its touches will say `<path>.ts`.
+  return /\.[cm]?[jt]sx?$/.test(base) ? base.replace(/\.js$/, ".ts") : `${base}.ts`;
 }
 
 function importMap(

@@ -18,3 +18,16 @@ On `main`:
 
 Both pass once auth and checkout pick the same mechanism and the Vite proxy is in place (see `solution/`).
 Demo login: `demo@shop.dev` / `correct-horse`. Run the app with `npm run dev` (API :3001) and `npm run web` (:5173).
+
+## Agent sessions
+
+Each teammate runs Claude Code with the `plugin/` installed and `lb join` done. The dashboard draws each agent's
+work as the tasks of its own task list (`TaskCreate` / `TaskUpdate`). Those tools are on by default only for some
+models, so start every demo session with them enabled:
+
+```sh
+export CLAUDE_CODE_ENABLE_TODO_TOOLS=1
+claude
+```
+
+Without a task list Little Brother still groups the agent's actions into inferred tasks, by topic, between prompts.

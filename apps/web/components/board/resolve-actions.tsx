@@ -2,10 +2,10 @@
 
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { api, type OpenConflict } from "@/lib/api";
+import { api, type BoardCatch } from "@/lib/api";
 
 /** An open conflict is decided here: keep one side (the other is superseded) or dismiss it as a false alarm. */
-export function ResolveActions({ conflict }: { conflict: OpenConflict }) {
+export function ResolveActions({ conflict }: { conflict: BoardCatch }) {
   const approve = useMutation(api.resolve.approve);
   const dismiss = useMutation(api.resolve.dismiss);
   const [busy, setBusy] = useState(false);
@@ -23,31 +23,25 @@ export function ResolveActions({ conflict }: { conflict: OpenConflict }) {
   };
   const { classificationId } = conflict;
   return (
-    <div className="resolve">
-      <p className="note">{conflict.reason}</p>
+    <>
       {conflict.comparison ? <pre className="compare">{conflict.comparison}</pre> : null}
-      <div className="actions">
-        {[conflict.a, conflict.b].map((side) => (
+      <div className="choices">
+        {conflict.sides.map((side, i) => (
           <button
             key={side.nodeId}
             type="button"
-            className="ctl"
+            className={i === 0 ? "primary" : undefined}
             disabled={busy}
             onClick={() => run(() => approve({ classificationId, keepNodeId: side.nodeId }))}
           >
-            Keep {side.handle}: {side.label}
+            Keep {side.label}
           </button>
         ))}
-        <button
-          type="button"
-          className="ctl quiet"
-          disabled={busy}
-          onClick={() => run(() => dismiss({ classificationId }))}
-        >
+        <button type="button" disabled={busy} onClick={() => run(() => dismiss({ classificationId }))}>
           Dismiss
         </button>
       </div>
-      {error ? <p className="note hot">{error}</p> : null}
-    </div>
+      {error ? <p className="empty hot">{error}</p> : null}
+    </>
   );
 }

@@ -1,80 +1,80 @@
-import type { Board } from "@/lib/api";
-import { relations } from "@/lib/board-view";
+import type { Board, BoardTask } from "@/lib/api";
+import { isOpen, stateAt, stateLabel, stopColor } from "@/lib/board-time";
 import { elapsed } from "@/lib/format";
-import { Icon } from "./glyph";
 import { ResolveActions } from "./resolve-actions";
+import { StoryList } from "./story-list";
 
 type Props = {
   board: Board;
   selected: string | null;
   t: number;
   start: number;
-  onSelect: (id: string) => void;
-  colorOf: (agentId: string | null) => string;
+  colorOf: (agentId: string) => string;
 };
 
-const KIND: Record<string, string> = {
-  intent: "Intent",
-  edit: "Action",
-  ok: "Action · tests pass",
-  fail: "Action · failed",
-  blocked: "Blocked action",
-  superseded: "Superseded action",
-  lesson: "Lesson",
-  decision: "Decision",
-  verify: "Verification",
-};
-
-function tagColor(kind: string): string {
-  if (kind === "conflict") return "var(--hot)";
-  return kind === "duplicate" || kind === "stale" ? "var(--warn)" : "var(--muted)";
+function TaskDetail({ board, k, t, start, colorOf }: Omit<Props, "selected"> & { k: BoardTask }) {
+  const state = stateAt(k, t);
+  const agent = board.agents.find((a) => a.id === k.agentId);
+  const goal = board.goals.find((g) => g.id === k.goalId);
+  const lines = (board.sessions.find((s) => s.agentId === k.agentId)?.lines ?? []).filter(
+    (l) => l.task === k.id && l.t <= t,
+  );
+  const color =
+    state === "running" || state === "done"
+      ? colorOf(k.agentId)
+      : state === "stopped"
+        ? stopColor(k)
+        : state === "abandoned"
+          ? "var(--hot)"
+          : "var(--muted)";
+  // A superseded task's note explains the supersession, so it waits for the decision.
+  const pendingSupersede = k.supersededAt !== undefined && t < k.supersededAt;
+  const conflict = board.catches.find(
+    (c) =>
+      c.kind === "conflict" && (c.from === k.id || c.to === k.id) && isOpen(c, t) && c.sides.length === 2,
+  );
+  return (
+    <>
+      <div className="title">{k.subject}</div>
+      <div className="meta">
+        {agent?.name ?? "agent"} · goal: {goal?.label ?? (k.inferred ? "inferred from actions" : "")}
+      </div>
+      <div>
+        <span className="state" style={{ color }}>
+          {stateLabel(k, state)}
+        </span>
+      </div>
+      {k.note && state !== "running" && !pendingSupersede ? <p className="empty">{k.note}</p> : null}
+      <StoryList lines={lines} start={start} />
+      {conflict ? <ResolveActions conflict={conflict} /> : null}
+    </>
+  );
 }
 
-export function SelectedPanel({ board, selected, t, start, onSelect, colorOf }: Props) {
-  const n = board.nodes.find((x) => x.id === selected && x.at <= t);
-  const handle = board.agents.find((a) => a.id === n?.agentId)?.handle;
-  const conflict = n ? board.conflicts.find((c) => c.a.id === n.id || c.b.id === n.id) : undefined;
+/** What the selected task did, step by step, with the decision buttons when it is in an open conflict. */
+export function SelectedPanel({ board, selected, t, start, colorOf }: Props) {
+  const task = board.tasks.find((k) => k.id === selected);
+  const shared = board.shared.find((s) => s.id === selected);
+  let body: React.ReactNode = (
+    <p className="empty">Click a task to see what the agent did and which files it touched.</p>
+  );
+  if (task && task.t0 <= t) {
+    body = <TaskDetail board={board} k={task} t={t} start={start} colorOf={colorOf} />;
+  } else if (shared && shared.t <= t) {
+    body = (
+      <>
+        <div className="title">{shared.label}</div>
+        <div className="meta">
+          {shared.kind} · {elapsed(shared.t, start)}
+        </div>
+        <p className="empty">{shared.note}</p>
+      </>
+    );
+  }
   return (
     <div className="card">
-      <div className="h">Selected</div>
-      <div className="detail">
-        {!n ? (
-          <p className="empty">Click any node to see its files and what it connects to.</p>
-        ) : (
-          <>
-            <div className="title">
-              <Icon glyph={n.glyph} color={colorOf(n.agentId)} why={n.why} />
-              {n.label}
-            </div>
-            <div className="meta">
-              {KIND[n.glyph]} · {n.agentId ? (handle ?? "agent") : "all agents"} · {elapsed(n.at, start)}
-            </div>
-            {n.note ? <p className="note">{n.note}</p> : null}
-            {n.files.length > 0 ? (
-              <ul className="files">
-                {n.files.map((f) => (
-                  <li key={f.path}>
-                    <span className="path">{f.path}</span>
-                    <span className="op">{f.op}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="rel">
-              {relations(board, n.id, t).map((r) => (
-                <button key={r.key} type="button" onClick={() => onSelect(r.other.id)}>
-                  <span className="tag" style={{ color: tagColor(r.kind) }}>
-                    {r.word}
-                  </span>
-                  <Icon glyph={r.other.glyph} color={colorOf(r.other.agentId)} why={r.other.why} />
-                  {r.other.label}
-                </button>
-              ))}
-            </div>
-            {conflict ? <ResolveActions conflict={conflict} /> : null}
-          </>
-        )}
-      </div>
+      <div className="h">Selected task</div>
+      <div className="detail">{body}</div>
     </div>
   );
 }

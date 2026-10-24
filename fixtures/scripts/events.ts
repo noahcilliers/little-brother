@@ -46,6 +46,7 @@ function writeFile(as: Handle, rel: string, content: string): void {
 
 export class Story {
   readonly lines: ScenarioLine[] = [];
+  private readonly taskIds = new Map<Handle, number>();
 
   private push(step: string, delayMs: number, as: Handle, input: Record<string, unknown>) {
     this.lines.push({ step, delayMs, as, cwd: cwdOf(as), input });
@@ -144,6 +145,54 @@ export class Story {
 
   sessionEnd(step: string, delayMs: number, as: Handle) {
     this.push(step, delayMs, as, { ...common(as, "SessionEnd"), reason: "prompt_input_exit" });
+  }
+
+  /** Reads only reach PostToolUse: the plugin's PreToolUse matcher covers writes and commands. */
+  read(step: string, delayMs: number, as: Handle, rel: string) {
+    const file_path = `${cwdOf(as)}/${rel}`;
+    const content = readFile(as, rel);
+    this.push(step, delayMs, as, {
+      ...common(as, "PostToolUse"),
+      permission_mode: "default",
+      tool_name: "Read",
+      tool_input: { file_path },
+      tool_response: {
+        type: "text",
+        file: { filePath: file_path, content, numLines: content.split("\n").length },
+      },
+      tool_use_id: toolUseId(step),
+    });
+  }
+
+  /**
+   * One step of the agent's task list: TaskCreated (fired by its TaskCreate call), then the TaskUpdate call that
+   * marks it in progress. Returns the completion, which fires TaskCompleted. Task ids count up per session.
+   */
+  task(step: string, delayMs: number, as: Handle, subject: string, description: string) {
+    const ids = (this.taskIds.get(as) ?? 0) + 1;
+    this.taskIds.set(as, ids);
+    const task_id = String(ids);
+    this.push(`${step}.created`, delayMs, as, {
+      ...common(as, "TaskCreated"),
+      task_id,
+      task_subject: subject,
+      task_description: description,
+    });
+    this.push(`${step}.start`, 100, as, {
+      ...common(as, "PostToolUse"),
+      permission_mode: "default",
+      tool_name: "TaskUpdate",
+      tool_input: { taskId: task_id, status: "in_progress" },
+      tool_response: { success: true, taskId: task_id, updatedFields: ["status"] },
+      tool_use_id: toolUseId(`${step}.start`),
+    });
+    return (doneStep: string, doneDelayMs: number) =>
+      this.push(doneStep, doneDelayMs, as, {
+        ...common(as, "TaskCompleted"),
+        task_id,
+        task_subject: subject,
+        task_description: description,
+      });
   }
 
   mcp(step: string, delayMs: number, as: Handle, tool: string, args: Record<string, unknown>) {

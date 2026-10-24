@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
@@ -39,7 +40,7 @@ describe("replayCommand", () => {
     });
     log.mockRestore();
 
-    expect(out).toHaveLength(43);
+    expect(out).toHaveLength(83);
     expect(out.find((l) => l.startsWith("14-joshua-users.pre"))).toContain("[joshua]");
     expect(out.find((l) => l.startsWith("23-noah-decision"))).toContain(
       "MCP post_decision → decision recorded",
@@ -49,9 +50,50 @@ describe("replayCommand", () => {
       auth: "Bearer tok-noah",
       body: { claudeSessionId: "7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d" },
     });
-    expect(hits.filter((h) => h.url?.startsWith("/hook/"))).toHaveLength(42);
+    expect(hits.filter((h) => h.url?.startsWith("/hook/"))).toHaveLength(82);
     expect(hits.find((h) => h.auth === "Bearer tok-joshua")?.body).toMatchObject({
       session: { cwd: "/tmp/lb-demo/joshua" },
     });
+  });
+
+  it("--parallel runs each agent on its own timeline: a slow agent delays only itself", async () => {
+    server = createServer((req, res) => {
+      let data = "";
+      req.on("data", (c) => (data += c));
+      req.on("end", () => {
+        const slow = req.headers.authorization === "Bearer tok-noah";
+        setTimeout(
+          () => {
+            res.setHeader("content-type", "application/json");
+            res.end(JSON.stringify({ output: null }));
+          },
+          slow ? 300 : 0,
+        );
+      });
+    });
+    await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+    const siteUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const profiles = Object.fromEntries(["noah", "joshua"].map((h) => [h, { token: `tok-${h}` }]));
+    process.env.LB_HOME = tempHome({ siteUrl, convexUrl: "", current: "noah", profiles });
+    process.env.LB_SESSION_DIR = join(process.env.LB_HOME, "sessions");
+    const line = (step: string, as: string, delayMs: number) =>
+      JSON.stringify({
+        step,
+        as,
+        delayMs,
+        input: { hook_event_name: "TaskCreated", session_id: `s-${as}`, cwd: "/tmp", task_id: step },
+      });
+    const file = join(process.env.LB_HOME, "parallel.jsonl");
+    writeFileSync(
+      file,
+      [line("a-noah", "noah", 0), line("b-joshua", "joshua", 50), line("c-noah", "noah", 0)].join("\n"),
+    );
+
+    const out: string[] = [];
+    const log = vi.spyOn(console, "log").mockImplementation((s: string) => void out.push(s));
+    await replayCommand(file, { speed: 1, timeout: 1500, apply: false, parallel: true });
+    log.mockRestore();
+    // Sequential replay would print a, b, c; in parallel joshua's line doesn't wait for noah's slow backend.
+    expect(out.map((l) => l.split(" ")[0])).toEqual(["b-joshua", "a-noah", "c-noah"]);
   });
 });

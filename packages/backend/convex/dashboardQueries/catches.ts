@@ -1,0 +1,103 @@
+import type { Id } from "../_generated/dataModel";
+import { lbSentence, lowerFirst, subjectThing } from "./labels";
+import { type Klass, payloadField } from "./shared";
+import type { Source } from "./source";
+import type { BoardTask } from "./tasks";
+
+export type CatchKind = "duplicate" | "stale" | "conflict" | "ordering" | "takeover";
+export type BoardCatch = {
+  id: string;
+  classificationId: Id<"classifications">;
+  kind: CatchKind;
+  /** Task id, or a lesson/decision id. */
+  from: string;
+  to: string;
+  t: number;
+  /** When it settled; null while still open. */
+  until: number | null;
+  status: Klass["status"];
+  topic?: string;
+  /** Short label for the chip on the edge: "conflict · auth.mechanism", "needs JWT tokens first". */
+  chip: string;
+  text: string;
+};
+
+// A catch with no recorded settle time stays drawn this long after it fired.
+const SETTLE_MS = 3000;
+
+function kindOf(c: Klass, src: Source): CatchKind | undefined {
+  if (c.type === "normal") return undefined;
+  if (c.relation === "ordering_dependency") return "ordering";
+  // The priority policy gave the claim to the newer change: the other side is told to stop.
+  const next = src.nodeById.get(c.nodeId);
+  if (c.winnerAgentId && next && c.winnerAgentId === next.agentId) return "takeover";
+  return c.type;
+}
+
+function chipOf(kind: CatchKind, topic: string | undefined, to: BoardTask | undefined): string {
+  switch (kind) {
+    case "conflict":
+      return topic ? `conflict · ${topic}` : "conflict";
+    case "duplicate":
+      return "duplicate";
+    case "stale":
+      return "already failed";
+    case "ordering":
+      return `needs ${to ? lowerFirst(subjectThing(to.subject)) : "the other side"} first`;
+    case "takeover":
+      return "takeover";
+  }
+}
+
+/** Catches link the task that was caught to the task (or lesson, decision) it was caught against. */
+export function buildCatches(
+  src: Source,
+  tasks: BoardTask[],
+  taskOfNode: Map<string, string>,
+  sharedIds: Set<string>,
+): BoardCatch[] {
+  const taskById = new Map(tasks.map((t) => [t.id, t]));
+  const anchor = (id: Id<"nodes"> | undefined) =>
+    id ? (taskOfNode.get(id) ?? (sharedIds.has(id) ? id : undefined)) : undefined;
+  const resolvedAt = new Map<string, number>();
+  for (const e of src.events) {
+    const cid = payloadField(e, "classificationId");
+    if (e.hook === "Resolve" && typeof cid === "string") resolvedAt.set(cid, e.at);
+  }
+
+  const byPair = new Map<string, BoardCatch>();
+  for (const c of [...src.verdicts].sort((a, b) => a.at - b.at)) {
+    const kind = kindOf(c, src);
+    const from = anchor(c.nodeId);
+    const to = anchor(c.againstNodeId);
+    if (!kind || !from || !to || from === to) continue;
+    const fromTask = taskById.get(from);
+    // Only a conflict nobody has a claim on waits for a person; everything else settles when the step ends.
+    const waits = kind === "conflict" && c.status === "open" && !c.winnerAgentId;
+    const settled = resolvedAt.get(c._id) ?? (waits ? null : Math.max(fromTask?.t1 ?? 0, c.at + SETTLE_MS));
+    const key = `${kind}:${from}:${to}`;
+    const prev = byPair.get(key);
+    if (prev) {
+      // Repeated verdicts on one pair are one catch: it stays open while any of them is.
+      if (prev.until !== null) prev.until = settled === null ? null : Math.max(prev.until, settled);
+      if (c.status === "open") Object.assign(prev, { classificationId: c._id, status: c.status });
+      continue;
+    }
+    const topic =
+      src.nodeById.get(c.nodeId)?.topic ?? (c.againstNodeId && src.nodeById.get(c.againstNodeId)?.topic);
+    byPair.set(key, {
+      id: c._id,
+      classificationId: c._id,
+      kind,
+      from,
+      to,
+      t: c.at,
+      until: settled,
+      status: c.status,
+      topic: topic || undefined,
+      chip: chipOf(kind, topic || undefined, taskById.get(to)),
+      text: lbSentence(c.reason),
+    });
+  }
+  return [...byPair.values()];
+}

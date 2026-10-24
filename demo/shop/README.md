@@ -7,6 +7,9 @@ Tiny shop: Express API (`src/`, port 3001) + Vite React storefront (`web/`, port
 | auth | `noah/auth` | `src/auth/*`, `db/schema/users.ts` (seed `demo@shop.dev` / `correct-horse`), `GET /api/me` |
 | checkout | `joshua/checkout` | `src/checkout/*`: `GET /api/cart`, `POST /api/cart/items`, `POST /api/checkout` |
 | frontend | `ash/frontend` | `web/` |
+| payments | `maya/payments` | `src/payments/*` (Stripe webhook), `src/contracts/order.ts`, `db/schema/orders.ts` |
+| search | `leo/search` | `src/catalog/*`: `GET /api/search?q=` |
+| notifications | `priya/notifications` | `src/notify/*`: mailer, order and shipping emails |
 
 The `User` shape is in `src/contracts/user.ts`. Import it; don't redeclare it.
 

@@ -25,6 +25,26 @@ export const GitOp = z.object({
 });
 export type GitOp = z.infer<typeof GitOp>;
 
+export const TaskStatus = z.enum(["pending", "in_progress", "completed"]);
+export type TaskStatus = z.infer<typeof TaskStatus>;
+
+/** One step of the agent's own task list, from TaskCreated/TaskCompleted or a TaskCreate/TaskUpdate call. */
+export const TaskRef = z.object({
+  key: z.string().min(1).max(200), // Claude Code task id, or `subject:<subject>` when the call carried no id
+  subject: z.string().max(300).optional(), // TaskUpdate may carry only an id and a status
+  description: z.string().max(1000).optional(),
+  status: TaskStatus.optional(),
+});
+export type TaskRef = z.infer<typeof TaskRef>;
+
+/** A TodoWrite snapshot entry (the legacy task list). */
+export const TodoItem = z.object({
+  content: z.string().max(300),
+  status: TaskStatus,
+  activeForm: z.string().max(300).optional(),
+});
+export type TodoItem = z.infer<typeof TodoItem>;
+
 /** Contract 2 — `lb hook` → Convex `POST /hook/:event`. */
 export const IngestEnvelope = z.object({
   v: z.literal(1),
@@ -52,6 +72,8 @@ export const IngestEnvelope = z.object({
   outputTail: z.string().max(2000).optional(),
   stopHookActive: z.boolean().optional(),
   tokens: z.number().optional(),
+  task: TaskRef.optional(), // TaskCreated / TaskCompleted, or a TaskCreate / TaskUpdate tool call
+  todos: z.array(TodoItem).max(100).optional(), // TodoWrite snapshot
   at: z.number(),
 });
 export type IngestEnvelope = z.infer<typeof IngestEnvelope>;

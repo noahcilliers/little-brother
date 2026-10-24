@@ -1,0 +1,9 @@
+{
+  "session_id": "7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d",
+  "transcript_path": "/Users/noah/.claude/projects/-tmp-lb-demo-noah/7b3e2c1a-4f5d-4e8a-9c21-0d6f8a1b2c3d.jsonl",
+  "cwd": "/tmp/lb-demo/noah",
+  "hook_event_name": "TaskCreated",
+  "task_id": "4",
+  "task_subject": "Issue JWT tokens",
+  "task_description": "jwt.sign on login"
+}

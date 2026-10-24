@@ -23,6 +23,8 @@ describe("fixtures/hooks", () => {
         "PostToolUseFailure",
         "Stop",
         "SessionEnd",
+        "TaskCreated",
+        "TaskCompleted",
       ]),
     );
   });

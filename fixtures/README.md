@@ -22,12 +22,16 @@ One JSON object per line, in order:
 { "step": "23-noah-decision", "delayMs": 2000, "as": "noah", "cwd": "/tmp/lb-demo/noah", "mcp": "post_decision", "args": { /* McpArgs.post_decision */ } }
 ```
 
-- `delayMs`: wait this long after the previous line before sending this one.
+- `delayMs`: wait this long after the previous line before sending this one. With `lb replay --parallel` the
+  running sum of delays is each line's due time, and each agent replays its own lines on its own timeline.
 - `as`: which agent (`noah` | `joshua` | `ash`); each has its own fixed `session_id`.
 - `input`: pipe to `lb hook` as stdin, run with `cwd` as the working directory (so repo/branch resolve per agent).
 - `mcp` + `args`: an MCP tool call by that agent's session (call it as `lb mcp` would for `session_id` of `as`).
   Lines without `input` are MCP calls; a replayer that can't do MCP may skip them.
 - Denied tool calls have only a `.pre` line, because Claude Code never runs a denied tool.
+- `T…` steps are the agents' task lists: `TaskCreated` / `TaskCompleted` hooks and `TaskUpdate` PostToolUse
+  calls. Their payload shapes follow the Claude Code docs, which only partly describe them; re-capture from a real
+  session (run with `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`) when available.
 - `Edit` `old_string`s are exact against each agent's worktree (main + that agent's earlier edits), and
   file contents are real TypeScript, so the connector's TS-compiler normalizer sees genuine symbols.
 

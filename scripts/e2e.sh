@@ -13,4 +13,4 @@ rm -rf /tmp/lb-demo "$LB_HOME"
 (cd "$ROOT" && pnpm --filter @lb/connector build >/dev/null)
 
 for who in noah joshua ash; do $LB join --url "$SITE" --as "$who" >/dev/null; done
-$LB replay "$ROOT/fixtures/scenario.jsonl" --apply --speed "${SPEED:-4}"
+$LB replay "$ROOT/fixtures/scenario.jsonl" --apply --parallel --speed "${SPEED:-4}"

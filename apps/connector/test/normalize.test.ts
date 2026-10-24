@@ -129,6 +129,16 @@ describe("normalizeTool", () => {
     expect(n.references).toEqual(expect.arrayContaining(["src/fx.ts::convert", "src/pay.ts::refund", "log"]));
   });
 
+  it("names imports of files not on this branch yet by their .ts path, as their creator's touches do", async () => {
+    const root = tempRepo({});
+    const n = await pre(root, "Write", {
+      file_path: "src/notify/order-email.ts",
+      content:
+        'import type { Order } from "../contracts/order";\n\nexport function subject(order: Order): string {\n  return `Order ${order.id}`;\n}\n',
+    });
+    expect(n.references).toContain("src/contracts/order.ts::Order");
+  });
+
   it("tags generated paths from defaults and .littlebrother.json", async () => {
     const root = tempRepo({ ".littlebrother.json": JSON.stringify({ generated: ["gen/**"] }) });
     const n = await pre(root, "Write", { file_path: "gen/api.ts", content: "export const x = 1;\n" });

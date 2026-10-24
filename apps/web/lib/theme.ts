@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 export type ThemeChoice = "auto" | "light" | "dark";
+const NEXT: Record<ThemeChoice, ThemeChoice> = { auto: "light", light: "dark", dark: "auto" };
 
-/** Theme lives on <html data-theme>; absent means follow the OS. */
+/** Theme lives on <html data-theme>; absent means follow the OS. The toggle cycles auto → light → dark. */
 export function useTheme() {
   const [choice, setChoice] = useState<ThemeChoice>("auto");
   useEffect(() => {
@@ -12,14 +13,14 @@ export function useTheme() {
     if (t === "light" || t === "dark") setChoice(t);
   }, []);
   const toggle = () => {
+    const next = NEXT[choice];
     const root = document.documentElement;
-    const effective =
-      root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    const next = effective === "dark" ? "light" : "dark";
-    root.dataset.theme = next;
+    if (next === "auto") delete root.dataset.theme;
+    else root.dataset.theme = next;
     setChoice(next);
     try {
-      localStorage.setItem("lb-theme", next);
+      if (next === "auto") localStorage.removeItem("lb-theme");
+      else localStorage.setItem("lb-theme", next);
     } catch {
       // Private mode or blocked storage: the toggle still works for this page view.
     }

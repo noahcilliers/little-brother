@@ -2,28 +2,81 @@
   "topics": {
     "db.users": {
       "owner": "noah",
-      "files": ["db/schema/users.ts"],
-      "consumers": ["src/checkout/**"]
+      "files": [
+        "db/schema/users.ts"
+      ],
+      "consumers": [
+        "src/checkout/**"
+      ]
     },
     "auth.mechanism": {
       "owner": "noah",
-      "files": ["src/auth/**"],
-      "consumers": ["src/checkout/**", "web/src/api.ts"]
+      "files": [
+        "src/auth/**"
+      ],
+      "consumers": [
+        "src/checkout/**",
+        "web/src/api.ts"
+      ]
     },
     "api.me.shape": {
       "owner": "noah",
-      "files": ["src/contracts/user.ts"],
-      "consumers": ["src/checkout/**", "web/src/**"]
+      "files": [
+        "src/contracts/user.ts"
+      ],
+      "consumers": [
+        "src/checkout/**",
+        "web/src/**"
+      ]
     },
     "api.cors": {
       "owner": "noah",
-      "files": ["src/server.ts", "web/vite.config.ts"],
-      "consumers": ["web/src/api.ts"]
+      "files": [
+        "src/server.ts",
+        "web/vite.config.ts"
+      ],
+      "consumers": [
+        "web/src/api.ts"
+      ]
     },
     "api.cart.shape": {
       "owner": "joshua",
-      "files": ["src/checkout/cart.ts", "src/checkout/routes.ts"],
-      "consumers": ["web/src/**"]
+      "files": [
+        "src/checkout/cart.ts",
+        "src/checkout/routes.ts"
+      ],
+      "consumers": [
+        "web/src/**"
+      ]
+    },
+    "payments.webhook": {
+      "owner": "maya",
+      "files": [
+        "src/payments/**"
+      ],
+      "consumers": []
+    },
+    "orders.model": {
+      "owner": "maya",
+      "files": [
+        "src/contracts/order.ts",
+        "db/schema/orders.ts"
+      ],
+      "consumers": []
+    },
+    "catalog.search": {
+      "owner": "leo",
+      "files": [
+        "src/catalog/**"
+      ],
+      "consumers": []
+    },
+    "notify.email": {
+      "owner": "priya",
+      "files": [
+        "src/notify/**"
+      ],
+      "consumers": []
     }
   },
   "verify": "npm run test:integration"

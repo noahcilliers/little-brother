@@ -74,6 +74,7 @@ export async function postDecision(
     kind: "action",
     verb: "DECIDE",
     text: signatureLine({ verb: "DECIDE", topic: a.topic, target: a.value }),
+    label: `${a.topic} = ${a.value}`.slice(0, 120),
     topic: a.topic,
     parentId: agent.intentId,
     outcome: "succeeded",

@@ -44,7 +44,7 @@ export async function resolveByDecision(
       resolution: `decided: ${topic} = ${value} by @${handle} (${decisionId})`,
       outcome: "owner_decision",
     });
-    await supersede(ctx, lose);
+    await supersede(ctx, lose, `Superseded: @${handle} (owner) set ${topic} = ${value}.`);
     await ctx.db.insert("inbox", {
       agentId: lose.agentId,
       classificationId: c._id,

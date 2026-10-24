@@ -1,6 +1,7 @@
 # Expected Little Brother output for `scenario.jsonl`
 
-Acceptance oracle for the end-to-end replay (`lb replay fixtures/scenario.jsonl`). Step ids match the `step`
+Acceptance oracle for the end-to-end replay (`lb replay fixtures/scenario.jsonl`, with `--parallel` in
+`scripts/e2e.sh`). Step ids match the `step`
 field of each line; `.pre` / `.post` are the PreToolUse / PostToolUse(Failure) halves of one tool call.
 
 **Output** is what `lb hook` prints to stdout (contract 3):
@@ -38,6 +39,30 @@ inbox item delivered as context is never a failure.
 | 25          | joshua | Edit `src/checkout/routes.ts` → `requireUser` + cart             | silent                               | —                                                                     | normal              | Matches `demo/solution/src/checkout/routes.ts`                                                                                                                                                                                                                                                                           |
 | 26–28       | all    | Stop                                                             | silent                               | —                                                                     | —                   | No open blocking items, so no `decision: "block"`                                                                                                                                                                                                                                                                        |
 | 29–31       | all    | SessionEnd                                                       | silent                               | —                                                                     | —                   | Agents marked offline                                                                                                                                                                                                                                                                                                    |
+
+## Task lines and the `tasks` table
+
+Lines whose step starts with `T` are the agents' own task list: `.created` is a `TaskCreated` hook, `.start` a
+`PostToolUse` `TaskUpdate` (status `in_progress`), `.done` a `TaskCompleted` hook. All are **silent**, create no
+action nodes and no classifications. Steps `06a`/`06b` are Ash's `Read`s (PostToolUse only, `EXPLORE`, not
+classified). Every action node gets `taskId` = its agent's in-progress task and a `label` (verb + primary symbol).
+
+| Agent  | Task (subject)        | Actions     | Final status | Why                                                                                   |
+| ------ | --------------------- | ----------- | ------------ | ------------------------------------------------------------------------------------- |
+| noah   | Create users table    | 07          | `completed`  | TaskCompleted                                                                         |
+| noah   | Allow storefront CORS | 08, 09, 10  | `abandoned`  | Its last test (09) failed and the agent started the next task; note names the failure |
+| noah   | Proxy /api in Vite    | 11, 12      | `completed`  | TaskCompleted after a passing test                                                    |
+| noah   | Issue JWT tokens      | 21          | `completed`  | TaskCompleted                                                                         |
+| ash    | Build pages           | 06a, 06b    | `completed`  | TaskCompleted                                                                         |
+| ash    | API client            | —           | `completed`  | TaskCompleted                                                                         |
+| ash    | CORS middleware       | 17 (denied) | `stopped`    | Denied before any successful action; note = first sentence of the denial              |
+| ash    | Use the Vite proxy    | 18          | `completed`  | TaskCompleted                                                                         |
+| joshua | Create users table    | 14 (denied) | `stopped`    | Duplicate denial                                                                      |
+| joshua | Cart model            | 15          | `completed`  | TaskCompleted                                                                         |
+| joshua | Session handling      | 19          | `superseded` | Step 23's decision supersedes step 19 (the conflict's losing side); note names it     |
+| joshua | Checkout routes       | 22 (denied) | `stopped`    | Conflict denial                                                                       |
+| joshua | Session on JWT        | 24          | `completed`  | TaskCompleted                                                                         |
+| joshua | Checkout routes       | 25          | `completed`  | A second task with the same subject (new task id)                                     |
 
 ## Totals after a clean run
 

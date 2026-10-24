@@ -1,4 +1,4 @@
-import { context, deriveVerb, type IngestEnvelope, signatureLine } from "@lb/core";
+import { actionLabel, context, deriveVerb, type IngestEnvelope, signatureLine } from "@lb/core";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
@@ -13,6 +13,7 @@ import {
   latestActions,
   topicFor,
 } from "../nodes";
+import { taskForAction } from "../taskAttribution";
 import type { HookHandler } from "./types";
 
 const sameFiles = (a: string[], b: string[]) =>
@@ -44,15 +45,26 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
 
   let nodeId: Doc<"nodes">["_id"];
   let verb = derived;
+  const now = Date.now();
+  const labelFor = (v: string) =>
+    actionLabel({ verb: v, tool, touches: env.touches, files: env.files, command: env.command });
   if (existing) {
     nodeId = existing._id;
     verb = existing.verb;
+    // Nodes from before task attribution (or whose PreToolUse was not hooked) get theirs now.
+    const label = existing.label ?? labelFor(verb);
+    const taskId =
+      existing.taskId ?? (await taskForAction(ctx, agent, { verb, topic: existing.topic, label, at: now }));
     await ctx.db.patch(nodeId, {
       outcome,
       text: signatureLine({ verb, topic: existing.topic, target, outcome }),
+      label,
+      taskId,
     });
   } else {
     const topic = await topicFor(ctx, agent.repo, env.files);
+    const label = labelFor(verb);
+    const taskId = await taskForAction(ctx, agent, { verb, topic, label, at: now });
     nodeId = await insertNode(ctx, {
       agentId: agent._id,
       kind: "action",
@@ -65,10 +77,12 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
       parentId: agent.intentId,
       outcome,
       signature: await actionSignature(env),
+      taskId,
+      label,
       baseRev: env.baseRev,
       preview: env.preview?.slice(0, 1500),
       consumes: await consumesFor(ctx, agent.repo, env.files),
-      at: Date.now(),
+      at: now,
     });
   }
   const landed = env.git ? await applyGitOp(ctx, agent, env.git) : "";

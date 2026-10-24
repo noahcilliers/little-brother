@@ -1,4 +1,4 @@
-import { type HookOutput, IngestEnvelope } from "@lb/core";
+import { type HookOutput, IngestEnvelope, TASK_TOOLS } from "@lb/core";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { upsertAgent } from "./agents";
@@ -9,6 +9,7 @@ import { onPreToolUse } from "./hooks/pre";
 import { onUserPromptSubmit } from "./hooks/prompt";
 import { onSessionStart } from "./hooks/start";
 import { onStop } from "./hooks/stop";
+import { onTaskEvent, onTaskTool } from "./hooks/task";
 import type { HookHandler, HookResult } from "./hooks/types";
 
 const HANDLERS: Record<string, HookHandler> = {
@@ -19,7 +20,16 @@ const HANDLERS: Record<string, HookHandler> = {
   PostToolUseFailure: onPostToolUse,
   Stop: onStop,
   SessionEnd: onSessionEnd,
+  TaskCreated: onTaskEvent,
+  TaskCompleted: onTaskEvent,
 };
+const TOOL_HOOKS = new Set(["PreToolUse", "PostToolUse", "PostToolUseFailure"]);
+
+/** Task-list tool calls are plan bookkeeping, routed away from the action-node handlers. */
+function handlerFor(hook: string, tool: string | undefined): HookHandler | undefined {
+  if (TOOL_HOOKS.has(hook) && tool && TASK_TOOLS.has(tool)) return onTaskTool;
+  return HANDLERS[hook];
+}
 
 type IngestResult = { status: 200 | 401; output: HookOutput };
 
@@ -49,7 +59,7 @@ export const ingest = internalMutation({
       payload: { envelope: env, output: null },
       at: now,
     });
-    const handler = HANDLERS[args.hook];
+    const handler = handlerFor(args.hook, env.tool);
     const result: HookResult = handler
       ? await handler({ ctx, hook: args.hook, agent, env, eventId })
       : { output: null, summary: args.hook };

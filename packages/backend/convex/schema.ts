@@ -86,6 +86,8 @@ export default defineSchema({
     outcome: v.union(v.literal("open"), v.literal("succeeded"), v.literal("failed"), v.literal("superseded")),
     signature: v.optional(v.string()),
     toolUseId: v.optional(v.string()),
+    taskId: v.optional(v.id("tasks")), // the agent's own plan step this action belongs to
+    label: v.optional(v.string()), // short behavior label: verb + primary symbol, e.g. "edit issueToken()"
     preview: v.optional(v.string()),
     consumes: v.optional(v.array(v.string())),
     baseRev: v.optional(v.string()),
@@ -103,6 +105,29 @@ export default defineSchema({
       dimensions: 768,
       filterFields: ["kind", "outcome"],
     }),
+
+  // The agent's own plan steps (Claude Code task list), or inferred groups when it keeps none.
+  tasks: defineTable({
+    agentId: v.id("agents"),
+    taskKey: v.string(), // Claude Code task_id, or "inferred:<n>"
+    subject: v.string(),
+    description: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("stopped"),
+      v.literal("abandoned"),
+      v.literal("superseded"),
+    ),
+    goalId: v.optional(v.id("nodes")), // the intent (prompt) it serves
+    source: v.union(v.literal("task_tool"), v.literal("inferred")),
+    startedAt: v.number(),
+    endedAt: v.optional(v.number()),
+    note: v.optional(v.string()), // why it stopped / was superseded, or the closing summary
+  })
+    .index("by_agent", ["agentId", "startedAt"])
+    .index("by_key", ["agentId", "taskKey"]),
 
   verbs: defineTable({
     key: v.string(),

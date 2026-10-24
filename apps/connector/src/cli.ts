@@ -66,9 +66,15 @@ program
   .option("--speed <n>", "speed multiplier for delays", "1")
   .option("--timeout <ms>", "per-event request timeout", "1500")
   .option("--apply", "write recorded Write/Edit content into the cwd before each PostToolUse line", false)
-  .action(async (file: string, o: { speed: string; timeout: string; apply: boolean }) => {
+  .option("--parallel", "replay each agent's lines on its own timeline, concurrently", false)
+  .action(async (file: string, o: { speed: string; timeout: string; apply: boolean; parallel: boolean }) => {
     const { replayCommand } = await import("./commands/replay");
-    await replayCommand(file, { speed: Number(o.speed), timeout: Number(o.timeout), apply: o.apply });
+    await replayCommand(file, {
+      speed: Number(o.speed),
+      timeout: Number(o.timeout),
+      apply: o.apply,
+      parallel: o.parallel,
+    });
   });
 
 program

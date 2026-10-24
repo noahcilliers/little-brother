@@ -1,7 +1,10 @@
+import { primarySymbol } from "@lb/core";
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
+import { subjectThing } from "./dashboardQueries/labels";
 import { insertNode, topicFor } from "./nodes";
+import { supersedeTaskOf } from "./tasks";
 
 // Human decisions from the dashboard resolve panel. Unauthenticated for the hackathon.
 
@@ -23,8 +26,20 @@ function winnerLabel(n: Doc<"nodes">): string {
   return (label || n.files[0] || n.text).slice(0, 80);
 }
 
-export async function supersede(ctx: MutationCtx, lose: Doc<"nodes">) {
+/** The value a decision records: what the winning side built (its symbol or label), not what it set out to do. */
+function winnerValue(n: Doc<"nodes">): string {
+  return (primarySymbol(n.touches) ?? n.label ?? winnerLabel(n)).slice(0, 80);
+}
+
+/** A decision reads as what the winning side set out to build: its task subject, e.g. "JWT tokens". */
+async function decisionValue(ctx: MutationCtx, keep: Doc<"nodes">): Promise<string> {
+  const task = keep.taskId ? await ctx.db.get(keep.taskId) : null;
+  return task ? subjectThing(task.subject).slice(0, 80) : winnerValue(keep);
+}
+
+export async function supersede(ctx: MutationCtx, lose: Doc<"nodes">, note = "Superseded by a decision.") {
   if (lose.outcome !== "superseded") await ctx.db.patch(lose._id, { outcome: "superseded" });
+  await supersedeTaskOf(ctx, lose, note);
   const later = await ctx.db
     .query("nodes")
     .withIndex("by_agent", (q) => q.eq("agentId", lose.agentId).gte("at", lose.at))
@@ -53,9 +68,7 @@ export const approve = mutation({
       lose.topic ??
       (agent && (await topicFor(ctx, agent.repo, keep.files))) ??
       topicFromPath(keep.files[0]);
-    // An action's intent says what was chosen better than its file path does.
-    const intent = keep.kind === "action" && keep.parentId ? await ctx.db.get(keep.parentId) : null;
-    const winner = winnerLabel(intent ?? keep);
+    const winner = await decisionValue(ctx, keep);
     const decisionText = `DECIDE ${topic} = ${winner}`;
 
     await ctx.db.patch(c._id, {
@@ -64,12 +77,13 @@ export const approve = mutation({
       resolution: `approved ${keep._id}`,
       outcome: "human_override",
     });
-    await supersede(ctx, lose);
+    await supersede(ctx, lose, `Superseded: owner chose ${topic} = ${winner}.`);
     const decisionId = await insertNode(ctx, {
       agentId: keep.agentId,
       kind: "knowledge",
       verb: "DECIDE",
       text: decisionText,
+      label: `${topic} = ${winner}`,
       topic,
       files: keep.files,
       parentId: keep._id,

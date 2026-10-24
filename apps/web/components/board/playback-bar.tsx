@@ -14,17 +14,19 @@ type Props = {
   onScrub: (c: number) => void;
 };
 
+/** Live follows the clock; Pause holds; Replay plays the run from the start; the scrubber moves through it. */
 export function PlaybackBar({ axis, mode, t, c, onLive, onPause, onReplay, onScrub }: Props) {
+  const span = axis?.span ?? 1;
   return (
-    <footer className="card">
+    <div className="card">
       <div className="controls">
-        {mode === "live" ? (
-          <button type="button" className="ctl" onClick={onPause}>
-            Pause
+        {mode === "paused" ? (
+          <button type="button" className="ctl" onClick={onLive}>
+            Live
           </button>
         ) : (
-          <button type="button" className="ctl on" onClick={onLive}>
-            Live
+          <button type="button" className="ctl" onClick={onPause}>
+            Pause
           </button>
         )}
         <button type="button" className="ctl" onClick={onReplay} disabled={!axis}>
@@ -34,18 +36,18 @@ export function PlaybackBar({ axis, mode, t, c, onLive, onPause, onReplay, onScr
           type="range"
           className="scrub"
           min={0}
-          max={axis?.span ?? 1}
+          max={span}
           step={50}
-          value={Math.min(c, axis?.span ?? 1)}
+          value={Math.min(c, span)}
           onChange={(e) => onScrub(Number(e.target.value))}
           aria-label="Time"
         />
         <span className="clock" title={clock(t)}>
-          {axis ? elapsed(Math.min(t, axis.fromC(axis.span)), axis.start) : "0:00"}
+          {axis ? elapsed(t, axis.start) : "0:00"}
           {mode === "live" ? " · live" : mode === "replay" ? " · replay" : " · paused"}
         </span>
       </div>
       <Legend />
-    </footer>
+    </div>
   );
 }

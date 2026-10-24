@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Creates the lb-demo-shop git repo used in the Little Brother demo.
 #
-#   demo/setup.sh [target-dir] [--worktrees] [--install]
+#   demo/setup.sh [target-dir] [--worktrees] [--install] [--agents a,b,c]
 #
 #   target-dir   where to create the repo (default: ~/lb-demo-shop); must not exist
-#   --worktrees  also add one worktree per agent next to the repo:
-#                <parent>/noah (noah/auth), <parent>/joshua (joshua/checkout), <parent>/ash (ash/frontend)
+#   --worktrees  also add one worktree per agent next to the repo, <parent>/<handle>:
+#                noah (noah/auth), joshua (joshua/checkout), ash (ash/frontend), maya (maya/payments),
+#                leo (leo/search), priya (priya/notifications)
 #                e.g. `demo/setup.sh /tmp/lb-demo/shop --worktrees` gives the cwds used by fixtures/scenario.jsonl
+#   --agents     extra handles (comma-separated), each on branch <handle>/work; used by scripts/swarm.ts
 #   --install    run `npm ci` in the repo (and in each worktree with --worktrees)
 set -euo pipefail
 
@@ -14,10 +16,15 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 target="$HOME/lb-demo-shop"
 worktrees=false
 install=false
+extra=""
+expect_agents=false
 for arg in "$@"; do
+  if $expect_agents; then extra="$arg"; expect_agents=false; continue; fi
   case "$arg" in
     --worktrees) worktrees=true ;;
     --install) install=true ;;
+    --agents) expect_agents=true ;;
+    --agents=*) extra="${arg#--agents=}" ;;
     -*) echo "unknown flag: $arg" >&2; exit 2 ;;
     *) target="$arg" ;;
   esac
@@ -43,7 +50,11 @@ git -C "$target" add -A
 git -C "$target" -c user.name="lb-demo" -c user.email="demo@little-brother.dev" \
   commit -q -m "lb-demo-shop: API + storefront skeleton"
 
-branches=(noah/auth joshua/checkout ash/frontend)
+branches=(noah/auth joshua/checkout ash/frontend maya/payments leo/search priya/notifications)
+if [ -n "$extra" ]; then
+  IFS=',' read -r -a handles <<<"$extra"
+  for handle in "${handles[@]}"; do branches+=("$handle/work"); done
+fi
 for branch in "${branches[@]}"; do
   git -C "$target" branch "$branch"
 done

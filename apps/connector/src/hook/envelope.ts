@@ -2,6 +2,7 @@ import type { HookInput, IngestEnvelope } from "@lb/core";
 import { sha1 } from "../hash";
 import type { Normalized } from "../normalize";
 import { capLines, tailLines } from "../normalize/text";
+import { taskFields } from "./task-fields";
 
 export type EnvelopeContext = {
   repo: string;
@@ -33,7 +34,9 @@ function outputTailOf(input: HookInput, rawResponse: unknown): string | undefine
 
 export function eventKey(input: HookInput, now: number): string {
   const toolUseId = "tool_use_id" in input ? input.tool_use_id : undefined;
-  return sha1(`${input.session_id}|${input.hook_event_name}|${toolUseId ?? now}`);
+  // Task hooks carry no tool_use_id; the task id keeps two hooks in the same millisecond apart.
+  const taskId = "task_id" in input && input.task_id !== undefined ? `${input.task_id}@` : "";
+  return sha1(`${input.session_id}|${input.hook_event_name}|${toolUseId ?? `${taskId}${now}`}`);
 }
 
 export function buildEnvelope(input: HookInput, ctx: EnvelopeContext): IngestEnvelope {
@@ -55,6 +58,9 @@ export function buildEnvelope(input: HookInput, ctx: EnvelopeContext): IngestEnv
     at: ctx.now,
   };
   if (n?.preview) env.preview = n.preview;
+  const { task, todos } = taskFields(input);
+  if (task) env.task = task;
+  if (todos) env.todos = todos;
 
   switch (input.hook_event_name) {
     case "UserPromptSubmit":

@@ -5,7 +5,7 @@ import { callTool } from "../mcp/tools";
 import { applyRecordedEdit } from "./replay-apply";
 import { describeOutput, parseReplay, type ReplayLine } from "./replay-parse";
 
-export type ReplayOptions = { speed: number; timeout: number; apply: boolean };
+export type ReplayOptions = { speed: number; timeout: number; apply: boolean; parallel?: boolean };
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
@@ -51,10 +51,38 @@ async function replayLine(
   return `${label(input)} → ${describeOutput(r.output, r.delivered)}${why}`;
 }
 
+/**
+ * `--parallel`: every agent replays on its own timeline at once, as in real use. Each line is due at its
+ * recorded time (the running sum of delays); an agent's lines still run one after another, so a slow response
+ * delays only that agent. Cross-agent order holds only through those times, never by waiting on another agent.
+ */
+async function replayParallel(lines: ReplayLine[], opts: ReplayOptions, speed: number): Promise<void> {
+  const sessions = new Map<string, string>();
+  const queues = new Map<string, { line: ReplayLine; step: string; dueMs: number }[]>();
+  let offset = 0;
+  for (const [i, line] of lines.entries()) {
+    offset += line.delayMs ?? 0;
+    const queue = queues.get(line.as) ?? [];
+    queue.push({ line, step: line.step ?? String(i + 1), dueMs: offset / speed });
+    queues.set(line.as, queue);
+  }
+  const start = Date.now();
+  await Promise.all(
+    [...queues.values()].map(async (queue) => {
+      for (const { line, step, dueMs } of queue) {
+        const wait = start + dueMs - Date.now();
+        if (wait > 0) await sleep(wait);
+        console.log(`${step.padEnd(28)} [${line.as}] ${await replayLine(line, opts, sessions)}`);
+      }
+    }),
+  );
+}
+
 export async function replayCommand(file: string, opts: ReplayOptions): Promise<void> {
   const { lines, errors } = parseReplay(readFileSync(file, "utf8"));
   for (const e of errors) console.error(`line ${e.line}: ${e.message}`);
   const speed = opts.speed > 0 ? opts.speed : 1;
+  if (opts.parallel) return replayParallel(lines, opts, speed);
   const sessions = new Map<string, string>();
   for (const [i, line] of lines.entries()) {
     if (line.delayMs) await sleep(line.delayMs / speed);

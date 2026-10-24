@@ -1,24 +1,17 @@
 import type { Doc } from "../_generated/dataModel";
 
-// Short labels for graph glyphs and one-sentence notes for the side panel, derived from compact signatures
-// (`VERB topic target → OUTCOME`, docs/PLAN.md §2) without any model call.
+// Short labels derived from compact signatures (`VERB topic target → OUTCOME`, docs/PLAN.md §2), no model call.
 
-type Sig = Pick<Doc<"nodes">, "verb" | "text" | "topic" | "files">;
+type Sig = Pick<Doc<"nodes">, "verb" | "text" | "topic" | "files" | "touches" | "label">;
 
 const STOP = new Set("the a an to so and of for that it with in on can".split(" "));
-const PAST: Record<string, string> = {
-  EDIT: "Edited",
-  FIX: "Fixed",
-  REVERT: "Reverted",
-  RUN: "Ran",
-  TEST: "Ran",
-};
+const LEAD_VERBS = new Set("add build create issue make use write implement allow set fix".split(" "));
 
-function capitalize(s: string): string {
+export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function clip(s: string, max: number): string {
+export function clip(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
 }
 
@@ -26,72 +19,70 @@ export function basename(path: string): string {
   return path.split("/").filter(Boolean).pop() ?? path;
 }
 
-/** The signature without its verb, topic and outcome tail: the free target text. */
-export function signatureRest(n: Sig): string {
-  return n.text
-    .split(/\s+/)
-    .filter((w, i) => !(i === 0 && w === n.verb) && w !== n.topic && w !== `${n.topic}:`)
-    .join(" ")
-    .replace(/\s*→.*$/, "")
-    .trim();
+/** The signature without its leading verb and topic and its outcome tail: the free target text. */
+export function signatureRest(n: Pick<Sig, "verb" | "text" | "topic">): string {
+  const words = n.text.replace(/\s*→.*$/, "").split(/\s+/);
+  if (words[0] === n.verb) words.shift();
+  if (n.topic && (words[0] === n.topic || words[0] === `${n.topic}:`)) words.shift();
+  return words.join(" ").trim();
 }
 
-function outcomeTail(text: string): string {
-  return text.match(/→\s*(.*)$/)?.[1]?.trim() ?? "";
-}
-
-/** "PLAN build the user auth workflow" → "Build user auth". The full text goes to the side panel. */
-export function intentLabel(n: Sig): string {
+/** "PLAN auth build the user auth workflow" → "Build user auth". The full prompt goes to the session pane. */
+export function goalLabel(n: Sig): string {
   const head = signatureRest(n).split(/[:;,.]/)[0] ?? "";
   const words = head.split(/\s+/).filter((w) => w && !STOP.has(w.toLowerCase()));
-  return capitalize(clip(words.slice(0, 3).join(" ") || n.topic || "intent", 28));
+  return capitalize(clip(words.slice(0, 3).join(" ") || n.topic || "goal", 28));
 }
 
+function symbolOf(n: Sig): string | undefined {
+  const sym = n.touches.find((t) => t.symbol)?.symbol;
+  return sym ? `${sym.split("::").pop()}()` : undefined;
+}
+
+/** Verb + primary symbol: "edit issueToken()". Falls back to the file name or the command. */
 export function actionLabel(n: Sig): string {
-  const file = n.files[0];
-  return clip(file ? basename(file) : signatureRest(n) || n.verb.toLowerCase(), 24);
+  if (n.label) return n.label;
+  const verb = n.verb.toLowerCase();
+  const target = symbolOf(n) ?? (n.files[0] ? basename(n.files[0]) : signatureRest(n));
+  return clip(`${verb} ${target}`.trim(), 40);
 }
 
 /** "DECIDE auth.mechanism jwt-bearer" and "DECIDE api.cors = x" both read "topic = choice". */
 export function decisionLabel(n: Sig): string {
+  if (n.label) return clip(n.label, 34);
   const rest = signatureRest(n).replace(/^=\s*/, "");
-  return clip(n.topic ? `${n.topic} = ${rest}` : rest, 26);
+  return clip(n.topic ? `${n.topic.split(".")[0]} = ${rest}` : rest, 30);
 }
 
 export function lessonLabel(n: Sig): string {
-  return n.topic ? `${n.topic} lesson` : "lesson";
-}
-
-export function intentNote(n: Sig): string {
-  return capitalize(signatureRest(n));
-}
-
-export function actionNote(n: Sig): string {
-  const rest = signatureRest(n);
-  const tail = outcomeTail(n.text);
-  const did = `${PAST[n.verb] ?? capitalize(n.verb.toLowerCase())} ${rest}`;
-  const how = n.verb === "TEST" && tail === "OK" ? "tests pass" : tail && tail !== "OK" ? tail : "";
-  return [did, n.topic, how].filter(Boolean).join(" · ");
+  const last = n.topic?.split(".").pop();
+  if (!last) return "lesson";
+  return `${last.length <= 4 ? last.toUpperCase() : last} lesson`;
 }
 
 export function knowledgeNote(n: Sig): string {
-  return n.text.replace(new RegExp(`^${n.verb}\\s+`), "");
+  const words = n.text.split(/\s+/);
+  if (words[0] === n.verb) words.shift();
+  if (n.topic && words[0] === n.topic && words[1] !== "=") words.shift();
+  return words.join(" ");
 }
 
-/** The line of a failing command's output that says why: an error message first, then a test arrow line. */
-export function failureLine(tail: string): string | undefined {
-  const lines = tail
+/** "Issue JWT tokens" → "JWT tokens": the thing a task is about, for captions and keep buttons. */
+export function subjectThing(subject: string): string {
+  const words = subject.split(/\s+/);
+  if (words.length > 1 && LEAD_VERBS.has((words[0] ?? "").toLowerCase())) words.shift();
+  return words.join(" ");
+}
+
+export function lowerFirst(s: string): string {
+  return /^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+}
+
+/** Hook replies start with a "[little-brother]" tag and a "type · " prefix; the panes show the sentence only. */
+export function lbSentence(text: string): string {
+  const lines = text
+    .replace(/^\s*\[little-brother\]\s*/, "")
     .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  const error = lines.find((l) => /\b\w*Error:/.test(l));
-  if (error) return clip(error.replace(/^.*?\b\w*Error:\s*/, ""), 160);
-  const arrow = lines.find((l) => l.startsWith("→"));
-  if (arrow) return clip(arrow.replace(/^→\s*/, ""), 160);
-  const failed = lines.find((l) => /fail/i.test(l));
-  return failed ? clip(failed, 160) : undefined;
-}
-
-export function verdictNote(reason: string): string {
-  return reason.replace(/^\[little-brother\]\s*/, "").split("\n")[0] ?? reason;
+    .map((l) => l.trim().replace(/^(conflict|stale|duplicate|normal)\s*·\s*/i, ""));
+  return clip(lines.find(Boolean) ?? text, 220);
 }

@@ -16,7 +16,7 @@ export function usePlayback(axis: TimeAxis | undefined) {
   const cRef = useRef(0);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
   }, []);
 

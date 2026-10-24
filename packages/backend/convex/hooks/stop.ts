@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { unackedUrgent } from "../inbox";
+import { closeOpenTasks } from "../tasks";
 import type { HookHandler } from "./types";
 
 const MAX_STOP_BLOCKS = 2;
@@ -17,6 +18,12 @@ async function trajectoryOutcome(ctx: MutationCtx, intent: Doc<"nodes">): Promis
   const finished = nodes.filter((n) => n.parentId === intent._id && n.outcome !== "open");
   const last = finished.find((n) => n.verb === "TEST") ?? finished.find((n) => n.verb === "RUN");
   return last?.outcome === "failed" ? "failed" : "succeeded";
+}
+
+/** Whether the agent's current trajectory ended green (no tests counts as green). */
+export async function lastTestPassed(ctx: MutationCtx, agent: Doc<"agents">): Promise<boolean> {
+  const intent = agent.intentId ? await ctx.db.get(agent.intentId) : null;
+  return !intent || (await trajectoryOutcome(ctx, intent)) === "succeeded";
 }
 
 async function closeIntent(ctx: MutationCtx, agent: Doc<"agents">): Promise<string> {
@@ -44,5 +51,7 @@ export const onStop: HookHandler = async ({ ctx, agent, env }) => {
       tokens: env.tokens,
     };
   }
-  return { output: null, summary: await closeIntent(ctx, agent), tokens: env.tokens };
+  const summary = await closeIntent(ctx, agent);
+  await closeOpenTasks(ctx, agent._id, await lastTestPassed(ctx, agent), Date.now(), env.preview);
+  return { output: null, summary, tokens: env.tokens };
 };

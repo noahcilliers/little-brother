@@ -2,6 +2,7 @@ import { context, signatureLine } from "@lb/core";
 import { internal } from "../_generated/api";
 import { deliverPending } from "../digest";
 import { insertNode, topicFor, topicFromText } from "../nodes";
+import { closeInferredTasks } from "../taskAttribution";
 import type { HookHandler } from "./types";
 
 const oneLine = (s: string, n = 200) => {
@@ -26,6 +27,7 @@ export const onUserPromptSubmit: HookHandler = async ({ ctx, agent, env }) => {
     at: Date.now(),
   });
   await ctx.db.patch(agent._id, { intentId: nodeId });
+  await closeInferredTasks(ctx, agent._id, Date.now());
   await ctx.scheduler.runAfter(0, internal.classify.run.classifyNode, { nodeId });
   const pending = await deliverPending(ctx, agent._id);
   return { output: context("UserPromptSubmit", pending), summary: prompt, nodeId };

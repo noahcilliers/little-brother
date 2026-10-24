@@ -1,4 +1,4 @@
-import { ACTION_RANK, deny, deriveVerb, type Judgment, signatureLine, TYPE_OF } from "@lb/core";
+import { ACTION_RANK, actionLabel, deny, deriveVerb, type Judgment, signatureLine, TYPE_OF } from "@lb/core";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { runSyncChecks } from "../classify/sync";
@@ -12,6 +12,8 @@ import {
   latestActions,
   topicFor,
 } from "../nodes";
+import { taskForAction } from "../taskAttribution";
+import { stopOnDeny } from "../tasks";
 import type { HookHandler } from "./types";
 
 /** Outcome of the last finished action in the current trajectory, so an edit after a failure becomes FIX. */
@@ -40,6 +42,9 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
   });
   const topic = await topicFor(ctx, agent.repo, env.files);
   const target = actionTarget(env);
+  const now = Date.now();
+  const label = actionLabel({ verb, tool, touches: env.touches, files: env.files, command: env.command });
+  const taskId = await taskForAction(ctx, agent, { verb, topic, label, at: now });
   const nodeId = await insertNode(ctx, {
     agentId: agent._id,
     kind: "action",
@@ -53,10 +58,12 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
     outcome: "open",
     signature: await actionSignature(env),
     toolUseId: env.toolUseId,
+    taskId,
+    label,
     baseRev: env.baseRev,
     preview: env.preview?.slice(0, 1500),
     consumes: await consumesFor(ctx, agent.repo, env.files),
-    at: Date.now(),
+    at: now,
   });
   // Linked before the checks run so classifications can find the event that triggered them.
   await ctx.db.patch(eventId, { nodeId });
@@ -94,5 +101,6 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
   const fullReason = extra.length ? `${reason}\n${extra.slice(0, 2).join("\n")}` : reason;
   // A denied call never runs, so it must not linger as open work for other agents to collide with.
   await ctx.db.patch(nodeId, { outcome: "superseded" });
+  await stopOnDeny(ctx, taskId, reason, now);
   return { output: deny(fullReason), summary: `denied ${tool} ${target}`, nodeId };
 };
