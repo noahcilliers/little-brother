@@ -15,3 +15,7 @@ export type Beat = Board["beats"][number];
 export type VerifyBadge = Board["verifies"][number];
 export type BoardDecision = Board["decisions"][number];
 export type LooseAction = Board["loose"][number];
+
+export type TeamStatus = FunctionReturnType<typeof api.team.status>;
+export type Me = FunctionReturnType<typeof api.team.me>;
+export type Progress = FunctionReturnType<typeof api.onboarding.progress>;

@@ -23,3 +23,12 @@ export function kTokens(n: number): string {
   const k = n / 1000;
   return `${k < 10 ? k.toFixed(1).replace(/\.0$/, "") : Math.round(k)}k`;
 }
+
+/** Coarse relative time: "just now", "5 min ago", "3 h ago", "2 d ago". */
+export function ago(at: number, now = Date.now()): string {
+  const min = Math.floor((now - at) / 60_000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.floor(min / 60);
+  return h < 48 ? `${h} h ago` : `${Math.floor(h / 24)} d ago`;
+}
