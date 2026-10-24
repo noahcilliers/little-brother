@@ -19,8 +19,8 @@ export function buildBeats(
   shared: BoardShared[],
   catches: BoardCatch[],
 ): Beat[] {
-  const handles = new Map<string, string>(src.handles);
-  const who = (agentId: string) => capitalize(handles.get(agentId) ?? "an agent");
+  const labels = new Map<string, string>(src.labels);
+  const who = (agentId: string) => capitalize(labels.get(agentId) ?? "an agent");
   const taskById = new Map(tasks.map((t) => [t.id, t]));
   const beats: Beat[] = [];
   const first = goals[0];

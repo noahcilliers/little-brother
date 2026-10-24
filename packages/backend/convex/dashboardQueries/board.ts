@@ -37,7 +37,7 @@ function agentRows(src: Source, tasks: BoardTask[], loose: LooseAction[]) {
     return {
       id: a._id as string,
       handle,
-      name: capitalize(handle),
+      name: capitalize(src.labels.get(a._id) ?? handle),
       color: src.colors.get(a._id) ?? 1,
       branch: a.branch,
       active: a.status === "active",
