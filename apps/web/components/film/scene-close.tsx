@@ -22,7 +22,7 @@ export function SceneClose({ s }: { s: number }) {
           </span>
         </span>
         <span className="fx-close-meta" style={{ opacity: prog(s, T0 + 0.8, 0.4) }}>
-          Claude Code plugin · hooks + MCP · works across laptops and accounts
+          A Claude Code plugin for teams
         </span>
       </div>
       <section

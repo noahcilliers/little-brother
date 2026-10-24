@@ -1,89 +1,64 @@
-// Every number the "What we measure" scenes show, in one place so real results can replace targets and
-// placeholders without touching the scenes. `status` decides the small tag next to the number:
-// measured → no tag, target → "target", placeholder → "pending".
+// The eval results the "What we measure" scene shows, one beat each, in order. Only measured numbers live here:
+// planted and large suites (detection), STALE-bench and CooperBench (Little Brother off vs on, paired runs).
+// Update this file when a new run lands; the beats only read it.
 
-export type Status = "measured" | "target" | "placeholder";
-export type Point = { name: string; value: number };
-export type Benchmark = {
+export type Bar = { name: string; value: number; shown: string; accent?: boolean };
+export type Result = {
   label: string;
   value: number;
   unit: string;
-  status: Status;
-  /** Printed before the number: "<", ">", "≈" or "−". */
-  bound?: string;
-  /** Other systems or conditions to compare against, drawn as bars. */
-  baselines?: Point[];
-  baselineStatus?: Status;
-  /** Pieces that add up to the value, drawn as a stacked bar. */
-  parts?: Point[];
+  /** Source and sample, in a few words. */
+  note: string;
+  bars?: Bar[];
+  /** The value a full bar stands for. */
+  max?: number;
 };
 
-export const BENCH = {
+export const RESULTS = {
   precision: {
-    // Live off/on eval, 5 planted cases × 2 runs: 10 catches, 0 false positives. Small sample; target stays >90%.
-    label: "Precision on blocking verdicts · planted suite",
+    label: "Precision",
     value: 100,
     unit: "%",
-    bound: "",
-    status: "measured",
-    baselines: [
-      { name: "LLM judges every event", value: 70 },
-      { name: "Embedding similarity only", value: 55 },
-      { name: "Path overlap only", value: 40 },
-    ],
-    baselineStatus: "placeholder",
+    note: "0 false positives · planted and large suites",
   },
-  catches: { label: "Clashes caught before the first edit", value: 10, unit: "/ 10", status: "measured" },
-  latency: {
-    label: "PreToolUse p95 · 3 agents active",
-    value: 150,
-    unit: "ms",
-    bound: "<",
-    status: "target",
-    parts: [
-      { name: "normalize", value: 5 },
-      { name: "index reads", value: 40 },
-      { name: "verdict read", value: 20 },
-    ],
-    baselines: [{ name: "LLM on the edit path", value: 4000 }],
-    baselineStatus: "placeholder",
-  },
-  tokensControlled: {
-    label: "Tokens per run · off vs on",
-    value: 30,
+  recall: {
+    label: "Planted clashes caught",
+    value: 64,
     unit: "%",
-    bound: "−",
-    status: "placeholder",
-    baselines: [
-      { name: "off", value: 100 },
-      { name: "on", value: 70 },
+    max: 100,
+    bars: [
+      { name: "duplicate", value: 86, shown: "86%" },
+      { name: "conflict", value: 67, shown: "67%" },
+      { name: "stale", value: 33, shown: "33%" },
     ],
-    baselineStatus: "placeholder",
+    note: "16 of 25 · 9 of 9 on the large suite",
   },
-  tokensReplay: {
-    // Per-catch estimate; the off/on eval showed it overcounting, so it stays pending until measured.
-    label: "Saved by catches · estimate",
-    value: 8.5,
-    unit: "k tokens",
-    bound: "≈",
-    status: "placeholder",
-  },
-  cost: {
-    label: "$ per run · off vs on",
-    value: 20,
+  early: {
+    label: "Flagged before the first edit",
+    value: 88,
     unit: "%",
-    bound: "−",
-    status: "placeholder",
-    baselines: [
-      { name: "off", value: 1 },
-      { name: "on", value: 0.8 },
-    ],
-    baselineStatus: "placeholder",
+    note: "planted suite · median 20 s to detect",
   },
-} satisfies Record<string, Benchmark>;
-
-export const TAG: Record<Status, string | null> = {
-  measured: null,
-  target: "target",
-  placeholder: "pending",
-};
+  interference: {
+    label: "Merges that broke a teammate's tests",
+    value: 19,
+    unit: "%",
+    max: 100,
+    bars: [
+      { name: "Little Brother off", value: 50, shown: "50%" },
+      { name: "Little Brother on", value: 19, shown: "19%", accent: true },
+    ],
+    note: "STALE-bench · 16 paired runs",
+  },
+  conflicts: {
+    label: "Runs with a merge conflict",
+    value: 2,
+    unit: "/10",
+    max: 10,
+    bars: [
+      { name: "Little Brother off", value: 5, shown: "5/10" },
+      { name: "Little Brother on", value: 2, shown: "2/10", accent: true },
+    ],
+    note: "CooperBench · 10 paired runs",
+  },
+} satisfies Record<string, Result>;

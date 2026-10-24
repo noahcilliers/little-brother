@@ -1,17 +1,14 @@
 import type { ReactNode } from "react";
-import { type Status, TAG } from "./benchmarks";
 import { clamp01, easeOut, lerp, prog } from "./film-clock";
 import { countUp } from "./film-fx";
 
-// Building blocks for the full-screen benchmark beats: the zoom in and out, the big number, the status tag, bars.
+// Building blocks for the full-screen result beats: the zoom in and out, the big number, bars.
 
-export const BEAT_S = 2.85;
-
-/** One full-screen beat on its own clock t: zooms in from close, holds, zooms out and away. */
-export function Beat({ t, children }: { t: number; children: ReactNode }) {
-  if (t < 0 || t > BEAT_S) return null;
+/** One full-screen beat on its own clock t, `len` seconds long: zooms in from close, holds, zooms out and away. */
+export function Beat({ t, len, children }: { t: number; len: number; children: ReactNode }) {
+  if (t < 0 || t > len) return null;
   const pin = easeOut(clamp01(t / 0.45));
-  const pout = easeOut(clamp01((t - BEAT_S + 0.4) / 0.4));
+  const pout = easeOut(clamp01((t - len + 0.4) / 0.4));
   const scale = lerp(1.4, 1, pin) * lerp(1, 0.82, pout);
   return (
     <div
@@ -27,35 +24,14 @@ export function Beat({ t, children }: { t: number; children: ReactNode }) {
   );
 }
 
-export function Tag({ status }: { status: Status }) {
-  const text = TAG[status];
-  return text ? <em className={`ms-tag ${status}`}>{text}</em> : null;
-}
-
-/** The headline number, counting up; `decimals` for values like 8.5. */
-export function BigNumber({
-  t,
-  bound = "",
-  value,
-  unit,
-  status,
-  decimals = 0,
-}: {
-  t: number;
-  bound?: string;
-  value: number;
-  unit: string;
-  status: Status;
-  decimals?: number;
-}) {
+/** The headline number, counting up. */
+export function BigNumber({ t, value, unit }: { t: number; value: number; unit: string }) {
   return (
     <div className="ms-big">
       <b>
-        {bound}
-        {countUp(value, prog(t, 0.2, 1), decimals)}
+        {countUp(value, prog(t, 0.2, 1))}
         <small>{unit}</small>
       </b>
-      <Tag status={status} />
     </div>
   );
 }

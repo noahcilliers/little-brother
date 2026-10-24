@@ -4,10 +4,10 @@
   position: absolute;
   inset: 0;
   display: grid;
-  align-content: start;
+  align-content: center;
   justify-items: center;
-  gap: 34px;
-  padding: 64px 70px 0;
+  gap: 40px;
+  padding: 0 70px;
 }
 .lp .wy-title {
   margin: 0;
@@ -38,7 +38,7 @@
 }
 .lp .wy-panel h3 {
   margin: 0;
-  font: 600 25px / 1.25 var(--sans);
+  font: 600 30px / 1.2 var(--sans);
   letter-spacing: -0.02em;
 }
 .lp .wy-svg {
@@ -106,7 +106,6 @@
 .lp .wy-row,
 .lp .wy-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
 .lp .wy-big,
@@ -127,11 +126,6 @@
   font-size: 17px;
   color: var(--muted);
 }
-.lp .wy-panel blockquote {
-  margin: 0;
-  font: 400 19px / 1.4 var(--sans);
-}
-.lp .wy-panel cite,
 .lp .wy-src,
 .lp .wy-stats small {
   display: block;
@@ -160,13 +154,14 @@
   stroke-width: 5;
 }
 .lp .wy-stats {
-  width: 1180px;
-  gap: 60px;
+  width: 760px;
+  justify-items: center;
+  text-align: center;
 }
 .lp .wy-stats b {
-  font-size: 84px;
+  font-size: 96px;
 }
 .lp .wy-stats span {
-  font-size: 20px;
+  font-size: 24px;
   color: var(--ink);
 }

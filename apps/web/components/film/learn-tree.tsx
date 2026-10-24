@@ -29,12 +29,12 @@ const chain = (pills: Pill[]) => [ROOT, ...pills].map(([x, y], i) => `${i ? "L" 
 export function LearnTree({ s }: { s: number }) {
   const failDraw = prog(s, T0 + 0.2, 1);
   const failed = s >= T0 + 1.2;
-  const pruned = prog(s, T0 + 1.6, 0.5);
-  const workDraw = prog(s, T0 + 1.3, 0.9);
-  const later = prog(s, T0 + 2.4, 1.4);
-  const counter = prog(s, T0 + 3.7, 0.8);
+  const pruned = prog(s, T0 + 1.8, 0.5);
+  const workDraw = prog(s, T0 + 2.4, 0.9);
+  const later = prog(s, T0 + 3.4, 1.4);
+  const counter = prog(s, T0 + 5.2, 0.8);
   return (
-    <svg viewBox="0 0 880 900" className="lt" aria-hidden="true">
+    <svg viewBox="20 160 870 670" className="lt" aria-hidden="true">
       <path
         d={chain(FAIL)}
         pathLength={1}
@@ -66,26 +66,23 @@ export function LearnTree({ s }: { s: number }) {
         />
       ))}
       {WORK.map((p, i) => (
-        <PillNode key={p[2]} p={p} cls={i === 2 ? "ok" : ""} shown={prog(s, T0 + 1.4 + i * 0.25, 0.3)} />
+        <PillNode key={p[2]} p={p} cls={i === 2 ? "ok" : ""} shown={prog(s, T0 + 2.5 + i * 0.25, 0.3)} />
       ))}
       <g style={{ opacity: pruned }}>
         <rect x={400} y={176} width={474} height={44} rx={10} className="lt-lesson" />
         <text x={416} y={204} className="lt-text left">
-          ⬡ lesson: wildcard CORS + credentials fails → proxy
+          lesson: wildcard CORS fails → use a proxy
         </text>
       </g>
-      <text x={250} y={540} className="lt-note" style={{ opacity: prog(s, T0 + 3, 0.4) }}>
-        later agent: steered around (stale catch)
+      <text x={250} y={540} className="lt-note" style={{ opacity: prog(s, T0 + 4.2, 0.4) }}>
+        next agent goes straight to what works
       </text>
       <g style={{ opacity: counter }}>
         <text x={40} y={800} className="lt-big">
           {countUp(2, counter)}
         </text>
-        <text x={120} y={776} className="lt-text left">
-          failed paths pruned before anyone retried them
-        </text>
-        <text x={120} y={804} className="lt-src">
-          6-agent replay
+        <text x={120} y={790} className="lt-text left">
+          failed paths nobody had to retry · 6-agent replay
         </text>
       </g>
     </svg>

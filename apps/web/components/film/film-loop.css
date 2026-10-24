@@ -1,4 +1,4 @@
-/* How it works and the learning loop. */
+/* How it works and the learning tree. */
 /* how it works */
 .lp .fx-svg {
   position: absolute;
@@ -6,20 +6,10 @@
   width: 100%;
   height: 100%;
 }
-.lp .fx-lane {
-  fill: none;
-  stroke: var(--line-2);
-  stroke-dasharray: 2 6;
-}
-.lp .fx-lane-label,
-.lp .fx-note {
-  font: 500 13px var(--mono);
+.lp .fx-lane-label {
+  font: 500 15px var(--mono);
   letter-spacing: 0.06em;
   fill: var(--muted);
-}
-.lp .fx-note {
-  letter-spacing: 0;
-  font-size: 15px;
 }
 .lp .fx-edge {
   fill: none;
@@ -40,11 +30,11 @@
   stroke-width: 3;
 }
 .lp .fx-node-title {
-  font: 600 20px var(--sans);
+  font: 600 25px var(--sans);
   fill: var(--ink);
 }
 .lp .fx-node-sub {
-  font: 400 13.5px var(--mono);
+  font: 400 16px var(--mono);
   fill: var(--muted);
 }
 .lp .fx-packet {
@@ -54,13 +44,12 @@
 /* learning loop */
 .lp .fx-learn-tree {
   position: absolute;
-  left: 30px;
+  left: 230px;
   top: 120px;
-  width: 760px;
-  height: 777px;
+  width: 1140px;
+  height: 760px;
 }
-.lp .lt,
-.lp .fx-loop svg {
+.lp .lt {
   width: 100%;
   height: 100%;
 }
@@ -117,67 +106,4 @@
 .lp .lt-big {
   font: 700 76px var(--sans);
   fill: var(--ink);
-}
-.lp .lt-src {
-  font: 400 12.5px var(--mono);
-  fill: var(--muted);
-}
-.lp .fx-loop {
-  position: absolute;
-  right: 40px;
-  top: 150px;
-  width: 760px;
-  height: 720px;
-}
-.lp .fx-loop svg {
-  height: 600px;
-}
-.lp .fx-ring {
-  fill: none;
-  stroke: var(--line-2);
-  stroke-width: 2;
-  stroke-dasharray: 1;
-}
-.lp .fx-station {
-  fill: var(--panel);
-  stroke: var(--line-2);
-  stroke-width: 1.5;
-  transition: r 0.25s;
-}
-.lp .fx-station.on {
-  stroke: var(--film-accent);
-  stroke-width: 3;
-}
-.lp .fx-station-name {
-  font: 600 17px var(--sans);
-  fill: var(--ink);
-}
-.lp .fx-loop-center {
-  font: 600 30px var(--sans);
-  fill: var(--film-accent);
-}
-.lp .fx-loop-sub {
-  font: 400 13px var(--mono);
-  fill: var(--muted);
-}
-.lp .fx-loop-how {
-  margin: 0;
-  text-align: center;
-  font: 400 19px / 1.4 var(--sans);
-  min-height: 56px;
-}
-.lp .fx-roadmap {
-  margin: 10px auto 0;
-  width: fit-content;
-  padding: 6px 12px;
-  border: 1px dashed var(--line-2);
-  border-radius: 8px;
-  font: 400 13px var(--mono);
-  color: var(--muted);
-}
-.lp .fx-roadmap b {
-  margin-right: 8px;
-  color: var(--film-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }

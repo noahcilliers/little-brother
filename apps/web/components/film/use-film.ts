@@ -1,12 +1,13 @@
 "use client";
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { DURATION } from "./film-clock";
+import { PLAYBACK_DURATION, playbackAt } from "./film-tempo";
 
-const START_AT = 44.2; // a poster frame on the wide story layout until the film scrolls into view
+// A poster frame on the wide story layout until the film scrolls into view.
+const START_AT = playbackAt(44.2);
 const LOOP_HOLD = 2.5;
 
-/** Playback clock: autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
+/** Playback clock, in playback seconds (see film-tempo): autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
 export function useFilm(stage: RefObject<HTMLElement | null>) {
   const [t, setT] = useState(START_AT);
   const [playing, setPlaying] = useState(false);
@@ -14,7 +15,7 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
   const s = useRef({ t: START_AT, playing: false, userPaused: false, started: false, hold: 0 });
 
   const set = useCallback((next: number) => {
-    s.current.t = Math.max(0, Math.min(DURATION, next));
+    s.current.t = Math.max(0, Math.min(PLAYBACK_DURATION, next));
     setT(s.current.t);
   }, []);
   const play = useCallback((p: boolean) => {
@@ -30,7 +31,7 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
       last = now;
       const st = s.current;
       if (st.playing) {
-        if (st.t < DURATION) set(st.t + dt);
+        if (st.t < PLAYBACK_DURATION) set(st.t + dt);
         else {
           st.hold += dt;
           if (st.hold > LOOP_HOLD) {
@@ -77,7 +78,7 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
       st.started = true;
       set(0);
     }
-    if (st.t >= DURATION) set(0);
+    if (st.t >= PLAYBACK_DURATION) set(0);
     st.userPaused = st.playing;
     play(!st.playing);
   };

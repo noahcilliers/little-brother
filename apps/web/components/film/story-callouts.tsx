@@ -16,10 +16,10 @@ const staleRect = around([onBoard("a2", BEAT.stale), onBoard("s1", BEAT.stale)],
 const CALLOUTS: Callout[] = [
   { id: "admit", from: 9.05, to: 10.2, rect: { x: 899, y: 338, w: 392, h: 100 }, side: "left", at: [860, 300], text: "The host controls who joins" },
   { id: "dup", from: 20.8, to: 21.7, rect: dupRect, side: "right", at: [dupRect.x + dupRect.w + 40, dupRect.y - 10], text: "Caught at the plan, not at merge" },
-  { id: "deny", from: 22.2, to: 23.3, rect: { x: 820, y: 672, w: 730, h: 78 }, side: "top", at: [1185, 620], text: "Stopped before a single token was spent on duplicate work" },
+  { id: "deny", from: 22.2, to: 23.3, rect: { x: 820, y: 672, w: 730, h: 78 }, side: "top", at: [1185, 620], text: "Stopped before any work was wasted" },
   { id: "stale", from: 25.4, to: 26.6, rect: staleRect, side: "bottom", at: [staleRect.x + staleRect.w / 2, staleRect.y + staleRect.h + 36], text: "A teammate's failed path becomes everyone's lesson" },
-  { id: "diff", from: 33.7, to: 34.95, rect: boardBox({ x: 222, y: 166, w: 894, h: 210 }), side: "right", at: [1160, 250], text: "Both versions pass their own tests; merged, login breaks. Git can't see this" },
-  { id: "decided", from: 37.1, to: 38.5, rect: { x: 48, y: 736, w: 734, h: 90 }, side: "top", at: [415, 676], text: "The decision reaches the agent mid-task: no meeting, no merge fight" },
+  { id: "diff", from: 33.7, to: 34.95, rect: boardBox({ x: 222, y: 166, w: 894, h: 210 }), side: "right", at: [1160, 250], text: "Each works alone. Together, login breaks" },
+  { id: "decided", from: 37.1, to: 38.5, rect: { x: 48, y: 736, w: 734, h: 90 }, side: "top", at: [415, 676], text: "The decision reaches the agent mid-task" },
 ];
 
 /** Where the leader line leaves the spotlight: the middle of the side facing the callout. */

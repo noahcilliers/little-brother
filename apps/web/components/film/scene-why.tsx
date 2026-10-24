@@ -45,13 +45,8 @@ function Answer({ s }: { s: number }) {
       <div className="wy-stats">
         <div style={{ opacity: prog(t, 1.4, 0.4) }}>
           <b>{countUp(82, prog(t, 1.4, 0.9))}%</b>
-          <span>of failed parallel runs recovered by one message about the teammate's change</span>
+          <span>of failed team runs fixed by one heads-up about a teammate's change</span>
           <small>Passes Alone, Fails Together · 2026 · constructed tasks</small>
-        </div>
-        <div style={{ opacity: prog(t, 2, 0.4) }}>
-          <b>80% → 91%</b>
-          <span>coding pass@1 with verbal feedback in the loop</span>
-          <small>Reflexion · NeurIPS 2023</small>
         </div>
       </div>
     </div>

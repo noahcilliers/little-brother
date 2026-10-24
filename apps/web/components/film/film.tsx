@@ -16,6 +16,7 @@ import { type ReactNode, useRef } from "react";
 import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";
 import { layerStyle } from "./film-fx";
+import { clockAt } from "./film-tempo";
 import { CHAPTERS, SCENES, type SceneId, STORY_SHIFT, SUBS } from "./film-timeline";
 import { SceneClose } from "./scene-close";
 import { SceneHook } from "./scene-hook";
@@ -33,7 +34,7 @@ export function Film() {
   const wrap = useRef<HTMLDivElement>(null);
   const width = useWidth(wrap, W);
   const film = useFilm(wrap);
-  const s = film.t;
+  const s = clockAt(film.t);
   const still = film.reduced;
   const sub = lastBefore(SUBS, s);
   const chapter = lastBefore(CHAPTERS, s);
@@ -77,7 +78,7 @@ export function Film() {
         </p>
       </div>
       <FilmControls
-        s={s}
+        p={film.t}
         playing={film.playing}
         onToggle={film.toggle}
         onRestart={film.restart}

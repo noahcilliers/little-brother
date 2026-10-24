@@ -38,31 +38,11 @@
   font-size: 0.5em;
   letter-spacing: -0.03em;
 }
-.lp .ms-tag {
-  padding: 4px 10px;
-  border: 1px solid var(--film-accent);
-  border-radius: 6px;
-  font: 500 15px var(--mono);
-  font-style: normal;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--film-accent);
-}
-.lp .ms-tag.placeholder {
-  border-color: var(--line-2);
-  border-style: dashed;
-  color: var(--muted);
-}
 .lp .ms-bars {
   position: relative;
   display: grid;
   gap: 12px;
   width: 900px;
-}
-.lp .ms-bars > .ms-tag {
-  position: absolute;
-  right: 0;
-  top: -40px;
 }
 .lp .ms-bar {
   display: grid;
@@ -89,84 +69,6 @@
 .lp .ms-bar b {
   font: 600 22px var(--mono);
   text-align: right;
-}
-.lp .ms-checks {
-  display: flex;
-  gap: 40px;
-}
-.lp .ms-checks span {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font: 600 30px var(--sans);
-}
-.lp .ms-checks svg {
-  width: 48px;
-  height: 48px;
-}
-.lp .ms-checks circle {
-  fill: var(--add);
-}
-.lp .ms-checks path {
-  fill: none;
-  stroke: var(--panel);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-}
-.lp .ms-stack {
-  position: relative;
-  display: flex;
-  width: 900px;
-  height: 56px;
-  border: 2px dashed var(--line-2);
-  border-radius: 10px;
-}
-.lp .ms-seg {
-  position: relative;
-  height: 100%;
-  background: var(--film-accent);
-  border-right: 2px solid var(--panel);
-}
-.lp .ms-seg:nth-child(2) {
-  background: color-mix(in srgb, var(--film-accent) 70%, var(--panel));
-}
-.lp .ms-seg:nth-child(3) {
-  background: color-mix(in srgb, var(--film-accent) 45%, var(--panel));
-}
-.lp .ms-stack span {
-  position: absolute;
-  top: 66px;
-  left: 0;
-  white-space: nowrap;
-  font: 400 16px var(--mono);
-  color: var(--muted);
-}
-.lp .ms-seg:nth-child(2) span {
-  top: 92px;
-}
-.lp .ms-stack em {
-  position: absolute;
-  right: 8px;
-  top: 16px;
-  font: 400 15px var(--mono);
-  font-style: normal;
-  color: var(--muted);
-}
-.lp .ms-off,
-.lp .ms-measured {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  margin-top: 40px;
-  font-size: 22px;
-}
-.lp .ms-off b,
-.lp .ms-measured b {
-  font: 700 52px var(--sans);
-  letter-spacing: -0.03em;
-}
-.lp .ms-measured b {
-  color: var(--film-accent);
 }
 .lp .ms-note {
   margin: 0;

@@ -1,17 +1,19 @@
-import { DURATION, lastBefore, mmss } from "./film-clock";
+import { lastBefore, mmss } from "./film-clock";
+import { clockAt, PLAYBACK_DURATION, playbackAt } from "./film-tempo";
 import { CHAPTERS } from "./film-timeline";
 
 type Props = {
-  s: number;
+  /** Playback seconds, not film-clock seconds: the scrubber and clock show real time. */
+  p: number;
   playing: boolean;
   onToggle: () => void;
   onRestart: () => void;
-  onSeek: (s: number) => void;
+  onSeek: (p: number) => void;
 };
 
 /** Play/pause, restart, a scrubber with chapter jumps, and the clock. */
-export function FilmControls({ s, playing, onToggle, onRestart, onSeek }: Props) {
-  const chapter = lastBefore(CHAPTERS, s);
+export function FilmControls({ p, playing, onToggle, onRestart, onSeek }: Props) {
+  const chapter = lastBefore(CHAPTERS, clockAt(p));
   return (
     <div className="fc-controls">
       <button type="button" className="fc-ctl" onClick={onToggle}>
@@ -24,9 +26,9 @@ export function FilmControls({ s, playing, onToggle, onRestart, onSeek }: Props)
         <input
           type="range"
           min={0}
-          max={DURATION}
+          max={PLAYBACK_DURATION}
           step={0.05}
-          value={s}
+          value={p}
           aria-label="Seek"
           onChange={(e) => onSeek(Number(e.target.value))}
         />
@@ -36,7 +38,7 @@ export function FilmControls({ s, playing, onToggle, onRestart, onSeek }: Props)
               key={name}
               type="button"
               aria-current={chapter?.[0] === start}
-              onClick={() => onSeek(start)}
+              onClick={() => onSeek(playbackAt(start))}
             >
               {name}
             </button>
@@ -44,7 +46,7 @@ export function FilmControls({ s, playing, onToggle, onRestart, onSeek }: Props)
         </div>
       </div>
       <span className="fc-clock">
-        {mmss(s)} / {mmss(DURATION)}
+        {mmss(p)} / {mmss(PLAYBACK_DURATION)}
       </span>
     </div>
   );
