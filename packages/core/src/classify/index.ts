@@ -9,6 +9,7 @@ export * from "./judge-gate";
 export * from "./judge-prompt";
 export * from "./lexical";
 export * from "./pipeline";
+export * from "./revert";
 export * from "./rules/index";
 export * from "./topic-gate";
 export * from "./touches";

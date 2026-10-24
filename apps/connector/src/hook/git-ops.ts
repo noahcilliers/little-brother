@@ -65,7 +65,10 @@ function segments(command: string): string[][] {
 
 const isAssignment = (w: string) => /^[A-Za-z_][A-Za-z0-9_]*=/.test(w);
 
-function parseGit(words: string[], dir: string): ParsedGitOp | null {
+/** Any git invocation: the subcommand word, its arguments, and the directory it runs in. */
+export type GitInvocation = { sub: string; args: string[]; dir: string };
+
+function parseGit(words: string[], dir: string): GitInvocation | null {
   let i = 0;
   while (i < words.length && isAssignment(words[i] ?? "")) i++;
   if (words[i] !== "git") return null;
@@ -83,23 +86,31 @@ function parseGit(words: string[], dir: string): ParsedGitOp | null {
       i++;
     } else break;
   }
-  const op = SUBCOMMANDS[words[i] ?? ""];
-  return op ? { op, args: words.slice(i + 1), dir: cwd } : null;
+  const sub = words[i];
+  return sub ? { sub, args: words.slice(i + 1), dir: cwd } : null;
 }
 
-/** Every git operation we track in a shell command, in order. `cd` segments carry into later ones. */
-export function parseGitOps(command: string): ParsedGitOp[] {
-  const out: ParsedGitOp[] = [];
+/** Every git invocation in a shell command, in order. `cd` segments carry into later ones. */
+export function parseGitInvocations(command: string): GitInvocation[] {
+  const out: GitInvocation[] = [];
   let dir = ".";
   for (const words of segments(command)) {
     if (words[0] === "cd" && words[1]) {
       dir = words[1].startsWith("/") ? words[1] : posix.join(dir, words[1]);
       continue;
     }
-    const op = parseGit(words, dir);
-    if (op) out.push(op);
+    const git = parseGit(words, dir);
+    if (git) out.push(git);
   }
   return out;
+}
+
+/** Every git operation we track in a shell command, in order. */
+export function parseGitOps(command: string): ParsedGitOp[] {
+  return parseGitInvocations(command).flatMap(({ sub, args, dir }) => {
+    const op = SUBCOMMANDS[sub];
+    return op ? [{ op, args, dir }] : [];
+  });
 }
 
 /** The op that best describes the command; commit files still matter when it is chained before a push. */

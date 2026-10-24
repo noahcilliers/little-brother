@@ -62,7 +62,9 @@ export function distillTrajectory(intent: TrajectoryStep, actions: TrajectorySte
   const why = failureReason(failures.find((f) => f.output)?.output);
   const topic = attempt.topic ?? firstFail.topic ?? intent.topic;
   const files = [...new Set([attempt, ...failures, ...workedSteps].flatMap((s) => s.files))].slice(0, 20);
-  const attempts = failures.length > 1 ? ` (${failures.length} failures)` : "";
+  // Edits a revert marked failed are the attempt itself, not separate failures.
+  const runs = failures.filter((f) => !CHANGE_VERBS.has(f.verb)).length;
+  const attempts = runs > 1 ? ` (${runs} failures)` : "";
   const text = clip(
     [
       `LEARN${topic ? ` ${topic}` : ""}: tried ${attempt.text.replace(/ → (OK|FAIL)$/, "")}${attempts} → FAIL`,

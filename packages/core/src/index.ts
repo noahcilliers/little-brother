@@ -1,4 +1,5 @@
 export * from "./classify/index";
+export * from "./command-outcome";
 export * from "./hooks";
 export * from "./inbox";
 export * from "./ingest";

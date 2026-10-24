@@ -63,6 +63,7 @@ export const IngestEnvelope = z.object({
   topicMap: z.unknown().optional(), // the repo's .littlebrother.json, sent on SessionStart
   baseRev: z.string().optional(), // merge-base of HEAD with the default branch; line ranges are relative to it
   git: GitOp.optional(), // set on PostToolUse when a Bash command was a git operation
+  reverted: z.array(z.string()).max(200).optional(), // repo paths a git checkout/restore/reset put back; "." = all
   files: z.array(z.string()),
   touches: z.array(Touch),
   references: z.array(z.string()),
