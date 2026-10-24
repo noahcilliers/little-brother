@@ -16,6 +16,7 @@ export function ActionTicks({
   y,
   color,
   grey,
+  onSelect,
 }: {
   actions: BoardTask["actions"];
   layout: Layout;
@@ -23,26 +24,54 @@ export function ActionTicks({
   y: number;
   color: string;
   grey: boolean;
+  /** Ticks outside any task select themselves; a task's own ticks select the task through its bar. */
+  onSelect?: (actionId: string) => void;
 }) {
   return (
     <g>
       {actions
         .filter((a) => a.t <= t)
-        .map((a) => (
-          <g key={a.id} className="tick">
-            {/* A wider invisible target so the hover label is easy to reach. */}
-            <circle cx={layout.xAt(a.t)} cy={y} r={6} fill="transparent" />
-            <circle
-              cx={layout.xAt(a.t)}
-              cy={y}
-              r={a.routine ? 2.2 : 3}
-              fill={a.routine ? "var(--faint)" : grey ? "var(--faint)" : color}
-              stroke="var(--panel)"
-              strokeWidth={a.routine ? 1 : 1.5}
-            />
-            <title>{tickTitle(a)}</title>
-          </g>
-        ))}
+        .map((a) => {
+          const dot = (
+            <>
+              {/* A wider invisible target so the hover label is easy to reach. */}
+              <circle cx={layout.xAt(a.t)} cy={y} r={6} fill="transparent" />
+              <circle
+                cx={layout.xAt(a.t)}
+                cy={y}
+                r={a.routine ? 2.2 : 3}
+                fill={a.routine ? "var(--faint)" : grey ? "var(--faint)" : color}
+                stroke="var(--panel)"
+                strokeWidth={a.routine ? 1 : 1.5}
+              />
+              <title>{tickTitle(a)}</title>
+            </>
+          );
+          if (!onSelect) {
+            return (
+              <g key={a.id} className="tick">
+                {dot}
+              </g>
+            );
+          }
+          const pick = (e: { stopPropagation: () => void }) => {
+            e.stopPropagation();
+            onSelect(a.id);
+          };
+          return (
+            // biome-ignore lint/a11y/useSemanticElements: an SVG group cannot be a <button>
+            <g
+              key={a.id}
+              className="tick task"
+              role="button"
+              tabIndex={0}
+              onClick={pick}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " " ? pick(e) : undefined)}
+            >
+              {dot}
+            </g>
+          );
+        })}
     </g>
   );
 }
@@ -119,7 +148,8 @@ export function TokenCount({
   if (k.tokens === undefined) return null;
   const text = kTokens(k.tokens);
   const textW = text.length * 5.8;
-  const gap = state === "abandoned" ? 22 : state === "stopped" ? 9 : 5;
+  // Clear of the end cap and of the 2 px selection ring around the bar.
+  const gap = state === "abandoned" ? 22 : state === "stopped" ? 11 : 8;
   const after = room > gap + textW + 4;
   if (!after) return null;
   const wasted = state === "abandoned" || state === "superseded";

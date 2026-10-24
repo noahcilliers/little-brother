@@ -1,5 +1,8 @@
 import type { Board } from "./api";
+import { type AxisBreak, axisTicks, type Tick } from "./axis-ticks";
 import { type TimeAxis, timeAxis } from "./time-axis";
+
+export type { AxisBreak, Tick };
 
 // Rows stack top to bottom, one per agent: a goal line (pills), then as many bar lanes as the agent's overlapping
 // tasks need, then a thin band for the lessons and decisions that came out of that agent's work.
@@ -14,13 +17,11 @@ const GAP_H = 12;
 const FIT_WIDTH = 1180;
 const PX_PER_S_MIN = 4;
 const PX_PER_S_MAX = 56;
-const TICK_MIN_PX = 50;
-const STEPS_S = [1, 2, 3, 5, 10, 15, 30, 60, 120, 300, 600, 1800, 3600];
+const TICK_MIN_PX = 64;
 
 /** Middle of a row's goal line, where the goal pills sit. */
 export const goalLineY = (row: Row): number => row.top + GOAL_LINE / 2;
 
-export type Tick = { x: number; label: string };
 export type Row = {
   agentId: string;
   top: number;
@@ -40,6 +41,8 @@ export type Layout = {
   /** Lesson/decision id → the row whose band holds it. */
   bandRow: Map<string, Row>;
   ticks: Tick[];
+  /** Squeezed idle gaps, marked on the axis. */
+  breaks: AxisBreak[];
 };
 
 /** Centre line of a bar lane. */
@@ -82,17 +85,13 @@ function lanes(b: Board, xAt: (t: number) => number) {
   return { laneOf, count };
 }
 
-function tickLabel(ms: number): string {
-  const s = Math.round(ms / 1000);
-  return s < 120 ? `${s}s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
-
-export function layoutBoard(b: Board, now: number): Layout {
+/** `fit` is the width the session should fill before it scrolls: the visible graph on the dashboard. */
+export function layoutBoard(b: Board, now: number, fit = FIT_WIDTH): Layout {
   const axis = timeAxis(boardTimes(b), now);
   const spanS = axis.span / 1000;
-  const px = Math.min(PX_PER_S_MAX, Math.max(PX_PER_S_MIN, (FIT_WIDTH - LEFT - 80) / Math.max(spanS, 1)));
+  const px = Math.min(PX_PER_S_MAX, Math.max(PX_PER_S_MIN, (fit - LEFT - 80) / Math.max(spanS, 1)));
   const xAt = (t: number) => LEFT + (axis.toC(t) / 1000) * px;
-  const width = Math.max(FIT_WIDTH, Math.ceil(LEFT + spanS * px + 60));
+  const width = Math.max(fit, Math.ceil(LEFT + spanS * px + 60));
   const { laneOf, count } = lanes(b, xAt);
   // Knowledge from an agent outside the lanes sits in the first row's band.
   const lane = new Set(b.agents.map((a) => a.id));
@@ -113,11 +112,6 @@ export function layoutBoard(b: Board, now: number): Layout {
     const row = rows.get(home(s.agentId));
     if (row) bandRow.set(s.id, row);
   }
-  const step = STEPS_S.find((s) => s * px >= TICK_MIN_PX) ?? 3600;
-  const ticks: Tick[] = [];
-  for (let k = 0; LEFT + k * step * px <= width - 20; k++) {
-    const c = k * step * 1000;
-    ticks.push({ x: LEFT + k * step * px, label: k % 2 ? "" : tickLabel(axis.fromC(c) - axis.start) });
-  }
-  return { axis, width, height, xAt, rows, laneOf, bandRow, ticks };
+  const { ticks, breaks } = axisTicks(axis, xAt, px, width - 20, TICK_MIN_PX);
+  return { axis, width, height, xAt, rows, laneOf, bandRow, ticks, breaks };
 }

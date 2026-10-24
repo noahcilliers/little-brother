@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, asSessionId } from "@/lib/api";
+import { QuestionPopup } from "../ask/question-popup";
 import { Board } from "../board/board";
 import { ClassifierLogs, ServerLogs } from "../logs/session-logs";
 import { WaitingRoom } from "../rooms/waiting-room";
@@ -65,6 +66,7 @@ export function SessionView({ sessionId }: { sessionId: string }) {
         tabs={<Tabs tabs={tabs} active={tab} label="Session views" href={href} />}
       />
       <WaitingRoom roomId={session.room.id} floating />
+      <QuestionPopup sessionId={id} />
       {session.isHost ? (
         <ServerAlerts sessionId={id} onOpenLog={() => router.replace(href("server"))} />
       ) : null}

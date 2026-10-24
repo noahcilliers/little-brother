@@ -2,8 +2,14 @@
 const GAP_CAP = 20_000;
 const GAP_KEEP = 4_000;
 
+/** An idle stretch the axis squeezed: wall time t0 → t1 drawn as GAP_KEEP of compressed time. */
+export type AxisGap = { t0: number; t1: number };
+
 export type TimeAxis = {
   start: number;
+  /** Last timestamp the board draws; the axis runs a little past it. */
+  end: number;
+  gaps: AxisGap[];
   /** Compressed length of the session, plus a little room after the last node. */
   span: number;
   toC: (t: number) => number;
@@ -26,9 +32,12 @@ export function timeAxis(times: number[], fallback: number): TimeAxis {
   const T = [...new Set(times)].sort((a, b) => a - b);
   if (T.length === 0) T.push(fallback);
   const C = [0];
+  const gaps: AxisGap[] = [];
   for (let i = 1; i < T.length; i++) {
-    const gap = (T[i] ?? 0) - (T[i - 1] ?? 0);
-    C.push((C[i - 1] ?? 0) + (gap > GAP_CAP ? GAP_KEEP : gap));
+    const a = T[i - 1] ?? 0;
+    const b = T[i] ?? 0;
+    if (b - a > GAP_CAP) gaps.push({ t0: a, t1: b });
+    C.push((C[i - 1] ?? 0) + (b - a > GAP_CAP ? GAP_KEEP : b - a));
   }
   const tFirst = T[0] ?? fallback;
   const tLast = T[T.length - 1] ?? fallback;
@@ -42,6 +51,8 @@ export function timeAxis(times: number[], fallback: number): TimeAxis {
   };
   return {
     start: tFirst,
+    end: tLast,
+    gaps,
     span: cLast + GAP_KEEP,
     toC: (t) => {
       if (t <= tFirst) return 0;

@@ -9,14 +9,44 @@ type Props = {
   t: number;
   selected: string | null;
   highlight: CatchKind | null;
+  /** A chip opens the caught task. */
+  onSelect?: (id: string) => void;
 };
 
 /** A labelled chip at the middle of a catch edge: icon plus "conflict · auth.mechanism". */
-function EdgeChip({ c, x, y, color }: { c: BoardCatch; x: number; y: number; color: string }) {
+function EdgeChip({
+  c,
+  x,
+  y,
+  color,
+  width,
+  onSelect,
+}: {
+  c: BoardCatch;
+  x: number;
+  y: number;
+  color: string;
+  width: number;
+  onSelect?: (id: string) => void;
+}) {
   const text = chipText(c);
   const w = 30 + text.length * 6.1;
+  // Kept inside the graph so a catch near either end never loses half its chip.
+  const left = Math.max(4, Math.min(x - w / 2, width - w - 4));
+  const pick = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+    onSelect?.(c.from);
+  };
   return (
-    <g transform={`translate(${x - w / 2} ${y - 10})`}>
+    // biome-ignore lint/a11y/useSemanticElements: an SVG group cannot be a <button>
+    <g
+      className="task"
+      role="button"
+      tabIndex={0}
+      transform={`translate(${left} ${y - 10})`}
+      onClick={pick}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " " ? pick(e) : undefined)}
+    >
       <rect width={w} height={20} rx={10} fill="var(--panel)" stroke={color} strokeWidth={1.3} />
       <Icon name={CATCH_ICON[c.kind]} x={13} y={10} size={11} color={color} />
       <text x={24} y={14} fontFamily="var(--mono)" fontSize={10.5} fill="var(--ink)">
@@ -27,7 +57,7 @@ function EdgeChip({ c, x, y, color }: { c: BoardCatch; x: number; y: number; col
 }
 
 /** Catches link the caught task to what it was caught against; drawn while open, fading after. */
-export function GraphCatches({ catches, lookup, t, selected, highlight }: Props) {
+export function GraphCatches({ catches, lookup, t, selected, highlight, onSelect }: Props) {
   return (
     <g>
       {catches.map((c) => {
@@ -78,7 +108,17 @@ export function GraphCatches({ catches, lookup, t, selected, highlight }: Props)
                   </circle>
                 ))
               : null}
-            <EdgeChip c={c} x={cx} y={cy} color={style.color} />
+            {/* A settled catch rests as a faint edge; its chip comes back when selected or highlighted. */}
+            {opacity > 0.5 ? (
+              <EdgeChip
+                c={c}
+                x={cx}
+                y={cy}
+                color={style.color}
+                width={lookup.layout.width}
+                onSelect={onSelect}
+              />
+            ) : null}
             <title>{c.text}</title>
           </g>
         );

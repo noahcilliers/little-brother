@@ -2,6 +2,7 @@ import type { BoardCatch, BoardTask } from "@/lib/api";
 import { BAR_H, type Layout } from "@/lib/board-layout";
 import { barEnd, barTop, type CatchKind, stateAt } from "@/lib/board-time";
 import { kTokens } from "@/lib/format";
+import { CHAR_W, fitText, stickyX } from "@/lib/label-fit";
 import { CatchBadges, catchesOf, catchOutline } from "./catch-badges";
 import { ActionTicks, EndCap, TokenCount } from "./task-marks";
 
@@ -17,12 +18,26 @@ type Props = {
   selected: boolean;
   dim: boolean;
   onSelect: (id: string) => void;
+  /** Left edge of the visible part of the graph: a bar that starts before it keeps its label in view. */
+  viewLeft?: number;
 };
 
 const GREY_FILL = "color-mix(in srgb, var(--faint) 18%, transparent)";
 
 /** One task: a bar over its real duration, action ticks, an end cap for its state, and badges for its catches. */
-export function TaskBar({ k, nextX, layout, t, color, catches, highlight, selected, dim, onSelect }: Props) {
+export function TaskBar({
+  k,
+  nextX,
+  layout,
+  t,
+  color,
+  catches,
+  highlight,
+  selected,
+  dim,
+  onSelect,
+  viewLeft = 0,
+}: Props) {
   const y = barTop(k, layout);
   if (y === undefined || t < k.t0) return null;
   const state = stateAt(k, t);
@@ -35,11 +50,13 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
   const fill = grey
     ? GREY_FILL
     : `color-mix(in srgb, ${color} ${state === "stopped" ? 8 : 16}%, transparent)`;
-  // Inside the bar when it fits; otherwise just below it, using the room up to the next task in the lane.
-  const inside = Math.floor((w - 26) / 6.4) >= k.subject.length;
-  const below = Math.floor((nextX - x0 - 6) / 5.8);
-  const text =
-    inside || below >= k.subject.length ? k.subject : `${k.subject.slice(0, Math.max(3, below - 1))}…`;
+  // Inside the bar when it fits; otherwise just below it, using the room up to the next task in the lane. Either
+  // way the label starts at the bar's visible left edge, so a bar scrolled half out of view still reads.
+  const inside = Math.floor((w - 26) / CHAR_W.bar) >= k.subject.length;
+  const labelX = stickyX(x0, viewLeft, inside ? 8 : 2);
+  const text = inside
+    ? fitText(k.subject, x0 + w - labelX - 18, CHAR_W.bar)
+    : fitText(k.subject, nextX - labelX - 6, CHAR_W.below);
   const strike = superseded ? "line-through" : undefined;
   const mine = catchesOf(catches, k.id, t);
   const outline = catchOutline(mine);
@@ -61,11 +78,11 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
     >
       {outline ? (
         <rect
-          x={x0 - 3}
-          y={y - 3}
-          width={w + 6}
-          height={BAR_H + 6}
-          rx={9}
+          x={x0 - 4}
+          y={y - 4}
+          width={w + 8}
+          height={BAR_H + 8}
+          rx={10}
           fill="none"
           stroke={outline}
           strokeWidth={2}
@@ -100,7 +117,7 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
       ) : null}
       {inside ? (
         <text
-          x={x0 + 8}
+          x={labelX}
           y={y + BAR_H / 2 + 4}
           fontFamily="var(--sans)"
           fontSize={11.5}
@@ -112,7 +129,7 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
         </text>
       ) : (
         <text
-          x={x0 + 2}
+          x={labelX}
           y={y + BAR_H + 15}
           fontFamily="var(--sans)"
           fontSize={10.5}
@@ -127,15 +144,16 @@ export function TaskBar({ k, nextX, layout, t, color, catches, highlight, select
       <TokenCount k={k} state={state} x1={x1} y={y} room={nextX - x1} />
       {selected ? (
         <rect
-          x={x0 - 6}
-          y={y - 6}
-          width={w + 12}
-          height={BAR_H + 12}
-          rx={11}
+          className="sel-ring"
+          x={x0 - 2}
+          y={y - 2}
+          width={w + 4}
+          height={BAR_H + 4}
+          rx={9}
           fill="none"
           stroke="var(--ink)"
-          strokeWidth={1.4}
-          strokeDasharray="2 3"
+          strokeWidth={1.5}
+          strokeDasharray="3 2"
         />
       ) : null}
       <CatchBadges items={mine} x={x0 + w - 2} y={y - 2} highlight={highlight} />

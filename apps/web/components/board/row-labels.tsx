@@ -4,14 +4,28 @@ import { BAR_H, type Layout, laneY } from "@/lib/board-layout";
 import { Icon } from "./icons";
 
 export const LABEL_W = 148;
+/** The label column on a phone, where every pixel of graph counts. */
+export const LABEL_W_COMPACT = 104;
 const NAME_X = 14;
+
 // Geist Mono is ~0.6em wide; at 12px a name may use the space left of the 24px status icon column.
-const NAME_CHARS = Math.floor((LABEL_W - NAME_X - 30) / 7.2);
+function fit(name: string, width: number): string {
+  const chars = Math.floor((width - NAME_X - 30) / 7.2);
+  return name.length > chars ? `${name.slice(0, chars - 1)}…` : name;
+}
 
-const fit = (name: string) => (name.length > NAME_CHARS ? `${name.slice(0, NAME_CHARS - 1)}…` : name);
-
-function StatusIcon({ status, color, y }: { status: AgentStatus; color: string; y: number }) {
-  const x = LABEL_W - 20;
+function StatusIcon({
+  status,
+  color,
+  y,
+  width,
+}: {
+  status: AgentStatus;
+  color: string;
+  y: number;
+  width: number;
+}) {
+  const x = width - 20;
   if (status === "decision") return <Icon name="bolt" x={x} y={y} size={15} color="var(--hot)" />;
   if (status === "working") return <Icon name="pulse" x={x} y={y} size={13} color={color} />;
   if (status === "blocked") return <Icon name="wall" x={x} y={y} size={13} color="var(--warn)" />;
@@ -24,12 +38,13 @@ type Props = {
   t: number;
   focus: string | null;
   colorOf: (id: string) => string;
+  width?: number;
 };
 
 /** The sticky left column: agent names with a one-icon status, and the band label under each row. */
-export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
+export function RowLabels({ board, layout, t, focus, colorOf, width = LABEL_W }: Props) {
   return (
-    <svg className="labels" width={LABEL_W} height={layout.height} aria-hidden="true">
+    <svg className="labels" width={width} height={layout.height} aria-hidden="true">
       {board.agents.map((a) => {
         const row = layout.rows.get(a.id);
         if (!row) return null;
@@ -47,7 +62,7 @@ export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
               fontWeight={500}
               fill={colorOf(a.id)}
             >
-              {fit(a.name)}
+              {fit(a.name, width)}
             </text>
             <text
               x={NAME_X}
@@ -58,7 +73,7 @@ export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
             >
               {STATUS_LABEL[status]}
             </text>
-            <StatusIcon status={status} color={colorOf(a.id)} y={y} />
+            <StatusIcon status={status} color={colorOf(a.id)} y={y} width={width} />
             {row.band !== null ? (
               <text
                 x={NAME_X}
@@ -68,7 +83,7 @@ export function RowLabels({ board, layout, t, focus, colorOf }: Props) {
                 fill="var(--muted)"
                 letterSpacing="0.06em"
               >
-                LEARNED · DECIDED
+                {width < LABEL_W ? "LEARNED" : "LEARNED · DECIDED"}
               </text>
             ) : null}
           </g>

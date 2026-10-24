@@ -1,5 +1,6 @@
 import type { BoardShared, VerifyBadge } from "@/lib/api";
-import { anchor, type Lookup } from "@/lib/board-time";
+import { anchor, bandLabel, type Lookup } from "@/lib/board-time";
+import { CHAR_W, fitText } from "@/lib/label-fit";
 
 type Props = {
   shared: BoardShared[];
@@ -7,6 +8,8 @@ type Props = {
   t: number;
   colorOf: (agentId: string) => string;
   onSelect: (id: string) => void;
+  /** Left edge of the visible graph: a label flipped left of its marker is cut there rather than hidden. */
+  viewLeft?: number;
 };
 
 function hexagon(x: number, y: number): string {
@@ -19,7 +22,7 @@ function hexagon(x: number, y: number): string {
 }
 
 /** Lessons (hexagons) and decisions (diamonds) in their bands, each tied back to the task it came from. */
-export function GraphShared({ shared, lookup, t, colorOf, onSelect }: Props) {
+export function GraphShared({ shared, lookup, t, colorOf, onSelect, viewLeft = 0 }: Props) {
   return (
     <g>
       {shared.map((n) => {
@@ -27,6 +30,11 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect }: Props) {
         const at = anchor(n.id, n.t, lookup);
         if (!at) return null;
         const { x, y } = at;
+        const placed = bandLabel(x, n.label, lookup.layout.width);
+        const label =
+          placed.anchor === "end" && placed.left < viewLeft + 4
+            ? { ...placed, text: fitText(placed.text, x - 15 - viewLeft - 4, CHAR_W.band) }
+            : placed;
         const from = n.fromTask ? anchor(n.fromTask, n.t, lookup) : undefined;
         const midY = from ? (from.y + y) / 2 : y;
         const select = (e: { stopPropagation: () => void }) => {
@@ -59,8 +67,15 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect }: Props) {
                     stroke="var(--ink)"
                     strokeWidth={1.3}
                   />
-                  <text x={x + 15} y={y + 4} fontFamily="var(--mono)" fontSize={10.5} fill="var(--muted)">
-                    {n.label}
+                  <text
+                    x={label.x}
+                    y={y + 4}
+                    textAnchor={label.anchor}
+                    fontFamily="var(--mono)"
+                    fontSize={10.5}
+                    fill="var(--muted)"
+                  >
+                    {label.text}
                   </text>
                 </>
               ) : (
@@ -70,18 +85,19 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect }: Props) {
                     fill={colorOf(n.agentId)}
                   />
                   <text
-                    x={x + 15}
+                    x={label.x}
                     y={y + 4}
+                    textAnchor={label.anchor}
                     fontFamily="var(--mono)"
                     fontSize={11}
                     fontWeight={500}
                     fill="var(--ink)"
                   >
-                    {n.label}
+                    {label.text}
                   </text>
                 </>
               )}
-              <title>{n.note}</title>
+              <title>{n.label === label.text ? n.note : `${n.label}\n${n.note}`}</title>
             </g>
           </g>
         );
@@ -105,8 +121,8 @@ export function VerifyBadges({
     <g>
       {verifies.map((v) => {
         if (t < v.t) return null;
-        const x = Math.min(lookup.layout.xAt(v.t) - 28, lookup.layout.width - 160);
         const width = 44 + v.text.length * 6.6;
+        const x = Math.max(4, Math.min(lookup.layout.xAt(v.t) - 28, lookup.layout.width - width - 6));
         return (
           <g key={v.id}>
             <rect x={x} y={y} width={width} height={30} rx={15} fill="var(--panel)" stroke="var(--line)" />

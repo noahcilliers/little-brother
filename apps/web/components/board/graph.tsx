@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Board } from "@/lib/api";
 import { BAR_H, type Layout, laneY } from "@/lib/board-layout";
 import { bandOffsets, type CatchKind, type Lookup } from "@/lib/board-time";
@@ -23,10 +23,23 @@ type Props = {
   highlight: CatchKind | null;
   onSelect: (id: string | null) => void;
   colorOf: (agentId: string) => string;
+  /** Width of the sticky name column; narrower on phones. */
+  labelW?: number;
 };
 
 /** One shared time axis: a row per agent with goal regions and task lanes, knowledge bands, catches. */
-export function Graph({ board, layout, t, follow, selected, focus, highlight, onSelect, colorOf }: Props) {
+export function Graph({
+  board,
+  layout,
+  t,
+  follow,
+  selected,
+  focus,
+  highlight,
+  onSelect,
+  colorOf,
+  labelW,
+}: Props) {
   const box = useRef<HTMLDivElement>(null);
   const lookup: Lookup = useMemo(
     () => ({
@@ -51,6 +64,14 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
     return out;
   }, [board, layout]);
   const nowX = layout.xAt(t);
+  // Labels of bars and goals that start left of the visible area stick to its edge.
+  const [viewLeft, setViewLeft] = useState(0);
+  const frame = useRef(0);
+  const onScroll = () => {
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => setViewLeft(box.current?.scrollLeft ?? 0));
+  };
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
   useEffect(() => {
     const el = box.current;
@@ -62,8 +83,8 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
   const toggle = (id: string) => onSelect(selected === id ? null : id);
   return (
     <div className="card graph">
-      <RowLabels board={board} layout={layout} t={t} focus={focus} colorOf={colorOf} />
-      <div className="scroll" ref={box}>
+      <RowLabels board={board} layout={layout} t={t} focus={focus} colorOf={colorOf} width={labelW} />
+      <div className="scroll" ref={box} onScroll={onScroll}>
         <svg
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           width={layout.width}
@@ -81,6 +102,9 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
             t={t}
             focus={focus}
             colorOf={colorOf}
+            selected={selected}
+            onSelect={toggle}
+            viewLeft={viewLeft}
           />
           {board.agents.map((a) => {
             const row = layout.rows.get(a.id);
@@ -88,7 +112,16 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
             if (!row || loose.length === 0) return null;
             const y = laneY(row, 0) + BAR_H / 2;
             return (
-              <ActionTicks key={a.id} actions={loose} layout={layout} t={t} y={y} color="var(--faint)" grey />
+              <ActionTicks
+                key={a.id}
+                actions={loose}
+                layout={layout}
+                t={t}
+                y={y}
+                color="var(--faint)"
+                grey
+                onSelect={toggle}
+              />
             );
           })}
           {board.tasks.map((k) => (
@@ -104,15 +137,24 @@ export function Graph({ board, layout, t, follow, selected, focus, highlight, on
               selected={selected === k.id}
               dim={focus !== null && focus !== k.agentId}
               onSelect={toggle}
+              viewLeft={viewLeft}
             />
           ))}
-          <GraphShared shared={board.shared} lookup={lookup} t={t} colorOf={colorOf} onSelect={toggle} />
+          <GraphShared
+            shared={board.shared}
+            lookup={lookup}
+            t={t}
+            colorOf={colorOf}
+            onSelect={toggle}
+            viewLeft={viewLeft}
+          />
           <GraphCatches
             catches={board.catches}
             lookup={lookup}
             t={t}
             selected={selected}
             highlight={highlight}
+            onSelect={toggle}
           />
           <NowLine x={nowX} height={layout.height} />
           <VerifyBadges verifies={board.verifies} lookup={lookup} t={t} />

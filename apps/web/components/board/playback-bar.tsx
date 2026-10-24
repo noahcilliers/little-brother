@@ -1,7 +1,7 @@
 import { clock, elapsed } from "@/lib/format";
 import type { TimeAxis } from "@/lib/time-axis";
 import type { Mode } from "@/lib/use-playback";
-import { Legend } from "./legend";
+import { LegendToggle } from "./legend";
 
 type Props = {
   axis: TimeAxis | undefined;
@@ -12,42 +12,59 @@ type Props = {
   onPause: () => void;
   onReplay: () => void;
   onScrub: (c: number) => void;
+  /** Carry on a paused replay; without it, Play restarts from the start. */
+  onResume?: () => void;
 };
 
-/** Live follows the clock; Pause holds; Replay plays the run from the start; the scrubber moves through it. */
-export function PlaybackBar({ axis, mode, t, c, onLive, onPause, onReplay, onScrub }: Props) {
+/**
+ * Live needs no transport: a live mark and Replay. Replaying or paused shows the scrubber with Pause or Play and
+ * the way back to Live. How-to-read sits behind "?" either way.
+ */
+export function PlaybackBar({ axis, mode, t, c, onLive, onPause, onReplay, onScrub, onResume }: Props) {
   const span = axis?.span ?? 1;
-  return (
-    <div className="card">
-      <div className="controls">
-        {mode === "paused" ? (
-          <button type="button" className="ctl" onClick={onLive}>
-            Live
-          </button>
-        ) : (
-          <button type="button" className="ctl" onClick={onPause}>
-            Pause
-          </button>
-        )}
+  const at = axis ? elapsed(t, axis.start) : "0:00";
+  if (mode === "live") {
+    return (
+      <div className="playback">
+        <span className="live-mark" title={clock(t)}>
+          <i aria-hidden="true" />
+          live
+        </span>
         <button type="button" className="ctl" onClick={onReplay} disabled={!axis}>
           Replay
         </button>
-        <input
-          type="range"
-          className="scrub"
-          min={0}
-          max={span}
-          step={50}
-          value={Math.min(c, span)}
-          onChange={(e) => onScrub(Number(e.target.value))}
-          aria-label="Time"
-        />
-        <span className="clock" title={clock(t)}>
-          {axis ? elapsed(t, axis.start) : "0:00"}
-          {mode === "live" ? " · live" : mode === "replay" ? " · replay" : " · paused"}
-        </span>
+        <LegendToggle />
       </div>
-      <Legend />
+    );
+  }
+  return (
+    <div className="playback replaying">
+      {mode === "paused" ? (
+        <button type="button" className="ctl" onClick={onResume ?? onReplay}>
+          Play
+        </button>
+      ) : (
+        <button type="button" className="ctl" onClick={onPause}>
+          Pause
+        </button>
+      )}
+      <button type="button" className="ctl" onClick={onLive}>
+        Live
+      </button>
+      <input
+        type="range"
+        className="scrub"
+        min={0}
+        max={span}
+        step={50}
+        value={Math.min(c, span)}
+        onChange={(e) => onScrub(Number(e.target.value))}
+        aria-label="Time"
+      />
+      <span className="clock" title={clock(t)}>
+        {at} · {mode === "replay" ? "replay" : "paused"}
+      </span>
+      <LegendToggle />
     </div>
   );
 }

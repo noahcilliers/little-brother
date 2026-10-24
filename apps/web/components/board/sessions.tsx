@@ -70,7 +70,9 @@ function Pane({
         <span className="sess-name" title={session.name}>
           {session.name}
         </span>
-        <small title={session.branch}>claude code · {session.branch}</small>
+        <small title={session.branch || undefined}>
+          {session.branch ? `claude code · ${session.branch}` : "claude code"}
+        </small>
       </header>
       <ol ref={list}>
         {lines.map((l, i) => (

@@ -1,5 +1,6 @@
 import type { BoardCatch, BoardGoal, BoardShared, BoardTask } from "./api";
 import { BAR_H, goalLineY, type Layout, laneY } from "./board-layout";
+import { CHAR_W, fitText } from "./label-fit";
 
 // Everything on the board is drawn as of time t (live: now; paused or replay: the scrubber).
 
@@ -54,6 +55,24 @@ export type Lookup = {
 };
 
 const NUDGE = [0, -11, 11];
+const BAND_LABEL_MAX = 44;
+
+/**
+ * A lesson's or decision's label: right of its marker, or flipped to the left when it would run past the graph's
+ * right edge. `left`/`right` are the pixels it covers, for staggering neighbours.
+ */
+export function bandLabel(x: number, label: string, width: number) {
+  const short = fitText(label, BAND_LABEL_MAX * CHAR_W.band, CHAR_W.band);
+  const w = short.length * CHAR_W.band;
+  if (x + 15 + w <= width - 6)
+    return { text: short, x: x + 15, anchor: "start" as const, left: x, right: x + 15 + w };
+  const text = fitText(short, Math.max(x - 21, width - x - 21), CHAR_W.band);
+  const flip = x - 21 > width - x - 21;
+  const tw = text.length * CHAR_W.band;
+  return flip
+    ? { text, x: x - 15, anchor: "end" as const, left: x - 15 - tw, right: x }
+    : { text, x: x + 15, anchor: "start" as const, left: x, right: x + 15 + tw };
+}
 
 /** Staggers lessons and decisions that sit too close in time for their labels to fit side by side. */
 export function bandOffsets(shared: BoardShared[], layout: Layout): Map<string, number> {
@@ -63,12 +82,12 @@ export function bandOffsets(shared: BoardShared[], layout: Layout): Map<string, 
     const row = layout.bandRow.get(s.id);
     if (!row) continue;
     const ends = right.get(row.agentId) ?? NUDGE.map(() => Number.NEGATIVE_INFINITY);
-    const x = layout.xAt(s.t);
+    const label = bandLabel(layout.xAt(s.t), s.label, layout.width);
     const lane = Math.max(
       0,
-      ends.findIndex((r) => r < x - 14),
+      ends.findIndex((r) => r < label.left - 14),
     );
-    ends[lane] = x + 18 + s.label.length * 6.6;
+    ends[lane] = label.right + 3;
     right.set(row.agentId, ends);
     out.set(s.id, NUDGE[lane] ?? 0);
   }

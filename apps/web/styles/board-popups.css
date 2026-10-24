@@ -1,0 +1,212 @@
+/* The board's selection popup, its live/replay strip and the folded legend. */
+
+/* live: a mark and Replay; replaying: the full transport in a card */
+.playback {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  padding: 0 2px;
+  font: 400 12px var(--mono);
+  color: var(--muted);
+}
+.playback.replaying {
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.live-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.live-mark i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  color: var(--ok);
+  animation: live 1.6s ease-out infinite;
+}
+.playback .scrub {
+  min-width: 120px;
+}
+
+/* "?" opens the legend as a small card above the strip */
+.howto {
+  margin-left: auto;
+}
+.howto summary {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font: 500 12px var(--mono);
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.howto summary::-webkit-details-marker {
+  display: none;
+}
+.howto summary:hover,
+.howto[open] summary {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.howto .legend {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: min(460px, calc(100vw - 32px));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+}
+.howto .legend .how {
+  grid-column: 1 / -1;
+}
+
+/* The side column only holds People now, so its list may use the column's height. */
+.side .agents-list {
+  max-height: calc(100vh - 140px);
+}
+
+/* selection popup: centred card, bottom sheet on phones */
+.sel-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--scrim);
+  animation: fade-in 0.15s ease-out;
+}
+.sel-pop {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(80dvh, 720px);
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 0.18s ease-out;
+}
+.sel-pop:focus {
+  outline: none;
+}
+.sel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 4px 14px;
+  font: 500 11px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sel-close {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  font: 400 18px / 1 var(--sans);
+  color: var(--muted);
+}
+.sel-close:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+.sel-pop .detail {
+  padding: 2px 14px 16px;
+}
+.sel-pop .detail .title {
+  -webkit-line-clamp: 3;
+}
+.who {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 0;
+}
+.state-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.files,
+.goal-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.files li {
+  font: 400 11.5px / 1.6 var(--mono);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goal-tasks button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: var(--r-sm);
+  text-align: left;
+  font-size: 12.5px;
+}
+.goal-tasks button:hover {
+  background: var(--hover);
+}
+.goal-tasks .clamp {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goal-tasks small {
+  flex: none;
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+@media (max-width: 640px) {
+  .sel-scrim {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .sel-pop {
+    width: 100%;
+    max-height: 85dvh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: sheet-up 0.2s ease-out;
+  }
+}

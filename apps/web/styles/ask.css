@@ -1,0 +1,276 @@
+/* An agent's question, answered on the website: the popup and the pill it folds into. */
+
+.ask-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--scrim);
+  animation: fade-in 0.15s ease-out;
+}
+.ask-scrim[hidden] {
+  display: none;
+}
+.ask {
+  width: min(600px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 0.18s ease-out;
+}
+.ask-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 14px var(--sans);
+}
+.ask-mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-sm);
+  font: 600 12px var(--mono);
+}
+.ask-more {
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.ask-min {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  font: 400 18px / 1 var(--sans);
+  color: var(--muted);
+}
+.ask-min:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
+/* one tab per question, headed by its short header */
+.ask-tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+.ask-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 6px 10px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font: 500 12px var(--mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ask-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+.ask-tabs i {
+  width: 10px;
+  font-style: normal;
+  color: var(--ok);
+}
+.ask-chip {
+  justify-self: start;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: 500 11px var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* the question and its options */
+.ask-q {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ask-text {
+  padding: 0;
+  font: 600 15px / 1.4 var(--sans);
+  overflow-wrap: anywhere;
+}
+.ask-hint {
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.ask-opts {
+  display: grid;
+  gap: 6px;
+}
+.ask-opt {
+  display: grid;
+  grid-template-columns: 16px 14px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.ask-opt:hover {
+  background: var(--hover);
+}
+.ask-opt.on {
+  border-color: var(--ink);
+}
+.ask-opt input[type="radio"],
+.ask-opt input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--panel);
+  cursor: pointer;
+}
+.ask-opt input[type="checkbox"] {
+  border-radius: 4px;
+}
+.ask-opt input:checked {
+  border-color: var(--ink);
+  background: var(--ink);
+  box-shadow: inset 0 0 0 3px var(--panel);
+}
+.ask-n {
+  font: 400 12px / 20px var(--mono);
+  color: var(--faint);
+}
+.ask-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ask-body b {
+  font: 500 13.5px / 20px var(--sans);
+  overflow-wrap: anywhere;
+}
+.ask-body small {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.ask-other {
+  align-items: center;
+}
+.ask-other input[type="radio"],
+.ask-other input[type="checkbox"] {
+  margin: 0;
+}
+.ask-other-text {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: 400 13.5px / 20px var(--sans);
+}
+.ask-other-text::placeholder {
+  color: var(--muted);
+}
+.ask-opt:has(.ask-other-text:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* who asked, the countdown, and how to answer */
+.ask-meta {
+  font: 400 11.5px / 1.5 var(--mono);
+  color: var(--muted);
+}
+.ask-error {
+  font-size: 12.5px;
+  color: var(--hot);
+}
+.ask-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.ask-keys {
+  font: 400 11px var(--mono);
+  color: var(--muted);
+}
+.ask-keys kbd {
+  margin: 0 3px 0 8px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 10.5px;
+}
+.ask-keys kbd:first-child {
+  margin-left: 0;
+}
+
+/* folded: a pill bottom right that reopens it */
+.ask-pill {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ink-fg);
+  font: 500 13px var(--sans);
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 0.18s ease-out;
+}
+.ask-pill i {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--warn);
+  color: var(--warn);
+  animation: live 1.6s ease-out infinite;
+}
+
+@media (max-width: 640px) {
+  .ask-scrim {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .ask {
+    width: 100%;
+    max-height: 90dvh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-bottom: 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    animation: sheet-up 0.2s ease-out;
+  }
+  .ask-keys {
+    display: none;
+  }
+  .ask-foot .button {
+    flex: 1;
+  }
+}

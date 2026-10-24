@@ -83,11 +83,17 @@
   background: var(--faint);
 }
 
-/* graph and side column */
+/* graph and side column: each sized to its own content, so a short graph leaves no blank card below it */
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 260px;
   gap: 12px;
+  align-items: start;
+}
+.graph-col {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
 }
 .card {
   background: var(--panel);
@@ -701,11 +707,6 @@ a.ctl {
   max-height: 40vh;
   overflow-y: auto;
 }
-.card.selected {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
 .detail {
   min-height: 0;
   overflow-y: auto;
@@ -748,7 +749,6 @@ a.ctl {
     position: sticky;
     top: 60px;
     max-height: calc(100vh - 76px);
-    grid-template-rows: auto minmax(0, 1fr);
     align-self: start;
   }
 }

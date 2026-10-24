@@ -56,6 +56,11 @@ export function usePlayback(axis: TimeAxis | undefined) {
       hold(0);
       setMode("replay");
     },
+    /** Carry on a paused replay from where it stopped (from the start once it reached the end). */
+    resume: () => {
+      if (axis && cRef.current >= axis.span) hold(0);
+      setMode("replay");
+    },
     scrub: (next: number) => {
       hold(next);
       setMode("paused");

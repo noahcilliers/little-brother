@@ -97,3 +97,15 @@ export function Legend() {
     </div>
   );
 }
+
+/** The legend folded behind a "?" so it costs one button until someone asks. */
+export function LegendToggle() {
+  return (
+    <details className="howto">
+      <summary aria-label="How to read the board" title="How to read the board">
+        ?
+      </summary>
+      <Legend />
+    </details>
+  );
+}

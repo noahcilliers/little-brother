@@ -35,3 +35,5 @@ export type LogStep = NonNullable<FunctionReturnType<typeof api.dashboard.log>>[
 export type LogVerdict = LogStep["verdicts"][number];
 export type JoinRequest = FunctionReturnType<typeof api.roomAdmin.requests>[number];
 export type ServerRow = NonNullable<FunctionReturnType<typeof api.dashboard.serverLog>>[number];
+export type AskItem = FunctionReturnType<typeof api.ask.pending>[number];
+export type AskQuestion = AskItem["questions"][number];

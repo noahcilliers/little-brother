@@ -1,27 +1,27 @@
 import type { Board, BoardTask } from "@/lib/api";
 import { isOpen, stateAt, stateLabel, stopColor } from "@/lib/board-time";
 import { CATCH_STYLE, chipText } from "@/lib/catch-style";
-import { elapsed, kTokens } from "@/lib/format";
+import { kTokens } from "@/lib/format";
 import { CATCH_ICON, InlineIcon } from "./icons";
 import { StoryList } from "./story-list";
 
-type Props = {
+export type DetailProps = {
   board: Board;
-  selected: string | null;
   t: number;
   start: number;
   colorOf: (agentId: string) => string;
   onOpenDecision: (id: string) => void;
 };
 
-function TaskDetail({
-  board,
-  k,
-  t,
-  start,
-  colorOf,
-  onOpenDecision,
-}: Omit<Props, "selected"> & { k: BoardTask }) {
+/** Distinct files a task's actions touched, in the order it first touched them. */
+function filesOf(k: BoardTask, t: number): string[] {
+  const out = new Set<string>();
+  for (const a of k.actions) if (a.t <= t && a.file) out.add(a.file);
+  return [...out];
+}
+
+/** What a task did, step by step, which files it touched, its catches, and a way into a waiting decision. */
+export function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: DetailProps & { k: BoardTask }) {
   const state = stateAt(k, t);
   const agent = board.agents.find((a) => a.id === k.agentId);
   const goal = board.goals.find((g) => g.id === k.goalId);
@@ -40,27 +40,38 @@ function TaskDetail({
   const pendingSupersede = k.supersededAt !== undefined && t < k.supersededAt;
   const decision = board.decisions.find((d) => d.t <= t && d.sides.some((s) => s.taskId === k.id));
   const catches = board.catches.filter((c) => (c.from === k.id || c.to === k.id) && c.t <= t);
+  const files = filesOf(k, t);
   return (
     <>
       <div className="title" title={k.subject}>
         {k.subject}
       </div>
       <div className="meta">
+        <i className="who" style={{ background: colorOf(k.agentId) }} />
         {agent?.name ?? "agent"}
-        {goal ? ` · goal: ${goal.label}` : k.inferred ? " · goal inferred from actions" : ""}
+        {goal ? ` · ${goal.label}` : k.inferred ? " · goal inferred" : ""}
       </div>
-      <div>
+      <div className="state-row">
         <span className="state" style={{ color }}>
           {stateLabel(k, state)}
         </span>
+        {k.tokens !== undefined ? (
+          <span className="meta">
+            {kTokens(k.tokens)} tokens{state === "abandoned" || state === "superseded" ? " · wasted" : ""}
+          </span>
+        ) : null}
       </div>
-      {k.tokens !== undefined ? (
-        <div className="meta">
-          spent {kTokens(k.tokens)} tokens{state === "abandoned" || state === "superseded" ? " · wasted" : ""}
-        </div>
-      ) : null}
       {k.note && state !== "running" && !pendingSupersede ? <p className="empty">{k.note}</p> : null}
       <StoryList lines={lines} start={start} />
+      {files.length > 0 ? (
+        <ul className="files" aria-label="Files touched">
+          {files.map((f) => (
+            <li key={f} title={f}>
+              {f}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {catches.length > 0 ? (
         <ul className="catches">
           {catches.map((c) => {
@@ -86,44 +97,5 @@ function TaskDetail({
         </button>
       ) : null}
     </>
-  );
-}
-
-/** What the selected task did, step by step, its catches, and a way into the decision when one is waiting. */
-export function SelectedPanel({ board, selected, t, start, colorOf, onOpenDecision }: Props) {
-  const task = board.tasks.find((k) => k.id === selected);
-  const shared = board.shared.find((s) => s.id === selected);
-  let body: React.ReactNode = (
-    <p className="empty">Click a task to see what the agent did and which files it touched.</p>
-  );
-  if (task && task.t0 <= t) {
-    body = (
-      <TaskDetail
-        board={board}
-        k={task}
-        t={t}
-        start={start}
-        colorOf={colorOf}
-        onOpenDecision={onOpenDecision}
-      />
-    );
-  } else if (shared && shared.t <= t) {
-    body = (
-      <>
-        <div className="title" title={shared.label}>
-          {shared.label}
-        </div>
-        <div className="meta">
-          {shared.kind} · {elapsed(shared.t, start)}
-        </div>
-        <p className="empty">{shared.note}</p>
-      </>
-    );
-  }
-  return (
-    <div className="card selected">
-      <div className="h">Selected task</div>
-      <div className="detail">{body}</div>
-    </div>
   );
 }
