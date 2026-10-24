@@ -65,7 +65,7 @@ story.edit(
 );
 story.edit(
   "22-joshua-routes-cookie",
-  4000,
+  8000,
   "joshua",
   "src/checkout/routes.ts",
   s.joshuaRoutesCookieOld,

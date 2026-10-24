@@ -59,13 +59,27 @@ async function generate(
 ): Promise<string | null> {
   let lastError: unknown;
   for (const model of JUDGE_MODELS) {
-    try {
-      return await generateWith(ai, model, system, prompt, json);
-    } catch (e) {
-      lastError = e;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await generateWith(ai, model, system, prompt, json);
+      } catch (e) {
+        lastError = e;
+        const wait = retryDelayMs(e);
+        // Rate limited: wait as told (bounded) and retry once; any other failure moves to the next model.
+        if (wait === null || attempt > 0) break;
+        await new Promise((r) => setTimeout(r, wait));
+      }
     }
   }
   throw lastError;
+}
+
+/** Milliseconds to wait on a 429 (from the API's retryDelay when present), else null. Capped at 4 s. */
+function retryDelayMs(e: unknown): number | null {
+  const text = String(e);
+  if (!/\b429\b|RESOURCE_EXHAUSTED/.test(text)) return null;
+  const seconds = Number(/retryDelay[^0-9]*([0-9.]+)s/.exec(text)?.[1] ?? 1);
+  return Math.min(4000, Math.max(500, seconds * 1000));
 }
 
 async function generateWith(
@@ -81,7 +95,7 @@ async function generateWith(
     config: {
       systemInstruction: system,
       temperature: 0,
-      maxOutputTokens: 512,
+      maxOutputTokens: 1024,
       abortSignal: AbortSignal.timeout(TIMEOUT_MS),
       ...(json ? { responseMimeType: "application/json", responseJsonSchema: judgeSchema() } : {}),
     },

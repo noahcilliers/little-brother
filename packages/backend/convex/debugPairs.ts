@@ -1,6 +1,7 @@
+import { classifyStructural, toClassifiedNode } from "@lb/core";
 import { v } from "convex/values";
-import { stored } from "./classify/load";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalQuery } from "./_generated/server";
+import { loadStructural, stored, toCandidates } from "./classify/load";
 
 /** Dev only: every classification with both sides' signatures, for tuning the judge. */
 export const list = internalQuery({
@@ -25,17 +26,6 @@ export const list = internalQuery({
   },
 });
 
-/** Dev only: mark every agent active and touch recent nodes so a classifier re-run sees the live state. */
-export const revive = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    for (const a of await ctx.db.query("agents").collect())
-      await ctx.db.patch(a._id, { status: "active", lastSeenAt: Date.now() });
-    for (const n of await ctx.db.query("nodes").collect())
-      await ctx.db.patch(n._id, { at: Date.now() - 60_000 });
-  },
-});
-
 /** Dev only: two nodes by text fragment, as StoredNode-shaped objects. */
 export const byText = internalQuery({
   args: { a: v.string(), b: v.string() },
@@ -45,5 +35,29 @@ export const byText = internalQuery({
     const na = find(a);
     const nb = find(b);
     return na && nb ? { a: stored(na), b: stored(nb) } : null;
+  },
+});
+
+/** Dev only: what the async classifier would see for a node: candidates with retrieval reasons and scores. */
+export const explain = internalQuery({
+  args: { text: v.string() },
+  handler: async (ctx, { text }) => {
+    const all = await ctx.db.query("nodes").collect();
+    const next = all.find((n) => n.text.includes(text));
+    if (!next) return null;
+    const now = Date.now();
+    const cands = await toCandidates(ctx, next, await loadStructural(ctx, next, now), now);
+    const view = toClassifiedNode(stored(next));
+    const r = classifyStructural(view, cands, {});
+    return {
+      next: view.text,
+      topic: view.topic,
+      consumes: view.consumes,
+      settled: r.judgments.map((j) => `${j.relation}/${j.action} vs ${j.otherNodeId}`),
+      unsettled: r.unsettled.map(
+        (u) =>
+          `${u.pair.retrievalScore.toFixed(2)} ${u.pair.other.text.slice(0, 50)} :: ${u.pair.reasons.join("; ")}`,
+      ),
+    };
   },
 });

@@ -730,20 +730,46 @@ Hook output shapes, the identity handoff and install commands are the same as th
 
 ## 7. Dashboard
 
-Three views, matching the whiteboard. Dark, minimal, Geist type, one color per teammate, red/amber/green only for verdicts.
+One screen. Prototype: https://claude.ai/artifact/Ct8rEUSXHEcetz7rZz1pcq
 
-| View                | Shows                                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Graph** (home)    | Nodes per agent lane (intent → actions → knowledge). Verdict edges between lanes: red conflict, amber duplicate, violet stale. Click a node for its evidence. |
-| **Tables**          | Live Activity (`events`), Event types with counts, and Agents, each row linked to its classification. This is the "SQL view" for judges.                      |
-| **Agent thoughts**  | One stream per agent: prompts, plan, tool calls, and what Little Brother injected or denied, in Claude Code's own vocabulary                                  |
-| **Resolve** (panel) | For a conflict: both sides, the evidence, the owner's approve buttons, and delivery state per affected agent                                                  |
+**Model: behavior, not files.** Three levels, all from data we already receive or can receive for free:
 
-Header metrics: tokens saved · minutes saved · catches before push · precision.
+| Level                | Source                                                                                                                                                                                                                                  | Drawn as                                                                                                                        |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Goal                 | the prompt (`UserPromptSubmit`)                                                                                                                                                                                                         | label + thin bracket above the agent's row, spanning its work                                                                   |
+| **Task** (main unit) | the agent's own task list: `TaskCreated` / `TaskCompleted` hooks (`task_id`, `task_subject`, `task_description`) and `TaskCreate`/`TaskUpdate` tool calls. Fallback when an agent keeps no list: group actions between prompts by topic | a **bar** spanning start → end, labelled in the agent's own words                                                               |
+| Action               | each tool call (`PreToolUse`/`PostToolUse`)                                                                                                                                                                                             | ticks along the bar's bottom edge, labelled by the code symbol changed (`issueToken()`), from the connector's symbol extraction |
 
-**Tokens saved** = the measured token cost of the original failed or duplicated trajectory, credited once per catch. It's labeled as an estimate.
+Files are never nodes; they appear when a task is clicked.
 
----
+**One shared time axis.** All agents share it, so parallel work lines up vertically. Task bar states:
+- done: solid
+- running: open-ended, animated
+- abandoned or superseded: grey, dashed, ✕ at the end
+- stopped: cut short, with a colored wall
+
+**Between rows:**
+- Catches link task bars: amber dotted for duplicate or stale, animated red for conflict. They are visible only while open, then fade; selecting a task shows its history.
+- Lessons (hexagons) and decisions (diamonds) sit in bands between rows at their time.
+
+**Side panel:**
+- Agents: current task, or goal and idle.
+- Selected task: goal, state, actions with symbol and file, catches, and Keep A / Keep B / Dismiss for an open conflict.
+- A short, task-level "what just happened" feed.
+
+**Bottom:** live / pause / scrub, and a legend.
+
+**Rules:**
+- Color only for agent identity and the two alert levels.
+- One short label per element.
+- No edge is drawn permanently unless it is open or selected.
+
+**Data work this needs:**
+1. Hook `TaskCreated`/`TaskCompleted`, and `PreToolUse`/`PostToolUse` for the task-list tools, into a `tasks` concept: start/end, subject, state. Attribute each action to the agent's in-progress task. The input shapes of the task tools are UNCONFIRMED in the docs, so capture a real session's stdin first. The task tools are on by default only for some models; otherwise set `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` (documented in the install step).
+2. Action labels = verb + primary symbol from the touches (no LLM).
+3. Decisions approved on the dashboard are labelled with the winning side's value, not its intent text.
+4. `lb replay --parallel`: each agent's lines run on their own timeline at once, as in real use, and the demo scenario includes task-list events.
+5. The per-action "why" sentence is not reliably available at `PreToolUse`: the transcript may lag. Only `last_assistant_message` at `Stop` is guaranteed, so use it for the task's closing note.
 
 ## 8. Demo story (one repo, three agents, three catches)
 

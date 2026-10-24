@@ -11,6 +11,13 @@ export const JudgeOutput = z.object({
 });
 export type JudgeOutput = z.infer<typeof JudgeOutput>;
 
+const LenientJudgeOutput = z.object({
+  relation: z.enum(RELATIONS),
+  direction: z.enum(["new_needs_other", "other_needs_new", "none"]).catch("none"),
+  confidence: z.number().min(0).max(1).default(0.7), // missing → default; out of range → reject
+  rationale: z.string().catch("no rationale given"),
+});
+
 /** Same schema as JSON Schema, for providers that constrain decoding. */
 export const JUDGE_JSON_SCHEMA = {
   type: "object",
@@ -34,11 +41,15 @@ Relations (pick exactly one):
 - textual_conflict: git cannot merge them. e.g. both create db/schema/users.ts.
 - semantic_conflict: merges cleanly but breaks behavior. e.g. A changes pay(amount) to pay(amount, currency); B adds pay(amount) callers.
 - intent_contradiction: goals pull in opposite directions. e.g. A removes legacy auth; B extends it.
-- ordering_dependency: one must land before the other. e.g. B uses User.role, which A is creating.
+- ordering_dependency: one must land before the other, and nothing is broken once it does. e.g. B uses User.role, which A is creating. NOT when A changes or replaces something B already relies on: that is semantic_conflict.
 - repeats_failure: NEW follows a path already recorded as failed in OTHER. e.g. NEW plans CORS middleware that OTHER proved fails.
 
 direction: "new_needs_other" if NEW depends on or must adapt to OTHER, "other_needs_new" for the reverse, else "none".
 confidence: 0..1, how sure you are. Similar wording alone is not evidence; "add X" and "remove X" are not duplicates.
+
+Decision rule: if OTHER's code depends on behavior that NEW changes or replaces (a token format, a session/cookie,
+a header, a field, a function signature, a route), merging both breaks OTHER at runtime: semantic_conflict, even
+if each passes its own tests. Use intent_contradiction when the goals themselves oppose.
 
 Judge what would happen if BOTH changes were merged into one codebase. Only call it a conflict if you can name the
 specific symbol, request field, header, cookie, route or file where one change breaks the other; otherwise prefer
@@ -87,9 +98,11 @@ export function parseJudgeOutput(raw: string, pair: CandidatePair, hints: Hint[]
   } catch {
     return null;
   }
-  const parsed = JudgeOutput.safeParse(json);
+  // Strict on what decides (relation), lenient on the rest: a long rationale or a missing confidence from a
+  // detailed answer, the conflicts we most want, must not be thrown away as unparseable.
+  const parsed = LenientJudgeOutput.safeParse(json);
   if (!parsed.success) return null;
-  const o = parsed.data;
+  const o = { ...parsed.data, rationale: parsed.data.rationale.slice(0, 600) };
   return {
     otherNodeId: pair.other.id,
     relation: o.relation,

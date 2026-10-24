@@ -11,6 +11,7 @@ import {
   distillPrompt,
   distillTrajectory,
   fallbackJudgment,
+  isCrossCutting,
   type Judgment,
   judgeWorthy,
   type StoredNode,
@@ -22,7 +23,7 @@ import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, internalAction } from "../_generated/server";
 import { selectEmbedder, selectJudge } from "./adapters/select";
 
-const MAX_JUDGE_CALLS = 5;
+const MAX_JUDGE_CALLS = 4;
 const VECTOR_LIMIT = 16;
 
 async function embedAndStore(ctx: ActionCtx, nodeId: Id<"nodes">, text: string): Promise<number[] | null> {
@@ -60,9 +61,12 @@ async function semanticCandidates(
  * Async classifier (steps 2, 5, 6, 7): embed, retrieve semantically, settle with rules, send up to five
  * unsettled pairs to the judge, fall back when it is absent or fails, then persist and fan out.
  */
+const MAX_ATTEMPTS = 3;
+const RETRY_MS = 3000;
+
 export const classifyNode = internalAction({
-  args: { nodeId: v.id("nodes") },
-  handler: async (ctx, { nodeId }) => {
+  args: { nodeId: v.id("nodes"), attempt: v.optional(v.number()) },
+  handler: async (ctx, { nodeId, attempt = 1 }) => {
     const c = await ctx.runQuery(internal.classify.db.context, { nodeId });
     if (!c) return;
     const view = c.view;
@@ -72,11 +76,20 @@ export const classifyNode = internalAction({
     const semantic = await semanticCandidates(ctx, nodeId, vector);
     const structural = classifyStructural(view, [...semantic, ...c.structural], { thresholds: c.thresholds });
     const judge = selectJudge();
+    const seen = new Set<string>(await ctx.runQuery(internal.classify.db.classifiedWith, { nodeId }));
     const unsettled = [...structural.unsettled]
+      .filter(({ pair }) => !seen.has(pair.other.id))
       // Test and build runs are evidence about code, not approaches; rules (R10/R11) already use them.
       .filter(({ pair }) => !/^(TEST|RUN)$/.test(pair.other.verb))
       .filter(({ pair }) => judgeWorthy(pair, pair.failedMemory ? 0.5 : 0.8))
-      .sort((a, b) => b.pair.retrievalScore - a.pair.retrievalScore);
+      // Cross-cutting links first (they can actually break each other), then score, then older work: the change
+      // that was there first is what the new one has to fit.
+      .sort(
+        (a, b) =>
+          Number(isCrossCutting(b.pair)) - Number(isCrossCutting(a.pair)) ||
+          b.pair.retrievalScore - a.pair.retrievalScore ||
+          a.pair.other.at - b.pair.other.at,
+      );
     // Commands (tests, builds) are re-run constantly; they are not approaches a model should weigh.
     const toJudge = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_JUDGE_CALLS) : [];
     const examples = toJudge.length
@@ -84,20 +97,47 @@ export const classifyNode = internalAction({
           near: structural.pairs.map((p) => p.other.id as Id<"nodes">),
         })
       : [];
-    const judged: Judgment[] = [];
-    for (const { pair, hints } of toJudge) {
-      const started = Date.now();
-      const verdict = judge ? await judge.judge(pair, hints, examples).catch(() => null) : null;
-      judged.push(
-        verdict
-          ? decide(verdict, pair, { nextKind: view.kind, thresholds: c.thresholds }, Date.now() - started)
-          : fallbackJudgment(pair, hints),
-      );
-    }
+    // In parallel: the next hook can be seconds away, and a verdict that lands after it is a missed catch.
+    const results = await Promise.all(
+      toJudge.map(async ({ pair, hints }) => {
+        const started = Date.now();
+        const verdict = judge ? await judge.judge(pair, hints, examples).catch(() => null) : null;
+        return verdict
+          ? {
+              ok: true,
+              j: decide(
+                verdict,
+                pair,
+                { nextKind: view.kind, thresholds: c.thresholds },
+                Date.now() - started,
+              ),
+            }
+          : { ok: false, j: fallbackJudgment(pair, hints) };
+      }),
+    );
+    const judgeFailed = results.some((r) => !r.ok);
+    console.log(
+      `classify ${view.text} #${attempt}: ${structural.pairs.length} candidates, judged [${toJudge
+        .map(
+          (t, i) =>
+            `${t.pair.other.text.slice(0, 40)} → ${results[i]?.ok ? results[i]?.j.relation : "FAILED"}`,
+        )
+        .join(
+          "; ",
+        )}]${unsettled.length > toJudge.length ? `, skipped ${unsettled.length - toJudge.length}` : ""}`,
+    );
+    const judged: Judgment[] = results.map((r) => r.j);
     await ctx.runMutation(internal.classify.db.persist, {
       nodeId,
       judgments: [...structural.judgments, ...judged],
     });
+    // A busy or flaky model must not silently cost a catch: re-run soon; rules and dedupe make re-runs safe.
+    if (judgeFailed && attempt < MAX_ATTEMPTS) {
+      await ctx.scheduler.runAfter(RETRY_MS * attempt, internal.classify.run.classifyNode, {
+        nodeId,
+        attempt: attempt + 1,
+      });
+    }
     if (judge) await compareEscalations(ctx, nodeId, judge);
   },
 });

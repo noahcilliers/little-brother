@@ -135,3 +135,22 @@ export const persist = internalMutation({
     if (next) await persistJudgments(ctx, next, judgments satisfies Judgment[], { selfActions: ASYNC_SELF });
   },
 });
+
+/** Nodes already classified against this one, in either direction: never pay the judge twice for a pair. */
+export const classifiedWith = internalQuery({
+  args: { nodeId: v.id("nodes") },
+  handler: async (ctx, { nodeId }) => {
+    const forward = await ctx.db
+      .query("classifications")
+      .withIndex("by_node", (q) => q.eq("nodeId", nodeId))
+      .take(200);
+    const reverse = await ctx.db
+      .query("classifications")
+      .withIndex("by_against", (q) => q.eq("againstNodeId", nodeId))
+      .take(200);
+    return [
+      ...forward.flatMap((c) => (c.againstNodeId ? [c.againstNodeId] : [])),
+      ...reverse.map((c) => c.nodeId),
+    ];
+  },
+});
