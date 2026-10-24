@@ -1,10 +1,9 @@
 import type { Touch } from "@lb/core";
+import { bashWrites } from "./bash";
 import { editTexts, type Phase } from "./edits";
+import { fileChange } from "./file-change";
 import { repoPath } from "./paths";
-import { diffSymbols } from "./symbols";
-import { changedSpans, lineRange } from "./text";
 import { generatedMatcher, loadTopicMap } from "./topic-map";
-import { loadTs } from "./ts-symbols";
 
 export type NormalizeInput = {
   tool: string;
@@ -19,28 +18,14 @@ export type Normalized = { files: string[]; touches: Touch[]; references: string
 
 const EDIT_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
 const READ_TOOLS = new Set(["Read", "Grep", "Glob"]);
-const JS_TS = /\.(c|m)?(t|j)sx?$/;
-const MAX_PARSE_BYTES = 1_000_000;
 
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 
 async function normalizeEdit(p: NormalizeInput, filePath: string): Promise<Normalized> {
   const { abs, rel } = repoPath(filePath, p.cwd, p.repoRoot);
   const t = editTexts(p.tool, p.input, abs, p.phase, p.toolResponse);
-  const op: Touch["op"] = t.created ? "create" : "write";
-  const fileTouch: Touch = { path: rel, op };
-  const known = t.after !== null && (t.created || t.before !== null);
-  if (t.after !== null && known)
-    fileTouch.lines = lineRange(t.after, changedSpans(t.before ?? "", t.after).new);
-  const base: Normalized = { files: [rel], touches: [fileTouch], references: [], preview: t.preview };
-  if (!known || t.after === null || !JS_TS.test(rel) || t.after.length > MAX_PARSE_BYTES) return base;
-  try {
-    const ts = await loadTs();
-    const diff = diffSymbols(ts, rel, t.created ? null : t.before, t.after, p.repoRoot);
-    return { ...base, touches: [fileTouch, ...diff.touches], references: diff.references };
-  } catch {
-    return base;
-  }
+  const change = await fileChange(rel, t.before, t.after, t.created, p.repoRoot);
+  return { files: [rel], ...change, preview: t.preview };
 }
 
 function normalizeRead(p: NormalizeInput): Normalized {
@@ -57,6 +42,8 @@ export async function normalizeTool(p: NormalizeInput): Promise<Normalized> {
     const filePath = str(p.input.file_path);
     if (EDIT_TOOLS.has(p.tool) && filePath) out = await normalizeEdit(p, filePath);
     else if (READ_TOOLS.has(p.tool)) out = normalizeRead(p);
+    else if (p.tool === "Bash" && str(p.input.command))
+      out = await bashWrites(str(p.input.command) ?? "", p.cwd, p.repoRoot, p.phase);
     else if (p.tool === "NotebookEdit" && str(p.input.notebook_path)) {
       const { rel } = repoPath(str(p.input.notebook_path) ?? "", p.cwd, p.repoRoot);
       out = { files: [rel], touches: [{ path: rel, op: "write" }], references: [] };
