@@ -1,0 +1,30 @@
+{
+  "topics": {
+    "db.users": {
+      "owner": "noah",
+      "files": ["db/schema/users.ts"],
+      "consumers": ["src/checkout/**"]
+    },
+    "auth.mechanism": {
+      "owner": "noah",
+      "files": ["src/auth/**"],
+      "consumers": ["src/checkout/**", "web/src/api.ts"]
+    },
+    "api.me.shape": {
+      "owner": "noah",
+      "files": ["src/contracts/user.ts"],
+      "consumers": ["src/checkout/**", "web/src/**"]
+    },
+    "api.cors": {
+      "owner": "noah",
+      "files": ["src/server.ts", "web/vite.config.ts"],
+      "consumers": ["web/src/api.ts"]
+    },
+    "api.cart.shape": {
+      "owner": "joshua",
+      "files": ["src/checkout/cart.ts", "src/checkout/routes.ts"],
+      "consumers": ["web/src/**"]
+    }
+  },
+  "verify": "npm run test:integration"
+}

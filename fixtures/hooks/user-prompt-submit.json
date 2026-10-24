@@ -1,0 +1,8 @@
+{
+  "session_id": "c4d8e2f0-1a6b-4c3d-8e9f-5b7a2d0c6e81",
+  "transcript_path": "/Users/ash/.claude/projects/-tmp-lb-demo-ash/c4d8e2f0-1a6b-4c3d-8e9f-5b7a2d0c6e81.jsonl",
+  "cwd": "/tmp/lb-demo/ash",
+  "hook_event_name": "UserPromptSubmit",
+  "permission_mode": "default",
+  "prompt": "add CORS middleware to the API so the storefront can call it"
+}

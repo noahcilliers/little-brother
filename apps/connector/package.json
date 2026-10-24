@@ -1,0 +1,30 @@
+{
+  "name": "@lb/connector",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "lb": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@lb/backend": "workspace:*",
+    "@lb/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.18.0",
+    "commander": "^14.0.0",
+    "convex": "^1.27.3",
+    "picomatch": "^4.0.3",
+    "typescript": "^5.9.3",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.0",
+    "@types/picomatch": "^4.0.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0"
+  }
+}

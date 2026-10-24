@@ -1,0 +1,29 @@
+{
+  "name": "@lb/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "typecheck": "tsc -p .",
+    "seed": "node scripts/seed-demo.ts",
+    "test": "echo 'no web tests'"
+  },
+  "dependencies": {
+    "@lb/backend": "workspace:*",
+    "@lb/core": "workspace:*",
+    "@xyflow/react": "^12.8.0",
+    "clsx": "^2.1.1",
+    "convex": "^1.27.3",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^24.5.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

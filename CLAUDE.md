@@ -15,7 +15,7 @@ Coordination layer for independent Claude Code sessions. Full plan: [docs/PLAN.m
 - TypeScript strict. No `any`, no non-null `!` outside tests. Validate with zod at boundaries only (hook stdin, HTTP, MCP args, LLM output).
 - Pure logic goes in `packages/core` with a unit test. Convex functions and CLI commands stay thin: parse → call core → persist.
 - One responsibility per file; split before 200 lines. Named exports only.
-- Comments explain *why*, never *what*. No commented-out code, no TODO without an owner (`TODO(ash):`).
+- Comments explain _why_, never _what_. No commented-out code, no TODO without an owner (`TODO(ash):`).
 - Add a dependency only if it's in the plan's stack table or replaces 50+ lines of our own code.
 - Hooks must fail open: any network/parse error exits 0 with no output. Never block a developer because our backend is down.
 - PreToolUse path stays under 150 ms: tier-0 rules and stored verdicts only. Embeddings and LLM calls run in scheduled Convex actions.

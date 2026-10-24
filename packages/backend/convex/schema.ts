@@ -1,0 +1,170 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export const typeKey = v.union(
+  v.literal("conflict"),
+  v.literal("stale"),
+  v.literal("duplicate"),
+  v.literal("normal"),
+);
+export const action = v.union(
+  v.literal("ignore"),
+  v.literal("warn"),
+  v.literal("serialize"),
+  v.literal("block"),
+);
+export const touch = v.object({
+  path: v.string(),
+  symbol: v.optional(v.string()),
+  op: v.string(),
+  lines: v.optional(v.array(v.number())),
+  newPath: v.optional(v.string()),
+  generated: v.optional(v.boolean()),
+});
+
+export default defineSchema({
+  members: defineTable({
+    name: v.string(),
+    handle: v.string(),
+    tokenHash: v.string(),
+    revoked: v.boolean(),
+  })
+    .index("by_token", ["tokenHash"])
+    .index("by_handle", ["handle"]),
+
+  agents: defineTable({
+    memberId: v.id("members"),
+    claudeSessionId: v.string(),
+    machine: v.string(),
+    repo: v.string(),
+    branch: v.string(),
+    status: v.union(v.literal("active"), v.literal("idle"), v.literal("offline")),
+    intentId: v.optional(v.id("nodes")),
+    lastSeenAt: v.number(),
+    baseRev: v.optional(v.string()),
+    git: v.optional(
+      v.object({
+        op: v.string(),
+        ok: v.boolean(),
+        sha: v.optional(v.string()),
+        target: v.optional(v.string()),
+        at: v.number(),
+      }),
+    ),
+  })
+    .index("by_session", ["claudeSessionId"])
+    .index("by_status", ["status"])
+    .index("by_member", ["memberId", "lastSeenAt"]),
+
+  events: defineTable({
+    agentId: v.id("agents"),
+    eventKey: v.string(),
+    source: v.union(v.literal("hook"), v.literal("mcp"), v.literal("verify"), v.literal("human")),
+    hook: v.string(),
+    tool: v.optional(v.string()),
+    files: v.array(v.string()),
+    summary: v.string(),
+    payload: v.any(),
+    nodeId: v.optional(v.id("nodes")),
+    tokens: v.optional(v.number()),
+    at: v.number(),
+  })
+    .index("by_key", ["eventKey"])
+    .index("by_agent_time", ["agentId", "at"])
+    .index("by_time", ["at"]),
+
+  nodes: defineTable({
+    agentId: v.id("agents"),
+    kind: v.union(v.literal("knowledge"), v.literal("intent"), v.literal("action")),
+    verb: v.string(),
+    text: v.string(), // compact signature; what gets embedded
+    topic: v.optional(v.string()),
+    files: v.array(v.string()),
+    touches: v.array(touch),
+    references: v.array(v.string()),
+    parentId: v.optional(v.id("nodes")),
+    outcome: v.union(v.literal("open"), v.literal("succeeded"), v.literal("failed"), v.literal("superseded")),
+    signature: v.optional(v.string()),
+    toolUseId: v.optional(v.string()),
+    preview: v.optional(v.string()),
+    consumes: v.optional(v.array(v.string())),
+    baseRev: v.optional(v.string()),
+    landed: v.optional(v.union(v.literal("committed"), v.literal("pushed"), v.literal("merged"))),
+    embedding: v.optional(v.array(v.float64())),
+    at: v.number(),
+  })
+    .index("by_agent", ["agentId", "at"])
+    .index("by_topic", ["topic"])
+    .index("by_signature", ["signature"])
+    .index("by_tool_use", ["toolUseId"])
+    .index("by_outcome", ["outcome", "at"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 768,
+      filterFields: ["kind", "outcome"],
+    }),
+
+  verbs: defineTable({
+    key: v.string(),
+    description: v.string(),
+    match: v.array(
+      v.object({
+        tool: v.optional(v.string()),
+        input: v.optional(v.string()),
+        after: v.optional(v.string()),
+        outcome: v.optional(v.string()),
+      }),
+    ),
+    priority: v.number(),
+    status: v.union(v.literal("active"), v.literal("proposed")),
+  }).index("by_key", ["key"]),
+
+  eventTypes: defineTable({
+    key: typeKey,
+    enforcement: v.union(v.literal("block"), v.literal("warn"), v.literal("silent")),
+    description: v.string(),
+  }).index("by_key", ["key"]),
+
+  classifications: defineTable({
+    eventId: v.optional(v.id("events")),
+    nodeId: v.id("nodes"),
+    type: typeKey,
+    relation: v.string(),
+    direction: v.union(v.literal("new_needs_other"), v.literal("other_needs_new"), v.literal("none")),
+    action,
+    againstNodeId: v.optional(v.id("nodes")),
+    agentIds: v.array(v.id("agents")),
+    reason: v.string(),
+    evidence: v.array(v.string()),
+    confidence: v.number(),
+    retrievalScore: v.number(),
+    source: v.union(v.literal("rule"), v.literal("pair_model"), v.literal("llm"), v.literal("fallback")),
+    status: v.union(v.literal("open"), v.literal("resolved"), v.literal("dismissed")),
+    resolution: v.optional(v.string()),
+    feedback: v.optional(v.union(v.literal("confirmed"), v.literal("false_positive"), v.literal("ignored"))),
+    outcome: v.optional(v.string()),
+    winnerAgentId: v.optional(v.id("agents")), // collisions: whose claim held under the priority policy
+    comparison: v.optional(v.string()), // escalations: LLM side-by-side once both sides have code
+    gitStatus: v.optional(v.union(v.literal("confirmed"), v.literal("clean"), v.literal("missed"))),
+    latencyMs: v.number(),
+    at: v.number(),
+  })
+    .index("by_node", ["nodeId"])
+    .index("by_status", ["status", "at"])
+    .index("by_pair", ["nodeId", "againstNodeId"])
+    .index("by_against", ["againstNodeId"]),
+
+  inbox: defineTable({
+    agentId: v.id("agents"),
+    classificationId: v.id("classifications"),
+    text: v.string(),
+    action: v.union(v.literal("warn"), v.literal("serialize"), v.literal("block")),
+    state: v.union(v.literal("queued"), v.literal("delivered"), v.literal("acked"), v.literal("applied")),
+    attempts: v.number(),
+    at: v.number(),
+  })
+    .index("by_agent_state", ["agentId", "state"])
+    .index("by_classification", ["classificationId"]),
+
+  settings: defineTable({ key: v.string(), value: v.any() }).index("by_key", ["key"]),
+});

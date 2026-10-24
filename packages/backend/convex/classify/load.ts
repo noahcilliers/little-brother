@@ -1,0 +1,147 @@
+import {
+  ACTIVE_WINDOW_MS,
+  type Candidate,
+  type ClassifiedNode,
+  isActive,
+  isFailureMemory,
+  type StoredNode,
+  type Thresholds,
+  toClassifiedNode,
+} from "@lb/core";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { QueryCtx } from "../_generated/server";
+import { type PriorityLoader, priorityLoader } from "./priority";
+
+/** Open work older than this is treated as abandoned rather than active. */
+const OPEN_WINDOW_MS = 12 * 60 * 60 * 1000;
+const ACTIVE_CAP = 200;
+const MEMORY_CAP = 50;
+
+export function stored(n: Doc<"nodes">): StoredNode {
+  return {
+    _id: n._id,
+    agentId: n.agentId,
+    kind: n.kind,
+    verb: n.verb,
+    text: n.text,
+    topic: n.topic,
+    files: n.files,
+    touches: n.touches,
+    references: n.references,
+    outcome: n.outcome,
+    signature: n.signature,
+    baseRev: n.baseRev,
+    landed: n.landed,
+    preview: n.preview,
+    consumes: n.consumes,
+    at: n.at,
+  };
+}
+
+/** A node as the classifier sees it, with its author's claim strength for collision tie-breaks. */
+export async function classifiedView(n: Doc<"nodes">, priority: PriorityLoader): Promise<ClassifiedNode> {
+  return { ...toClassifiedNode(stored(n)), priority: await priority.of(n) };
+}
+
+export async function agentStatus(
+  ctx: QueryCtx,
+  ids: Iterable<Id<"agents">>,
+): Promise<Map<string, Doc<"agents">>> {
+  const out = new Map<string, Doc<"agents">>();
+  for (const id of new Set(ids)) {
+    const a = await ctx.db.get(id);
+    if (a) out.set(id, a);
+  }
+  return out;
+}
+
+/** Turn loaded nodes into candidates: failure memory from anyone, active work only from other live agents. */
+export async function toCandidates(
+  ctx: QueryCtx,
+  next: Doc<"nodes">,
+  nodes: Doc<"nodes">[],
+  now: number,
+  similarity: Map<string, number> = new Map(),
+  priority: PriorityLoader = priorityLoader(ctx),
+): Promise<Candidate[]> {
+  const agents = await agentStatus(
+    ctx,
+    nodes.map((n) => n.agentId),
+  );
+  const out: Candidate[] = [];
+  const seen = new Set<string>();
+  for (const n of nodes) {
+    if (n._id === next._id || seen.has(n._id) || n.outcome === "superseded") continue;
+    seen.add(n._id);
+    const sim = similarity.get(n._id);
+    const base = { node: toClassifiedNode(stored(n)), ...(sim !== undefined ? { similarity: sim } : {}) };
+    if (isFailureMemory(n)) {
+      out.push({ ...base, failedMemory: true });
+      continue;
+    }
+    const agent = agents.get(n.agentId);
+    if (n.agentId === next.agentId || !agent || agent.status === "offline") continue;
+    if (n.kind === "knowledge" || !isActive(n, now)) continue;
+    out.push({ ...base, node: { ...base.node, priority: await priority.of(n) }, failedMemory: false });
+  }
+  return out;
+}
+
+/** Structural candidate set (no embeddings): recent active work plus failure memory by signature, topic, path. */
+export async function loadStructural(
+  ctx: QueryCtx,
+  next: Doc<"nodes">,
+  now: number,
+): Promise<Doc<"nodes">[]> {
+  const open = await ctx.db
+    .query("nodes")
+    .withIndex("by_outcome", (q) => q.eq("outcome", "open").gte("at", now - OPEN_WINDOW_MS))
+    .order("desc")
+    .take(ACTIVE_CAP);
+  const finished = await ctx.db
+    .query("nodes")
+    .withIndex("by_outcome", (q) => q.eq("outcome", "succeeded").gte("at", now - ACTIVE_WINDOW_MS))
+    .order("desc")
+    .take(ACTIVE_CAP / 2);
+  const failed = await ctx.db
+    .query("nodes")
+    .withIndex("by_outcome", (q) => q.eq("outcome", "failed"))
+    .order("desc")
+    .take(ACTIVE_CAP);
+  const files = new Set(next.files.concat(next.touches.map((t) => t.path)));
+  const failedNearby = failed.filter(
+    (n) => n.files.some((f) => files.has(f)) || n.touches.some((t) => files.has(t.path)),
+  );
+  const bySignature = next.signature
+    ? await ctx.db
+        .query("nodes")
+        .withIndex("by_signature", (q) => q.eq("signature", next.signature))
+        .take(MEMORY_CAP)
+    : [];
+  const byTopic = next.topic
+    ? (
+        await ctx.db
+          .query("nodes")
+          .withIndex("by_topic", (q) => q.eq("topic", next.topic))
+          .order("desc")
+          .take(MEMORY_CAP)
+      ).filter(isFailureMemory)
+    : [];
+  return [...open, ...finished, ...failedNearby, ...bySignature.filter(isFailureMemory), ...byTopic];
+}
+
+const THRESHOLDS_KEY = "classifier:thresholds";
+
+export async function loadThresholds(ctx: QueryCtx): Promise<Thresholds> {
+  const row = await ctx.db
+    .query("settings")
+    .withIndex("by_key", (q) => q.eq("key", THRESHOLDS_KEY))
+    .first();
+  const value: unknown = row?.value;
+  if (!value || typeof value !== "object") return {};
+  const out: Thresholds = {};
+  for (const [k, v] of Object.entries(value)) if (typeof v === "number") out[k as keyof Thresholds] = v;
+  return out;
+}
+
+export { THRESHOLDS_KEY };

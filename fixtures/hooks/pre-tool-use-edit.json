@@ -1,0 +1,15 @@
+{
+  "session_id": "c4d8e2f0-1a6b-4c3d-8e9f-5b7a2d0c6e81",
+  "transcript_path": "/Users/ash/.claude/projects/-tmp-lb-demo-ash/c4d8e2f0-1a6b-4c3d-8e9f-5b7a2d0c6e81.jsonl",
+  "cwd": "/tmp/lb-demo/ash",
+  "hook_event_name": "PreToolUse",
+  "permission_mode": "default",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/tmp/lb-demo/ash/src/server.ts",
+    "old_string": "import express from \"express\";\nimport { authRouter } from \"./auth/routes\";\nimport { catalogRouter } from \"./catalog/routes\";\nimport { checkoutRouter } from \"./checkout/routes\";\n\nexport const app = express();\n\napp.use(express.json());\n\napp.use(\"/api\", catalogRouter);\napp.use(\"/api\", authRouter);\napp.use(\"/api\", checkoutRouter);\n",
+    "new_string": "import cors from \"cors\";\nimport express from \"express\";\nimport { authRouter } from \"./auth/routes\";\nimport { catalogRouter } from \"./catalog/routes\";\nimport { checkoutRouter } from \"./checkout/routes\";\n\nexport const app = express();\n\napp.use(cors({ origin: \"*\", credentials: true }));\napp.use(express.json());\n\napp.use(\"/api\", catalogRouter);\napp.use(\"/api\", authRouter);\napp.use(\"/api\", checkoutRouter);\n",
+    "replace_all": false
+  },
+  "tool_use_id": "toolu_01tk0vePIhOBKaCM98pOxSj5"
+}

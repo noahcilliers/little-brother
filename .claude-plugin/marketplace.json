@@ -1,0 +1,17 @@
+{
+  "name": "little-brother",
+  "owner": {
+    "name": "Little Brother team"
+  },
+  "metadata": {
+    "description": "Little Brother coordination plugin for Claude Code teams."
+  },
+  "plugins": [
+    {
+      "name": "little-brother",
+      "source": "./plugin",
+      "description": "Hooks, `lb mcp` server and team-protocol skill for Little Brother.",
+      "version": "0.1.0"
+    }
+  ]
+}

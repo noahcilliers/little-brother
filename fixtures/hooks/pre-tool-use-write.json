@@ -1,0 +1,13 @@
+{
+  "session_id": "9f1c2a64-8d0e-4b7f-a315-6e2c9b4d7f10",
+  "transcript_path": "/Users/joshua/.claude/projects/-tmp-lb-demo-joshua/9f1c2a64-8d0e-4b7f-a315-6e2c9b4d7f10.jsonl",
+  "cwd": "/tmp/lb-demo/joshua",
+  "hook_event_name": "PreToolUse",
+  "permission_mode": "default",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/tmp/lb-demo/joshua/db/schema/users.ts",
+    "content": "import { randomUUID } from \"node:crypto\";\n\nexport interface Customer {\n  id: string;\n  email: string;\n  displayName: string;\n  createdAt: Date;\n}\n\n/** Customers who reach checkout; keyed by id. */\nexport const users = new Map<string, Customer>();\n\nexport function upsertCustomer(email: string, displayName: string): Customer {\n  const existing = [...users.values()].find((c) => c.email === email);\n  if (existing) return existing;\n  const customer = { id: randomUUID(), email, displayName, createdAt: new Date() };\n  users.set(customer.id, customer);\n  return customer;\n}\n"
+  },
+  "tool_use_id": "toolu_01SeQaXaqPfR1szvwc1eFQsH"
+}

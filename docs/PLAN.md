@@ -9,12 +9,12 @@
 
 ## 1. Problem and pitch
 
-| Pain | What happens today | What Little Brother does | Event type |
-| --- | --- | --- | --- |
-| Duplicate work | Two agents build the same thing; one copy is thrown away at merge | Stops the second agent at the edit and points it to the existing work | `duplicate` |
-| Repeated failure | An agent spends 10 minutes on an approach another agent already proved fails | Injects "this was tried, it failed because X, what worked was Y" before it starts | `stale` |
-| Incompatible work | Two agents implement the same topic differently; each passes its own tests; integration breaks | Blocks further work on that topic, shows both sides, and the owner decides | `conflict` |
-| Everything else | — | Stays silent | `normal` |
+| Pain              | What happens today                                                                             | What Little Brother does                                                          | Event type  |
+| ----------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------- |
+| Duplicate work    | Two agents build the same thing; one copy is thrown away at merge                              | Stops the second agent at the edit and points it to the existing work             | `duplicate` |
+| Repeated failure  | An agent spends 10 minutes on an approach another agent already proved fails                   | Injects "this was tried, it failed because X, what worked was Y" before it starts | `stale`     |
+| Incompatible work | Two agents implement the same topic differently; each passes its own tests; integration breaks | Blocks further work on that topic, shows both sides, and the owner decides        | `conflict`  |
+| Everything else   | —                                                                                              | Stays silent                                                                      | `normal`    |
 
 **Selling point:** fewer wasted tokens and less waiting. We measure it: tokens and minutes saved per catch, catches before push, and classifier precision.
 
@@ -24,11 +24,11 @@
 
 ### Node kinds: what the shared graph is made of
 
-| Kind | Meaning | Created from |
-| --- | --- | --- |
-| `intent` | What an agent is trying to do, and how. Can be broad ("build checkout") or narrow ("add CORS middleware to the API"). | `UserPromptSubmit`; refined when the agent's plan or approach changes |
-| `action` | A real change or command: an edit, a write, a test run, a commit | `PreToolUse` / `PostToolUse` |
-| `knowledge` | A fact about the codebase, including **outcomes**: "approach X failed because Y; Z worked" | Distilled at `Stop` from the trajectory; MCP `post_knowledge`; human resolutions |
+| Kind        | Meaning                                                                                                               | Created from                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `intent`    | What an agent is trying to do, and how. Can be broad ("build checkout") or narrow ("add CORS middleware to the API"). | `UserPromptSubmit`; refined when the agent's plan or approach changes            |
+| `action`    | A real change or command: an edit, a write, a test run, a commit                                                      | `PreToolUse` / `PostToolUse`                                                     |
+| `knowledge` | A fact about the codebase, including **outcomes**: "approach X failed because Y; Z worked"                            | Distilled at `Stop` from the trajectory; MCP `post_knowledge`; human resolutions |
 
 A **trajectory** is one intent plus its actions, ending with an outcome (`succeeded`, `failed`, `superseded`). Failed trajectories become `knowledge` nodes. That memory is what powers `stale`.
 
@@ -43,17 +43,17 @@ EDIT     api.cors   web/vite.config.ts  proxy /api        → OK
 DECIDE   auth.mech  jwt-bearer                            → APPROVED
 ```
 
-| Verb | Derived from (no model call) |
-| --- | --- |
-| `PLAN` | Prompt, or plan text in the assistant message |
-| `EXPLORE` | Read / Grep / Glob |
-| `EDIT` | Edit / Write / MultiEdit |
-| `RUN` | Bash, other than tests |
-| `TEST` | Bash matching the repo's test/build commands |
-| `FIX` | An edit following a failed `RUN`/`TEST` in the same trajectory |
-| `REVERT` | An edit restoring a file's earlier content |
-| `DECIDE` | A topic choice, from MCP or a human resolution |
-| `LEARN` | Distilled knowledge at `Stop` |
+| Verb      | Derived from (no model call)                                   |
+| --------- | -------------------------------------------------------------- |
+| `PLAN`    | Prompt, or plan text in the assistant message                  |
+| `EXPLORE` | Read / Grep / Glob                                             |
+| `EDIT`    | Edit / Write / MultiEdit                                       |
+| `RUN`     | Bash, other than tests                                         |
+| `TEST`    | Bash matching the repo's test/build commands                   |
+| `FIX`     | An edit following a failed `RUN`/`TEST` in the same trajectory |
+| `REVERT`  | An edit restoring a file's earlier content                     |
+| `DECIDE`  | A topic choice, from MCP or a human resolution                 |
+| `LEARN`   | Distilled knowledge at `Stop`                                  |
 
 Only `topic` needs the classifier.
 
@@ -73,12 +73,12 @@ Verbs are never deleted or renamed in place, because old signatures keep pointin
 
 ### Event types: what the classifier outputs
 
-| Type | Definition | Default enforcement |
-| --- | --- | --- |
-| `conflict` | Another agent is working on the same topic with a different, incompatible implementation that already exists | **Block** edits on that topic until the owner resolves it; notify both sides |
-| `duplicate` | The same task or change is already done or in progress by another agent | **Block** the duplicating edit; point to the existing work |
-| `stale` | The agent is following a reasoning path that has already been classified as failed, by any agent including itself | **Warn**: inject the failure and what worked. Block only an exact repeat of a known-failing command. |
-| `normal` | No overlap | Silent |
+| Type        | Definition                                                                                                        | Default enforcement                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `conflict`  | Another agent is working on the same topic with a different, incompatible implementation that already exists      | **Block** edits on that topic until the owner resolves it; notify both sides                         |
+| `duplicate` | The same task or change is already done or in progress by another agent                                           | **Block** the duplicating edit; point to the existing work                                           |
+| `stale`     | The agent is following a reasoning path that has already been classified as failed, by any agent including itself | **Warn**: inject the failure and what worked. Block only an exact repeat of a known-failing command. |
+| `normal`    | No overlap                                                                                                        | Silent                                                                                               |
 
 Internally the classifier uses eight finer relations (e.g. `textual_conflict`, `semantic_conflict`, `repeats_failure`) and four actions (`ignore`, `warn`, `serialize`, `block`) that roll up to these four types (§4). An intent-level duplicate only warns. Two agents creating the same file is a `textual_conflict` and is denied at the edit.
 
@@ -86,14 +86,14 @@ Internally the classifier uses eight finer relations (e.g. `textual_conflict`, `
 
 These are your three tables (activity, event types, agents), plus the three tables the workflow needs to run.
 
-| Table | Role | Points to |
-| --- | --- | --- |
-| `agents` | One row per Claude Code session, on any machine or account | member, current intent node |
-| `events` | **Activity**: an append-only log of every hook and MCP call | agent, node, classification |
-| `nodes` | The graph: knowledge, intent, action, each with an embedding | agent, parent intent |
-| `eventTypes` | Lookup of the four types and their enforcement policy | — |
+| Table             | Role                                                                                                            | Points to                      |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `agents`          | One row per Claude Code session, on any machine or account                                                      | member, current intent node    |
+| `events`          | **Activity**: an append-only log of every hook and MCP call                                                     | agent, node, classification    |
+| `nodes`           | The graph: knowledge, intent, action, each with an embedding                                                    | agent, parent intent           |
+| `eventTypes`      | Lookup of the four types and their enforcement policy                                                           | —                              |
 | `classifications` | One classifier verdict: event → type, against which earlier node, which agents are affected, why, how confident | event, eventType, node, agents |
-| `inbox` | What each agent still needs to be told, and its delivery state | agent, classification |
+| `inbox`           | What each agent still needs to be told, and its delivery state                                                  | agent, classification          |
 
 ```mermaid
 erDiagram
@@ -176,81 +176,126 @@ erDiagram
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const typeKey = v.union(v.literal("conflict"), v.literal("stale"), v.literal("duplicate"), v.literal("normal"));
+const typeKey = v.union(
+  v.literal("conflict"),
+  v.literal("stale"),
+  v.literal("duplicate"),
+  v.literal("normal"),
+);
 
 export default defineSchema({
   members: defineTable({
-    name: v.string(), handle: v.string(), color: v.string(), tokenHash: v.string(), revoked: v.boolean(),
+    name: v.string(),
+    handle: v.string(),
+    color: v.string(),
+    tokenHash: v.string(),
+    revoked: v.boolean(),
   }).index("by_token", ["tokenHash"]),
 
   agents: defineTable({
-    memberId: v.id("members"), claudeSessionId: v.string(), machine: v.string(),
-    repo: v.string(), branch: v.string(),
+    memberId: v.id("members"),
+    claudeSessionId: v.string(),
+    machine: v.string(),
+    repo: v.string(),
+    branch: v.string(),
     status: v.union(v.literal("active"), v.literal("idle"), v.literal("offline")),
-    intentId: v.optional(v.id("nodes")), lastSeenAt: v.number(),
-  }).index("by_session", ["claudeSessionId"]).index("by_status", ["status"]),
+    intentId: v.optional(v.id("nodes")),
+    lastSeenAt: v.number(),
+  })
+    .index("by_session", ["claudeSessionId"])
+    .index("by_status", ["status"]),
 
   events: defineTable({
-    agentId: v.id("agents"), eventKey: v.string(),          // idempotency
+    agentId: v.id("agents"),
+    eventKey: v.string(), // idempotency
     source: v.union(v.literal("hook"), v.literal("mcp"), v.literal("verify")),
-    hook: v.string(), tool: v.optional(v.string()),
-    files: v.array(v.string()), summary: v.string(), payload: v.any(),
-    nodeId: v.optional(v.id("nodes")), classificationId: v.optional(v.id("classifications")),
-    tokens: v.optional(v.number()),                          // from transcript usage, for savings metrics
+    hook: v.string(),
+    tool: v.optional(v.string()),
+    files: v.array(v.string()),
+    summary: v.string(),
+    payload: v.any(),
+    nodeId: v.optional(v.id("nodes")),
+    classificationId: v.optional(v.id("classifications")),
+    tokens: v.optional(v.number()), // from transcript usage, for savings metrics
     at: v.number(),
-  }).index("by_key", ["eventKey"]).index("by_agent_time", ["agentId", "at"]),
+  })
+    .index("by_key", ["eventKey"])
+    .index("by_agent_time", ["agentId", "at"]),
 
   nodes: defineTable({
     agentId: v.id("agents"),
     kind: v.union(v.literal("knowledge"), v.literal("intent"), v.literal("action")),
-    verb: v.string(),                                        // key in `verbs`; unmatched actions get "ACT"
-    text: v.string(),                                        // compact signature (§2); what gets embedded
-    topic: v.optional(v.string()),                           // e.g. "auth.mechanism", "api.cors"
+    verb: v.string(), // key in `verbs`; unmatched actions get "ACT"
+    text: v.string(), // compact signature (§2); what gets embedded
+    topic: v.optional(v.string()), // e.g. "auth.mechanism", "api.cors"
     files: v.array(v.string()),
-    parentId: v.optional(v.id("nodes")),                     // action/knowledge → intent (the trajectory)
+    parentId: v.optional(v.id("nodes")), // action/knowledge → intent (the trajectory)
     outcome: v.union(v.literal("open"), v.literal("succeeded"), v.literal("failed"), v.literal("superseded")),
-    signature: v.optional(v.string()),                       // hash of a normalized command or edit, for exact repeats
+    signature: v.optional(v.string()), // hash of a normalized command or edit, for exact repeats
     embedding: v.optional(v.array(v.float64())),
     at: v.number(),
-  }).index("by_agent", ["agentId", "at"]).index("by_topic", ["topic"]).index("by_signature", ["signature"])
-    .vectorIndex("by_embedding", { vectorField: "embedding", dimensions: 768, filterFields: ["kind", "outcome", "topic"] }),
+  })
+    .index("by_agent", ["agentId", "at"])
+    .index("by_topic", ["topic"])
+    .index("by_signature", ["signature"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 768,
+      filterFields: ["kind", "outcome", "topic"],
+    }),
 
-  verbs: defineTable({                                       // verb registry; add a row to add a verb
-    key: v.string(), description: v.string(),
-    match: v.array(v.object({                                // first matching rule across all verbs wins (by priority)
-      tool: v.optional(v.string()),                          // regex on tool_name, e.g. "^(Read|Grep|Glob)$", "^mcp__github__"
-      input: v.optional(v.string()),                         // regex on the command/path, e.g. "\\b(vitest|pytest|jest)\\b"
-      after: v.optional(v.string()),                         // previous verb in the trajectory, e.g. FIX = EDIT after a failed TEST
-      outcome: v.optional(v.string()),                       // ok | fail
-    })),
+  verbs: defineTable({
+    // verb registry; add a row to add a verb
+    key: v.string(),
+    description: v.string(),
+    match: v.array(
+      v.object({
+        // first matching rule across all verbs wins (by priority)
+        tool: v.optional(v.string()), // regex on tool_name, e.g. "^(Read|Grep|Glob)$", "^mcp__github__"
+        input: v.optional(v.string()), // regex on the command/path, e.g. "\\b(vitest|pytest|jest)\\b"
+        after: v.optional(v.string()), // previous verb in the trajectory, e.g. FIX = EDIT after a failed TEST
+        outcome: v.optional(v.string()), // ok | fail
+      }),
+    ),
     priority: v.number(),
     status: v.union(v.literal("active"), v.literal("proposed")),
   }).index("by_key", ["key"]),
 
   eventTypes: defineTable({
-    key: typeKey, enforcement: v.union(v.literal("block"), v.literal("warn"), v.literal("silent")), description: v.string(),
+    key: typeKey,
+    enforcement: v.union(v.literal("block"), v.literal("warn"), v.literal("silent")),
+    description: v.string(),
   }).index("by_key", ["key"]),
 
   classifications: defineTable({
-    eventId: v.id("events"), type: typeKey,
-    relation: v.string(),                                    // fine label (§4) that rolls up to `type`
+    eventId: v.id("events"),
+    type: typeKey,
+    relation: v.string(), // fine label (§4) that rolls up to `type`
     direction: v.union(v.literal("new_needs_other"), v.literal("other_needs_new"), v.literal("none")),
     action: v.union(v.literal("ignore"), v.literal("warn"), v.literal("serialize"), v.literal("block")),
-    againstNodeId: v.optional(v.id("nodes")),                // the earlier work this collides with
-    agentIds: v.array(v.id("agents")),                       // everyone affected
-    reason: v.string(), evidence: v.array(v.string()), confidence: v.number(), retrievalScore: v.number(),
+    againstNodeId: v.optional(v.id("nodes")), // the earlier work this collides with
+    agentIds: v.array(v.id("agents")), // everyone affected
+    reason: v.string(),
+    evidence: v.array(v.string()),
+    confidence: v.number(),
+    retrievalScore: v.number(),
     source: v.union(v.literal("rule"), v.literal("pair_model"), v.literal("llm"), v.literal("fallback")),
-    outcome: v.optional(v.string()),                         // joined later: merge_conflict, clean_merge, human_override, …
+    outcome: v.optional(v.string()), // joined later: merge_conflict, clean_merge, human_override, …
     status: v.union(v.literal("open"), v.literal("resolved"), v.literal("dismissed")),
     resolution: v.optional(v.string()),
     feedback: v.optional(v.union(v.literal("confirmed"), v.literal("false_positive"), v.literal("ignored"))),
     at: v.number(),
-  }).index("by_status", ["status"]).index("by_against", ["againstNodeId"]),
+  })
+    .index("by_status", ["status"])
+    .index("by_against", ["againstNodeId"]),
 
   inbox: defineTable({
-    agentId: v.id("agents"), classificationId: v.id("classifications"), text: v.string(),
+    agentId: v.id("agents"),
+    classificationId: v.id("classifications"),
+    text: v.string(),
     state: v.union(v.literal("queued"), v.literal("delivered"), v.literal("acked"), v.literal("applied")),
-    attempts: v.number(), at: v.number(),
+    attempts: v.number(),
+    at: v.number(),
   }).index("by_agent_state", ["agentId", "state"]),
 });
 ```
@@ -279,7 +324,7 @@ flowchart LR
 2. **Log it.** The event is appended to `events` (deduplicated by `eventKey`).
 3. **Map it to a node.** A prompt becomes an `intent`, an edit or command becomes an `action` under the current intent, and a finished turn is distilled into `knowledge` with its outcome.
 4. **Classify it.** The cascade (§4) checks the new node against other agents' activity and past outcomes, then writes a `classifications` row pointing to the `eventTypes` row, the earlier node it collides with, and the affected agents.
-5. **Respond.** The verdict goes back in the same hook response (deny or context). Affected *other* agents get an `inbox` row and a channel push.
+5. **Respond.** The verdict goes back in the same hook response (deny or context). Affected _other_ agents get an `inbox` row and a channel push.
 6. **Learn.** Agent acks, human confirms or dismisses, and later test outcomes are recorded as feedback that tunes the classifier (§5).
 
 ### Anatomy of one event
@@ -294,7 +339,10 @@ Joshua's agent tries to create the users table that Noah's agent is already writ
   "cwd": "/Users/joshua/lb-demo-shop",
   "hook_event_name": "PreToolUse",
   "tool_name": "Write",
-  "tool_input": { "file_path": "/Users/joshua/lb-demo-shop/db/schema/users.ts", "content": "export const users = pgTable(\"users\", { … })" },
+  "tool_input": {
+    "file_path": "/Users/joshua/lb-demo-shop/db/schema/users.ts",
+    "content": "export const users = pgTable(\"users\", { … })"
+  },
   "tool_use_id": "toolu_01AbC"
 }
 ```
@@ -305,7 +353,12 @@ Joshua's agent tries to create the users table that Noah's agent is already writ
   "v": 1,
   "eventKey": "sha1(9f1c2a|PreToolUse|toolu_01AbC)",
   "hook": "PreToolUse",
-  "session": { "claudeSessionId": "9f1c2a", "repo": "lb-demo-shop", "branch": "joshua/checkout", "machine": "joshua-mbp" },
+  "session": {
+    "claudeSessionId": "9f1c2a",
+    "repo": "lb-demo-shop",
+    "branch": "joshua/checkout",
+    "machine": "joshua-mbp"
+  },
   "tool": "Write",
   "files": ["db/schema/users.ts"],
   "preview": "export const users = pgTable(\"users\", { … })",
@@ -328,8 +381,13 @@ Joshua's agent tries to create the users table that Noah's agent is already writ
 
 **4. Convex → `lb` → Claude Code (stdout)**
 ```json
-{ "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "deny",
-  "permissionDecisionReason": "[little-brother] duplicate · db.users is owned by Noah (agent active, 2m ago). Import User from src/contracts/user.ts instead of creating db/schema/users.ts." } }
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "[little-brother] duplicate · db.users is owned by Noah (agent active, 2m ago). Import User from src/contracts/user.ts instead of creating db/schema/users.ts."
+  }
+}
 ```
 
 ### Data contracts
@@ -351,16 +409,16 @@ flowchart LR
 
 Each contract is a zod schema in `packages/core`, the single source of truth. Convex validators mirror them, either generated with `convex-helpers`' zod support (check in M0) or kept in sync by a test.
 
-| # | Contract | Between | File |
-| --- | --- | --- | --- |
-| 1 | `HookInput` | Claude Code → `lb` | `core/hooks.ts` |
-| 2 | `IngestEnvelope` v1 | `lb` → Convex `/hook/:event` | `core/ingest.ts` |
-| 3 | `HookOutput` | Convex → `lb` → Claude Code stdout | `core/hooks.ts` |
-| 4 | `Event`, `Node`, `Classification` | Convex tables | `convex/schema.ts` |
-| 5 | `CandidatePair`, `Judgment` | Backend ↔ classifier adapters (LLM output parsed against `Judgment`) | `core/classify/types.ts` |
-| 6 | `InboxItem`, `ChannelMessage` | Convex → `lb mcp` → session | `core/inbox.ts` |
-| 7 | MCP tool args and results | Agent ↔ `lb mcp` | `core/mcp.ts` |
-| 8 | Dashboard read models | Convex queries → web | `convex/*` return validators |
+| #   | Contract                          | Between                                                              | File                         |
+| --- | --------------------------------- | -------------------------------------------------------------------- | ---------------------------- |
+| 1   | `HookInput`                       | Claude Code → `lb`                                                   | `core/hooks.ts`              |
+| 2   | `IngestEnvelope` v1               | `lb` → Convex `/hook/:event`                                         | `core/ingest.ts`             |
+| 3   | `HookOutput`                      | Convex → `lb` → Claude Code stdout                                   | `core/hooks.ts`              |
+| 4   | `Event`, `Node`, `Classification` | Convex tables                                                        | `convex/schema.ts`           |
+| 5   | `CandidatePair`, `Judgment`       | Backend ↔ classifier adapters (LLM output parsed against `Judgment`) | `core/classify/types.ts`     |
+| 6   | `InboxItem`, `ChannelMessage`     | Convex → `lb mcp` → session                                          | `core/inbox.ts`              |
+| 7   | MCP tool args and results         | Agent ↔ `lb mcp`                                                     | `core/mcp.ts`                |
+| 8   | Dashboard read models             | Convex queries → web                                                 | `convex/*` return validators |
 
 Rules:
 - The envelope carries `v`.
@@ -380,7 +438,7 @@ Based on the team's classifier spec (v0.1), with four changes so it fits this pr
 3. Normalization runs on the developer's machine.
 4. Actions are mapped to what Claude Code can actually do.
 
-For every new event, the classifier answers one question: *given what everyone else is doing and what has already failed, is this safe to proceed, and if not, why and with whom?* It detects and recommends. It never resolves anything automatically.
+For every new event, the classifier answers one question: _given what everyone else is doing and what has already failed, is this safe to proceed, and if not, why and with whom?_ It detects and recommends. It never resolves anything automatically.
 
 ```
 new event (intent or edit)
@@ -403,27 +461,27 @@ Each stage can settle a pair early, so the common case stays cheap. **Similarity
 
 The classifier works with fine-grained relations internally. The dashboard, enforcement and pitch use the four event types from §2.
 
-| Relation | Meaning | Example | Direction | Type |
-| --- | --- | --- | --- | --- |
-| `independent` | No meaningful interaction | Docs edit vs DB migration | — | `normal` |
-| `overlap_compatible` | Same area, no problem | Two agents add separate functions to `utils.ts` | — | `normal` |
-| `duplicate` | Same work done twice | Both agents "add retry to the HTTP client" | — | `duplicate` |
-| `textual_conflict` | Git can't merge them | Both create `db/schema/users.ts` | — | `conflict` |
-| `semantic_conflict` | Merges cleanly, breaks behavior | A changes `pay(amount)` → `pay(amount, currency)`; B adds `pay(amount)` callers | yes | `conflict` |
-| `intent_contradiction` | Goals pull in opposite directions | A removes legacy auth; B extends it | — | `conflict` |
-| `ordering_dependency` | One must land before the other | B uses `User.role`, which A is creating | yes | `conflict` |
-| `repeats_failure` | Follows a path already recorded as failed | Ash plans CORS middleware that Noah's agent proved fails | yes | `stale` |
+| Relation               | Meaning                                   | Example                                                                         | Direction | Type        |
+| ---------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- | --------- | ----------- |
+| `independent`          | No meaningful interaction                 | Docs edit vs DB migration                                                       | —         | `normal`    |
+| `overlap_compatible`   | Same area, no problem                     | Two agents add separate functions to `utils.ts`                                 | —         | `normal`    |
+| `duplicate`            | Same work done twice                      | Both agents "add retry to the HTTP client"                                      | —         | `duplicate` |
+| `textual_conflict`     | Git can't merge them                      | Both create `db/schema/users.ts`                                                | —         | `conflict`  |
+| `semantic_conflict`    | Merges cleanly, breaks behavior           | A changes `pay(amount)` → `pay(amount, currency)`; B adds `pay(amount)` callers | yes       | `conflict`  |
+| `intent_contradiction` | Goals pull in opposite directions         | A removes legacy auth; B extends it                                             | —         | `conflict`  |
+| `ordering_dependency`  | One must land before the other            | B uses `User.role`, which A is creating                                         | yes       | `conflict`  |
+| `repeats_failure`      | Follows a path already recorded as failed | Ash plans CORS middleware that Noah's agent proved fails                        | yes       | `stale`     |
 
 Directional relations record `new_needs_other` or `other_needs_new`.
 
 ### Actions, mapped to Claude Code
 
-| Action | Meaning | How it reaches the agent |
-| --- | --- | --- |
-| `ignore` | No signal | Nothing |
-| `warn` | Notify; work continues | `additionalContext` on the next hook, or a channel push |
-| `serialize` | One side lands first | `PreToolUse` deny: "X lands first; build on it or work on Y meanwhile" |
-| `block` | Stop until a human decides | `PreToolUse` deny on that topic + `Stop` block + dashboard resolve panel |
+| Action      | Meaning                    | How it reaches the agent                                                 |
+| ----------- | -------------------------- | ------------------------------------------------------------------------ |
+| `ignore`    | No signal                  | Nothing                                                                  |
+| `warn`      | Notify; work continues     | `additionalContext` on the next hook, or a channel push                  |
+| `serialize` | One side lands first       | `PreToolUse` deny: "X lands first; build on it or work on Y meanwhile"   |
+| `block`     | Stop until a human decides | `PreToolUse` deny on that topic + `Stop` block + dashboard resolve panel |
 
 ### Step 1 · Normalize (runs in the connector)
 
@@ -440,15 +498,15 @@ The backend never sees the code, and the agents are on different machines, so no
 
 Gather candidates from several signals, merge and score them, and keep the top-k (default 10). **Anything with a path or symbol overlap is always kept**, regardless of k.
 
-| Signal | Finds | Weight |
-| --- | --- | --- |
-| Same path mutated by both | Textual conflicts, overlaps | 1.0 |
-| Same symbol touched by both | Textual and semantic conflicts | 1.0 |
-| One mutates a symbol the other references | Semantic conflicts, ordering | 0.9 |
-| Same topic (topic map) | Contract conflicts | 0.9 |
-| Intent similarity (Convex vector index) | Duplicates, contradictions | 0.8 × similarity |
-| **Failed knowledge** matching by signature or similarity, **outside the active window** | `repeats_failure` | 0.9 |
-| Same intent / subagents of one session | Expected overlap (lowers false positives) | annotate only |
+| Signal                                                                                  | Finds                                     | Weight           |
+| --------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------- |
+| Same path mutated by both                                                               | Textual conflicts, overlaps               | 1.0              |
+| Same symbol touched by both                                                             | Textual and semantic conflicts            | 1.0              |
+| One mutates a symbol the other references                                               | Semantic conflicts, ordering              | 0.9              |
+| Same topic (topic map)                                                                  | Contract conflicts                        | 0.9              |
+| Intent similarity (Convex vector index)                                                 | Duplicates, contradictions                | 0.8 × similarity |
+| **Failed knowledge** matching by signature or similarity, **outside the active window** | `repeats_failure`                         | 0.9              |
+| Same intent / subagents of one session                                                  | Expected overlap (lowers false positives) | annotate only    |
 
 Rules:
 - An agent is excluded from **conflict and duplicate** checks against itself, but **not** from failure memory. An agent repeating its own failure after context compaction should be caught.
@@ -458,18 +516,18 @@ Rules:
 
 ### Step 3 · Exact checks
 
-| # | Condition | Relation | Conf. | Settles? |
-| --- | --- | --- | --- | --- |
-| R1 | Both mutate the same path with overlapping lines (same base) | `textual_conflict` | 0.95 | yes |
-| R2 | Both `create` the same path or symbol | `textual_conflict` | 0.95 | yes |
-| R3 | `git merge-tree` dry run between the branches conflicts | `textual_conflict` | 0.99 | yes, **in `lb verify` only** (branches live on different machines) |
-| R4 | One deletes or renames what the other writes or references | `semantic_conflict` | 0.90 | yes |
-| R5 | One changes the signature of a symbol the other calls | `semantic_conflict` | 0.85 | yes |
-| R6 | One creates a symbol the other references | `ordering_dependency` | 0.80 | yes |
-| R7 | Both mutate the same symbol, lines unknown | — | — | hint |
-| R8 | Same file, disjoint ranges | — | — | hint: likely compatible |
-| R9 | Only overlap is a hot or generated file | — | — | hint: low signal |
-| R10 | Exact match with a failed action's `signature` (same normalized command or edit) | `repeats_failure` | 0.95 | yes |
+| #   | Condition                                                                        | Relation              | Conf. | Settles?                                                           |
+| --- | -------------------------------------------------------------------------------- | --------------------- | ----- | ------------------------------------------------------------------ |
+| R1  | Both mutate the same path with overlapping lines (same base)                     | `textual_conflict`    | 0.95  | yes                                                                |
+| R2  | Both `create` the same path or symbol                                            | `textual_conflict`    | 0.95  | yes                                                                |
+| R3  | `git merge-tree` dry run between the branches conflicts                          | `textual_conflict`    | 0.99  | yes, **in `lb verify` only** (branches live on different machines) |
+| R4  | One deletes or renames what the other writes or references                       | `semantic_conflict`   | 0.90  | yes                                                                |
+| R5  | One changes the signature of a symbol the other calls                            | `semantic_conflict`   | 0.85  | yes                                                                |
+| R6  | One creates a symbol the other references                                        | `ordering_dependency` | 0.80  | yes                                                                |
+| R7  | Both mutate the same symbol, lines unknown                                       | —                     | —     | hint                                                               |
+| R8  | Same file, disjoint ranges                                                       | —                     | —     | hint: likely compatible                                            |
+| R9  | Only overlap is a hot or generated file                                          | —                     | —     | hint: low signal                                                   |
+| R10 | Exact match with a failed action's `signature` (same normalized command or edit) | `repeats_failure`     | 0.95  | yes                                                                |
 
 When several settling rules fire, the most severe wins and all evidence is attached. Hints are passed on as features and evidence. **Budget:** < 20 ms per pair.
 
@@ -487,7 +545,12 @@ v2 adds graph features. This is the "distilled judge" step of the fine-tuning ro
 The `Judge` adapter (Gemini Flash by default, Claude `claude-opus-5-5` at low effort as the alternative) returns structured output, validated against the schema:
 
 ```json
-{ "relation": "...", "direction": "none", "confidence": 0.0, "rationale": "1–3 sentences citing specific symbols or lines" }
+{
+  "relation": "...",
+  "direction": "none",
+  "confidence": 0.0,
+  "rationale": "1–3 sentences citing specific symbols or lines"
+}
 ```
 
 The prompt contains:
@@ -502,16 +565,15 @@ The prompt contains:
 
 ### Step 6 · Decide and emit
 
-| Relation | Action at ≥ threshold | Threshold | Below threshold |
-| --- | --- | --- | --- |
-| `independent`, `overlap_compatible` | ignore | — | ignore |
-| `duplicate` | warn | 0.70 | ignore |
-| `textual_conflict` | serialize | 0.80 | warn |
-| `semantic_conflict` | block | 0.85 | warn |
-| `intent_contradiction` | block | 0.80 | warn |
-| `ordering_dependency` | serialize (dependent side) | 0.70 | warn |
-| `repeats_failure` | warn (serialize for R10 exact repeats) | 0.75 | ignore |
-
+| Relation                            | Action at ≥ threshold                  | Threshold | Below threshold |
+| ----------------------------------- | -------------------------------------- | --------- | --------------- |
+| `independent`, `overlap_compatible` | ignore                                 | —         | ignore          |
+| `duplicate`                         | warn                                   | 0.70      | ignore          |
+| `textual_conflict`                  | serialize                              | 0.80      | warn            |
+| `semantic_conflict`                 | block                                  | 0.85      | warn            |
+| `intent_contradiction`              | block                                  | 0.80      | warn            |
+| `ordering_dependency`               | serialize (dependent side)             | 0.70      | warn            |
+| `repeats_failure`                   | warn (serialize for R10 exact repeats) | 0.75      | ignore          |
 - **Fallback:** `overlap_compatible` at 0.3 if hints exist, otherwise `independent` at 0.5.
 - **Plans never block:** actions for `intent` events are capped at `serialize`.
 - **De-duplication:** an open judgment for the same pair and relation re-alerts only when severity rises.
@@ -522,14 +584,14 @@ The prompt contains:
 
 Every judgment is logged, including `ignore`s, with both event snapshots, the hints and the source. Outcomes are joined in later:
 
-| Outcome | Detected by | Label meaning |
-| --- | --- | --- |
-| `merge_conflict` | `lb verify` merge fails | Confirms textual conflict |
-| `post_merge_test_failure` | Each branch passed alone; the merged test fails | Strong semantic-conflict label |
-| `revert` | Change reverted within the session or N days | Weak conflict label |
-| `clean_merge` | Merged and tests stayed green | Evidence for independent/compatible |
-| `human_override` / `human_confirmed` | Dashboard dismiss / act | False positive / true positive |
-| `ignored_then_failed` / `ignored_then_succeeded` | Agent ignored a stale warning | Confirms / refutes `repeats_failure` |
+| Outcome                                          | Detected by                                     | Label meaning                        |
+| ------------------------------------------------ | ----------------------------------------------- | ------------------------------------ |
+| `merge_conflict`                                 | `lb verify` merge fails                         | Confirms textual conflict            |
+| `post_merge_test_failure`                        | Each branch passed alone; the merged test fails | Strong semantic-conflict label       |
+| `revert`                                         | Change reverted within the session or N days    | Weak conflict label                  |
+| `clean_merge`                                    | Merged and tests stayed green                   | Evidence for independent/compatible  |
+| `human_override` / `human_confirmed`             | Dashboard dismiss / act                         | False positive / true positive       |
+| `ignored_then_failed` / `ignored_then_succeeded` | Agent ignored a stale warning                   | Confirms / refutes `repeats_failure` |
 
 These labels drive §5 and the training export for the v1 pair model. LLM-only labels are flagged so they can be weighted down.
 
@@ -546,40 +608,60 @@ Re-run steps 2–6 for an event when any of these happen:
 
 ```ts
 // packages/core/src/classify/types.ts
-export type Relation = "independent" | "overlap_compatible" | "duplicate" | "textual_conflict"
-  | "semantic_conflict" | "intent_contradiction" | "ordering_dependency" | "repeats_failure";
+export type Relation =
+  | "independent"
+  | "overlap_compatible"
+  | "duplicate"
+  | "textual_conflict"
+  | "semantic_conflict"
+  | "intent_contradiction"
+  | "ordering_dependency"
+  | "repeats_failure";
 export type Judgment = {
-  otherNodeId: string; relation: Relation; direction: "new_needs_other" | "other_needs_new" | "none";
-  confidence: number; evidence: string[]; action: "ignore" | "warn" | "serialize" | "block";
-  source: "rule" | "pair_model" | "llm" | "fallback"; retrievalScore: number; latencyMs: number;
+  otherNodeId: string;
+  relation: Relation;
+  direction: "new_needs_other" | "other_needs_new" | "none";
+  confidence: number;
+  evidence: string[];
+  action: "ignore" | "warn" | "serialize" | "block";
+  source: "rule" | "pair_model" | "llm" | "fallback";
+  retrievalScore: number;
+  latencyMs: number;
 };
-export interface Rule { id: string; check(pair: CandidatePair): Judgment | Hint | null }
-export interface Embedder { embed(texts: string[]): Promise<number[][]> }
-export interface Judge { judge(pair: CandidatePair, hints: Hint[]): Promise<Judgment | null> }
+export interface Rule {
+  id: string;
+  check(pair: CandidatePair): Judgment | Hint | null;
+}
+export interface Embedder {
+  embed(texts: string[]): Promise<number[][]>;
+}
+export interface Judge {
+  judge(pair: CandidatePair, hints: Hint[]): Promise<Judgment | null>;
+}
 ```
 
 `CLASSIFIER_EMBEDDER` and `CLASSIFIER_JUDGE` select the adapters in `convex/classify/adapters/`. Confirm the Gemini model IDs and embedding size in M0.
 
 ### Evaluation targets
 
-| Metric | Target |
-| --- | --- |
-| Precision of `block` + `serialize` | ≥ 0.85; `block` turns on per relation only after it clears this in warn-only shadow mode |
-| Recall on real conflicts (`lb verify` merge or test failures) | ≥ 0.80 |
-| Candidate recall (real conflicts present after step 2) | ≥ 0.95 |
-| `PreToolUse` p95, excluding async judge | < 150 ms |
-| Judge calls per event | < 1 on average |
-| Calibration error (ECE) | < 0.1 once outcomes exist |
+| Metric                                                        | Target                                                                                   |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Precision of `block` + `serialize`                            | ≥ 0.85; `block` turns on per relation only after it clears this in warn-only shadow mode |
+| Recall on real conflicts (`lb verify` merge or test failures) | ≥ 0.80                                                                                   |
+| Candidate recall (real conflicts present after step 2)        | ≥ 0.95                                                                                   |
+| `PreToolUse` p95, excluding async judge                       | < 150 ms                                                                                 |
+| Judge calls per event                                         | < 1 on average                                                                           |
+| Calibration error (ECE)                                       | < 0.1 once outcomes exist                                                                |
 
 ### Hackathon cut (v0)
 
-| Build now | Roadmap |
-| --- | --- |
+| Build now                                                          | Roadmap                                            |
+| ------------------------------------------------------------------ | -------------------------------------------------- |
 | Step 1: paths + TS compiler symbols (exports, imports, signatures) | tree-sitter/LSP for all languages, full call graph |
-| Step 2: path, symbol, topic, embeddings, failed knowledge | Multi-hop reference-graph neighbours |
-| Rules R1, R2, R4, R5, R6, R10 | R3 live (stays in `lb verify`) |
-| Step 5 judge, steps 6–7, re-classification | Step 4 pair model, graph features / GNN |
-| Fixture tests per relation | Mined open-source PR pairs as an eval set |
+| Step 2: path, symbol, topic, embeddings, failed knowledge          | Multi-hop reference-graph neighbours               |
+| Rules R1, R2, R4, R5, R6, R10                                      | R3 live (stays in `lb verify`)                     |
+| Step 5 judge, steps 6–7, re-classification                         | Step 4 pair model, graph features / GNN            |
+| Fixture tests per relation                                         | Mined open-source PR pairs as an eval set          |
 
 ### How failed trajectories are recorded (the memory behind `stale`)
 
@@ -597,12 +679,12 @@ At `Stop`, a distillation step (judge model, async) writes one knowledge node: *
 
 Every classification eventually gets a label:
 
-| Signal | Label |
-| --- | --- |
-| Human confirms on dashboard / agent acks and changes course | `confirmed` |
-| Human dismisses | `false_positive` |
-| Agent continues and later succeeds on the same path | `false_positive` (stale) |
-| Delivered but no change in behavior | `ignored` |
+| Signal                                                      | Label                    |
+| ----------------------------------------------------------- | ------------------------ |
+| Human confirms on dashboard / agent acks and changes course | `confirmed`              |
+| Human dismisses                                             | `false_positive`         |
+| Agent continues and later succeeds on the same path         | `false_positive` (stale) |
+| Delivered but no change in behavior                         | `ignored`                |
 
 Labels are used three ways, all cheap:
 1. **Threshold calibration.** A cron re-fits each relation's action thresholds (§4, step 6) and the retrieval cutoffs to hit a target precision (start at 0.85). `block` turns on per relation only after it clears that in warn-only shadow mode.
@@ -615,15 +697,15 @@ Labels are used three ways, all cheap:
 
 A Claude Code **plugin** installs everything on each laptop: the hooks, the `lb mcp` server, and a skill describing the team protocol.
 
-| Hook | Writes | Classifies | Returns |
-| --- | --- | --- | --- |
-| `SessionStart` | agent row; writes `session_id` for `lb mcp` | — | Digest: who's doing what, open conflicts, relevant failures |
-| `UserPromptSubmit` | `intent` node | Schedules steps 2–6 on the intent (judge async) | Pending inbox items |
-| `PreToolUse` `Edit\|Write\|MultiEdit\|Bash` | `action` node (pending) | Local normalize, then steps 2–3 + stored judgments | `deny` + reason when `worst_action` is `serialize` or `block`; otherwise nothing |
-| `PostToolUse` | action outcome, files, command exit code | Schedules the judge for unsettled pairs | `additionalContext` with `stale` warnings and inbox items |
-| `PostToolUseFailure` | marks a failing action | Feeds failed-trajectory detection | — |
-| `Stop` | closes the intent; schedules distillation; records token usage from the transcript | — | `decision: "block"` if blocking items are unacked (guarded by `stop_hook_active`, max 2) |
-| `SessionEnd` | agent offline | — | — |
+| Hook                                        | Writes                                                                             | Classifies                                         | Returns                                                                                  |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `SessionStart`                              | agent row; writes `session_id` for `lb mcp`                                        | —                                                  | Digest: who's doing what, open conflicts, relevant failures                              |
+| `UserPromptSubmit`                          | `intent` node                                                                      | Schedules steps 2–6 on the intent (judge async)    | Pending inbox items                                                                      |
+| `PreToolUse` `Edit\|Write\|MultiEdit\|Bash` | `action` node (pending)                                                            | Local normalize, then steps 2–3 + stored judgments | `deny` + reason when `worst_action` is `serialize` or `block`; otherwise nothing         |
+| `PostToolUse`                               | action outcome, files, command exit code                                           | Schedules the judge for unsettled pairs            | `additionalContext` with `stale` warnings and inbox items                                |
+| `PostToolUseFailure`                        | marks a failing action                                                             | Feeds failed-trajectory detection                  | —                                                                                        |
+| `Stop`                                      | closes the intent; schedules distillation; records token usage from the transcript | —                                                  | `decision: "block"` if blocking items are unacked (guarded by `stop_hook_active`, max 2) |
+| `SessionEnd`                                | agent offline                                                                      | —                                                  | —                                                                                        |
 
 **Local normalization.** `lb hook` runs classifier step 1 on the developer's machine. It parses the pending edit into touches (path, symbol, op, lines) and references with the TypeScript compiler API, and sends only names, paths and line ranges. Code never leaves the machine, and symbols are always fresh.
 
@@ -650,12 +732,12 @@ Hook output shapes, the identity handoff and install commands are the same as th
 
 Three views, matching the whiteboard. Dark, minimal, Geist type, one color per teammate, red/amber/green only for verdicts.
 
-| View | Shows |
-| --- | --- |
-| **Graph** (home) | Nodes per agent lane (intent → actions → knowledge). Verdict edges between lanes: red conflict, amber duplicate, violet stale. Click a node for its evidence. |
-| **Tables** | Live Activity (`events`), Event types with counts, and Agents, each row linked to its classification. This is the "SQL view" for judges. |
-| **Agent thoughts** | One stream per agent: prompts, plan, tool calls, and what Little Brother injected or denied, in Claude Code's own vocabulary |
-| **Resolve** (panel) | For a conflict: both sides, the evidence, the owner's approve buttons, and delivery state per affected agent |
+| View                | Shows                                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Graph** (home)    | Nodes per agent lane (intent → actions → knowledge). Verdict edges between lanes: red conflict, amber duplicate, violet stale. Click a node for its evidence. |
+| **Tables**          | Live Activity (`events`), Event types with counts, and Agents, each row linked to its classification. This is the "SQL view" for judges.                      |
+| **Agent thoughts**  | One stream per agent: prompts, plan, tool calls, and what Little Brother injected or denied, in Claude Code's own vocabulary                                  |
+| **Resolve** (panel) | For a conflict: both sides, the evidence, the owner's approve buttons, and delivery state per affected agent                                                  |
 
 Header metrics: tokens saved · minutes saved · catches before push · precision.
 
@@ -667,13 +749,13 @@ Header metrics: tokens saved · minutes saved · catches before push · precisio
 
 `lb-demo-shop`: Express API + Vite storefront, with an integration test. Noah is on `auth`, Joshua on `checkout`, Ash on `frontend`.
 
-| Beat | What happens | Type |
-| --- | --- | --- |
-| Setup | Three prompts, three laptops. Intents appear as nodes. | `normal` |
-| **Duplicate** | Joshua's checkout agent plans its own `users` table. Noah's agent already owns it. The write is denied and Joshua's agent imports Noah's `User` instead. | `duplicate` |
-| **Stale** | Earlier, Noah's agent spent ~9 minutes adding `cors()` with a wildcard origin plus credentials. Browsers reject that, so the attempt failed, and the fix that worked was a Vite `/api` proxy. Now Ash's agent sets out to "add CORS middleware to the API". Before its first edit, it's told what failed, why, and what worked. It goes straight to the proxy. | `stale` |
-| **Conflict** | Noah's agent switches auth to JWT; Joshua's checkout reads `req.session.userId`. Both pass their own tests. A conflict appears with both diffs and Noah approves JWT. Joshua's session gets the update by channel, and his steps built on cookies are flagged. *(P1: Droid repair applies the fix.)* | `conflict` |
-| Verify | `lb verify` merges the three branches and runs the integration test, which passes. Metrics: 3 catches before push, ~N tokens saved. | — |
+| Beat          | What happens                                                                                                                                                                                                                                                                                                                                                   | Type        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Setup         | Three prompts, three laptops. Intents appear as nodes.                                                                                                                                                                                                                                                                                                         | `normal`    |
+| **Duplicate** | Joshua's checkout agent plans its own `users` table. Noah's agent already owns it. The write is denied and Joshua's agent imports Noah's `User` instead.                                                                                                                                                                                                       | `duplicate` |
+| **Stale**     | Earlier, Noah's agent spent ~9 minutes adding `cors()` with a wildcard origin plus credentials. Browsers reject that, so the attempt failed, and the fix that worked was a Vite `/api` proxy. Now Ash's agent sets out to "add CORS middleware to the API". Before its first edit, it's told what failed, why, and what worked. It goes straight to the proxy. | `stale`     |
+| **Conflict**  | Noah's agent switches auth to JWT; Joshua's checkout reads `req.session.userId`. Both pass their own tests. A conflict appears with both diffs and Noah approves JWT. Joshua's session gets the update by channel, and his steps built on cookies are flagged. _(P1: Droid repair applies the fix.)_                                                           | `conflict`  |
+| Verify        | `lb verify` merges the three branches and runs the integration test, which passes. Metrics: 3 catches before push, ~N tokens saved.                                                                                                                                                                                                                            | —           |
 
 Backup: `lb replay fixtures/scenario.jsonl` replays the recorded run, plus a recorded video.
 
@@ -683,11 +765,11 @@ Backup: `lb replay fixtures/scenario.jsonl` replays the recorded run, plus a rec
 
 Build-integrated, each doing real work:
 
-| Track | What it does in the product | Priority |
-| --- | --- | --- |
-| **Convex**: Best Use ($5,000) | Every table, live queries for dashboard and channel forwarder, vector index for similarity, scheduler for async classification, crons for calibration and claim expiry | Core |
-| **MLH: Gemini API** | Default embedder + judge + trajectory distillation | Core |
-| **Factory: Droid SDK** ($2,000) | Repair worker: after a human approves a resolution, Droid checks out the affected branch, applies the approved contract, runs tests, and pushes a fix branch for review. Never pushes to main. | P1 (M3) |
+| Track                           | What it does in the product                                                                                                                                                                    | Priority |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **Convex**: Best Use ($5,000)   | Every table, live queries for dashboard and channel forwarder, vector index for similarity, scheduler for async classification, crons for calibration and claim expiry                         | Core     |
+| **MLH: Gemini API**             | Default embedder + judge + trajectory distillation                                                                                                                                             | Core     |
+| **Factory: Droid SDK** ($2,000) | Repair worker: after a human approves a resolution, Droid checks out the affected branch, applies the approved contract, runs tests, and pushes a fix branch for review. Never pushes to main. | P1 (M3)  |
 
 Judged on what we already build (no extra code):
 - **Overall**, **Most Technically Advanced** (cross-machine connector + seven-step classifier pipeline + self-improvement), **Most Creative**, **Hacker's Choice**
@@ -736,50 +818,50 @@ fixtures/          captured hook payloads, scenario.jsonl, labeled classifier ex
 
 ## 11. Owners and timeline (from Fri 10 PM)
 
-| | Ash: hooks + MCP + platform | Noah: classifier logic | Joshua: dashboard + demo |
-| --- | --- | --- | --- |
-| Owns | `apps/connector`, `plugin/`, Convex `http/agents/events/nodes/inbox`, channels, `lb verify`, Droid worker (M3) | `core/classify`, Convex `classify/*`, adapters, distillation, calibration, labeled fixtures | `apps/web` (graph, tables, thoughts, resolve), demo repo, scenario recording, pitch + video |
-| First deliverable | Real hook → `events` row → hook response round trip | Rules R1, R2, R10 passing unit tests on fixtures | Tables view live from a seeded workspace |
+|                   | Ash: hooks + MCP + platform                                                                                    | Noah: classifier logic                                                                      | Joshua: dashboard + demo                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Owns              | `apps/connector`, `plugin/`, Convex `http/agents/events/nodes/inbox`, channels, `lb verify`, Droid worker (M3) | `core/classify`, Convex `classify/*`, adapters, distillation, calibration, labeled fixtures | `apps/web` (graph, tables, thoughts, resolve), demo repo, scenario recording, pitch + video |
+| First deliverable | Real hook → `events` row → hook response round trip                                                            | Rules R1, R2, R10 passing unit tests on fixtures                                            | Tables view live from a seeded workspace                                                    |
 
-| Block | Goal | Done when |
-| --- | --- | --- |
-| **M0** Fri 22:00–Sat 01:00 | Scaffold, Convex schema, plugin skeleton, channel spike, Gemini key + model IDs, Droid SDK access check | An event from laptop A appears in laptop B's session |
-| **M1** Sat 01:00–04:00 | Events → nodes, local normalize, rules R1/R2/R10, `PreToolUse` deny, inbox, tables view | **Duplicate** beat works across two machines |
-| *Sleep, staggered* | | |
-| **M2** Sat 09:00–14:00 | Embeddings + vector search, intent pre-classification, failed-trajectory distillation, conflict + resolve panel, channel delivery | **Stale** and **Conflict** beats work |
-| **M3** Sat 14:00–20:00 | LLM judge, feedback + calibration, token metrics, graph + thoughts views, `lb verify`, Droid repair | Full story end to end |
-| **M4** Sat 20:00–Sun 03:00 | Acceptance tests, failure recovery, polish, record scenario + demo video | Three clean run-throughs |
-| **Ship** Sun 03:00–08:00 | Freeze, README, Devpost, sponsor forms, rehearse | Submitted by 08:00 |
+| Block                      | Goal                                                                                                                              | Done when                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **M0** Fri 22:00–Sat 01:00 | Scaffold, Convex schema, plugin skeleton, channel spike, Gemini key + model IDs, Droid SDK access check                           | An event from laptop A appears in laptop B's session |
+| **M1** Sat 01:00–04:00     | Events → nodes, local normalize, rules R1/R2/R10, `PreToolUse` deny, inbox, tables view                                           | **Duplicate** beat works across two machines         |
+| _Sleep, staggered_         |                                                                                                                                   |                                                      |
+| **M2** Sat 09:00–14:00     | Embeddings + vector search, intent pre-classification, failed-trajectory distillation, conflict + resolve panel, channel delivery | **Stale** and **Conflict** beats work                |
+| **M3** Sat 14:00–20:00     | LLM judge, feedback + calibration, token metrics, graph + thoughts views, `lb verify`, Droid repair                               | Full story end to end                                |
+| **M4** Sat 20:00–Sun 03:00 | Acceptance tests, failure recovery, polish, record scenario + demo video                                                          | Three clean run-throughs                             |
+| **Ship** Sun 03:00–08:00   | Freeze, README, Devpost, sponsor forms, rehearse                                                                                  | Submitted by 08:00                                   |
 
 ---
 
 ## 12. Acceptance tests
 
-| Test | Pass condition |
-| --- | --- |
-| Duplicate | Second agent's write to an owned file is denied with the owner and the existing path |
-| Stale (similar) | An intent phrased differently from a failed trajectory gets a `stale` warning before its first edit |
-| Stale (exact) | Re-running a known-failing command signature is denied with the known fix |
-| Conflict | Same topic, different value → one `conflict` row (dedupe), both agents notified, owner resolves |
-| Normal control | Unrelated work by two agents → zero classifications |
-| Compatible control | Same topic, same value → no conflict |
+| Test                   | Pass condition                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Duplicate              | Second agent's write to an owned file is denied with the owner and the existing path                               |
+| Stale (similar)        | An intent phrased differently from a failed trajectory gets a `stale` warning before its first edit                |
+| Stale (exact)          | Re-running a known-failing command signature is denied with the known fix                                          |
+| Conflict               | Same topic, different value → one `conflict` row (dedupe), both agents notified, owner resolves                    |
+| Normal control         | Unrelated work by two agents → zero classifications                                                                |
+| Compatible control     | Same topic, same value → no conflict                                                                               |
 | Semantic conflict (R5) | Changing the signature of a symbol another agent calls → `semantic_conflict`, block, evidence lists the call sites |
-| Ordering (R6) | Referencing a symbol another agent is creating → `ordering_dependency` with the correct direction |
-| Candidate recall | Every pair with path or symbol overlap reaches step 3, regardless of top-k |
-| Plans never block | An intent-only event is capped at `serialize` |
-| Swappability | Switching `CLASSIFIER_JUDGE=claude` passes the same fixture suite |
-| Latency | `PreToolUse` p95 < 150 ms with 3 agents active |
-| Fail open | Backend down → hooks exit 0 in < 2 s; events land in the outbox |
-| Learning | After 3 dismissals of a pattern, its threshold rises and it stops firing |
+| Ordering (R6)          | Referencing a symbol another agent is creating → `ordering_dependency` with the correct direction                  |
+| Candidate recall       | Every pair with path or symbol overlap reaches step 3, regardless of top-k                                         |
+| Plans never block      | An intent-only event is capped at `serialize`                                                                      |
+| Swappability           | Switching `CLASSIFIER_JUDGE=claude` passes the same fixture suite                                                  |
+| Latency                | `PreToolUse` p95 < 150 ms with 3 agents active                                                                     |
+| Fail open              | Backend down → hooks exit 0 in < 2 s; events land in the outbox                                                    |
+| Learning               | After 3 dismissals of a pattern, its threshold rises and it stops firing                                           |
 
 ---
 
 ## 13. Open questions
 
-1. **Topic map.** Should each repo commit a small `.littlebrother.json` that maps files to topics and owners? It makes the exact rules faster and conflicts more precise. The alternative is to rely on LLM topic extraction alone. *Recommended: yes, optional, seeded for the demo.*
-2. **Self-stale.** Should `stale` also fire when an agent repeats its *own* failed approach, for example after context compaction? *Recommended: yes, it's free.*
-3. **Repair autonomy.** After approval, should Droid push a fix branch for review or just propose a diff? *Recommended: a fix branch, never main.*
-4. **Data sent to model providers.** For the demo repo, can prompts (≤500 chars) and diff hunks go to Gemini? *Recommended: yes for the demo; redaction is a stretch goal.*
+1. **Topic map.** Should each repo commit a small `.littlebrother.json` that maps files to topics and owners? It makes the exact rules faster and conflicts more precise. The alternative is to rely on LLM topic extraction alone. _Recommended: yes, optional, seeded for the demo._
+2. **Self-stale.** Should `stale` also fire when an agent repeats its _own_ failed approach, for example after context compaction? _Recommended: yes, it's free._
+3. **Repair autonomy.** After approval, should Droid push a fix branch for review or just propose a diff? _Recommended: a fix branch, never main._
+4. **Data sent to model providers.** For the demo repo, can prompts (≤500 chars) and diff hunks go to Gemini? _Recommended: yes for the demo; redaction is a stretch goal._
 
 **Answered from the classifier spec's open questions:**
 - **Granularity of intents:** free text from the prompt plus paths the agent actually touches. Structured declarations cost tokens and agents fill them in unreliably.
@@ -855,13 +937,13 @@ Pitch it as a data flywheel: more usage means better labels, which makes the cla
 **What does the classifier need to know about the graph and tables?**
 Not the schema, and not the whole graph. The backend assembles a small packet for each call, under about 2k tokens:
 
-| Part | Contents |
-| --- | --- |
-| The new node | Signature, kind, verb, topic, files, agent |
-| Candidates | Top-k nearest nodes from vector search, as signatures with agent, outcome and time |
-| Type definitions | The four event types from `eventTypes`, with their definitions |
-| Ownership | The topic owner from `.littlebrother.json`, if any |
-| Examples | 3–5 nearest confirmed and dismissed past verdicts |
+| Part             | Contents                                                                           |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| The new node     | Signature, kind, verb, topic, files, agent                                         |
+| Candidates       | Top-k nearest nodes from vector search, as signatures with agent, outcome and time |
+| Type definitions | The four event types from `eventTypes`, with their definitions                     |
+| Ownership        | The topic owner from `.littlebrother.json`, if any                                 |
+| Examples         | 3–5 nearest confirmed and dismissed past verdicts                                  |
 
 It returns one `Judgment` per pair (relation, direction, confidence, evidence, action). Writing to the tables, fan-out and enforcement stay in our code, never in the model.
 
@@ -885,14 +967,14 @@ Yes, as a small vocabulary of verbs stored in node fields, not a new language wi
 **Where are the hooks attached?**
 To Claude Code itself, on each developer's laptop. The plugin's `hooks/hooks.json` registers `lb hook <Event>` on Claude Code's lifecycle events (§6):
 
-| Hook | We get |
-| --- | --- |
-| `SessionStart` | `session_id`, working directory |
-| `UserPromptSubmit` | The prompt (the intent) |
-| `PreToolUse` | Tool name and exact input: file path, content, command. We can deny here. |
-| `PostToolUse` / `PostToolUseFailure` | The result: success, error, test output |
-| `Stop` | `last_assistant_message`, `transcript_path` |
-| `SessionEnd` | Cleanup |
+| Hook                                 | We get                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `SessionStart`                       | `session_id`, working directory                                           |
+| `UserPromptSubmit`                   | The prompt (the intent)                                                   |
+| `PreToolUse`                         | Tool name and exact input: file path, content, command. We can deny here. |
+| `PostToolUse` / `PostToolUseFailure` | The result: success, error, test output                                   |
+| `Stop`                               | `last_assistant_message`, `transcript_path`                               |
+| `SessionEnd`                         | Cleanup                                                                   |
 
 **Do we capture Claude's thinking tokens, or make Claude explain itself?**
 Neither.
@@ -900,7 +982,7 @@ Neither.
 - Reading teammates' reasoning would raise privacy concerns.
 - Making Claude narrate its reasoning would cost tokens on every step, which contradicts the pitch.
 
-The reasoning trajectory comes from what Claude *does*:
+The reasoning trajectory comes from what Claude _does_:
 - **Intent:** the prompt plus Claude's visible plan text.
 - **Approach:** the files touched, edits made and commands run.
 - **Outcome:** test results, errors, reverts.

@@ -1,0 +1,24 @@
+{
+  "name": "@lb/backend",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./convex/_generated/api.js"
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p convex"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.65.0",
+    "@google/genai": "^1.21.0",
+    "@lb/core": "workspace:*",
+    "convex": "^1.27.3",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "convex-test": "^0.0.38"
+  }
+}
