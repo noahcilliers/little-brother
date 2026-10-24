@@ -4,12 +4,12 @@ import type * as TS from "typescript";
 import { intersects, type Span } from "./text";
 import type { TsModule } from "./ts-symbols";
 
-type Imported = { module: string; name: string };
+export type Imported = { module: string; name: string };
 
 const EXTS = [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"];
 
 /** Relative specifiers become repo-relative paths so references line up with other agents' touches. */
-function resolveModule(spec: string, fileRel: string, repoRoot: string): string {
+export function resolveModule(spec: string, fileRel: string, repoRoot: string): string {
   if (!spec.startsWith(".")) return spec;
   const base = posix.normalize(posix.join(posix.dirname(fileRel), spec));
   for (const ext of EXTS) if (existsSync(join(repoRoot, base + ext))) return base + ext;
@@ -17,7 +17,7 @@ function resolveModule(spec: string, fileRel: string, repoRoot: string): string 
   return /\.[cm]?[jt]sx?$/.test(base) ? base.replace(/\.js$/, ".ts") : `${base}.ts`;
 }
 
-function importMap(
+export function importMap(
   ts: TsModule,
   sf: TS.SourceFile,
   fileRel: string,

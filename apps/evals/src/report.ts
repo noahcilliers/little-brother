@@ -1,5 +1,6 @@
 import type { Metrics, RunRecord, Summary } from "./aggregate";
 import { armOf } from "./arm";
+import { armsSection } from "./report-arms";
 import { latencySection } from "./report-latency";
 import { savingsSection } from "./report-savings";
 
@@ -108,6 +109,7 @@ export function renderReport(meta: ReportMeta, s: Summary, runs: RunRecord[]): s
     "",
     metricTable(variantCols),
     "",
+    ...(s.arms ? armsSection("Planted suite", s.arms) : []),
     ...latencySection(s.latency),
     ...savingsSection(s.savings),
     "## Cases",

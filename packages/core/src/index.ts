@@ -1,4 +1,6 @@
+export * from "./ask";
 export * from "./classify/index";
+export * from "./code/index";
 export * from "./command-outcome";
 export * from "./hook-timing";
 export * from "./hooks";
@@ -9,6 +11,7 @@ export * from "./labels";
 export * from "./mcp";
 export * from "./nodes";
 export * from "./prompt-text";
+export * from "./repo-graph";
 export * from "./shell-writes";
 export * from "./tasks";
 export * from "./topics";

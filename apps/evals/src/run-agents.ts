@@ -53,6 +53,8 @@ export async function runAgents(
         logFile: join(runDir, `${spec.handle}.stream.jsonl`),
         timingFile: timingFile(runDir, spec.handle),
         limits: ctx.limits,
+        ...(ctx.agentEnv ? { extraEnv: ctx.agentEnv(spec.handle, cwd) } : {}),
+        ...(ctx.extraTools ? { extraTools: ctx.extraTools } : {}),
         onFirstEdit: () => {
           state.firstEditAt = Date.now();
         },

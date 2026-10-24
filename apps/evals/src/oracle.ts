@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import type { Check, EvalCase } from "./case";
 import { sh, shAsync, shOrThrow } from "./exec";
+import { grepRef } from "./grep-ref";
 import type { CheckResult } from "./score";
 import type { AgentLog } from "./stream";
 import { branchOf, linkModules, type Workspace } from "./workspace";
@@ -54,12 +55,7 @@ async function runCheck(
     return { id: k.id, value: files !== null, detail: files ?? "merges cleanly" };
   }
   if (k.kind === "grep") {
-    const r = sh("git", ["grep", "-l", "-E", k.pattern, refOf(k.on), "--", ...(k.paths ?? [])], ws.repo);
-    const files = r.out
-      .trim()
-      .split("\n")
-      .filter(Boolean)
-      .map((l) => l.replace(/^[^:]+:/, ""));
+    const files = grepRef(ws.repo, refOf(k.on), k.pattern, k.paths ?? []);
     return {
       id: k.id,
       value: files.length >= k.minFiles,

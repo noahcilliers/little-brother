@@ -2,6 +2,9 @@ import { parseArgs } from "node:util";
 import type { Arm } from "./arm";
 import type { Variant } from "./case";
 
+export type Suite = "planted" | "stale" | "cooper";
+export const SUITES: readonly Suite[] = ["planted", "stale", "cooper"];
+
 export type Options = {
   cases: string[];
   variants: Variant[];
@@ -18,6 +21,19 @@ export type Options = {
   compare?: string;
   build: boolean;
   list: boolean;
+  /** Integration agent on the merged tree after every run, both arms (fixup.ts). */
+  fixup: boolean;
+  /** Off and on runs scheduled in adjacent seeded blocks (paired.ts). */
+  paired: boolean;
+  seed: number;
+  /** Stop starting runs once the ledger's estimated spend reaches this. */
+  capUsd: number;
+  ledger?: string;
+  suite: Suite;
+  /** Re-grade an earlier results directory's fix-up trees and rewrite its summary and report (recheck.ts). */
+  recheck?: string;
+  /** Convert an earlier results directory into labelled training pairs and exit (export-pairs.ts). */
+  exportPairs?: string;
 };
 
 export const USAGE = `pnpm --filter @lb/evals eval [options]
@@ -36,7 +52,15 @@ export const USAGE = `pnpm --filter @lb/evals eval [options]
   --out dir          results directory (default: apps/evals/results/<timestamp>)
   --compare dir      earlier results directory to diff against
   --no-build         skip building the connector
-  --list             print the cases and exit`;
+  --suite s          planted (demo shop) | stale (STALE-bench Django) | cooper (CooperBench) (default: planted)
+  --no-fixup         skip the integration agent that repairs the merged tree after each run
+  --paired           schedule off/on runs in adjacent seeded blocks and report paired differences
+  --seed n           schedule seed for --paired (default: 1)
+  --cap-usd usd      stop starting runs once estimated spend reaches this (default: 60)
+  --ledger file      spend ledger shared across invocations (default: apps/evals/results/ledger.jsonl)
+  --recheck dir      re-grade an earlier results dir's fix-up trees against the current cases, then re-report
+  --list             print the cases and exit
+  --export-pairs dir write <dir>/pairs.jsonl (labelled pairs for the pair model) from a results dir and exit`;
 
 function num(v: string | undefined, fallback: number, name: string): number {
   if (v === undefined) return fallback;
@@ -63,7 +87,15 @@ export function parseOptions(argv: string[]): Options {
       out: { type: "string" },
       compare: { type: "string" },
       "no-build": { type: "boolean" },
+      "no-fixup": { type: "boolean" },
+      paired: { type: "boolean" },
+      seed: { type: "string" },
+      "cap-usd": { type: "string" },
+      ledger: { type: "string" },
+      suite: { type: "string" },
+      recheck: { type: "string" },
       list: { type: "boolean" },
+      "export-pairs": { type: "string" },
       help: { type: "boolean" },
     },
   });
@@ -74,6 +106,8 @@ export function parseOptions(argv: string[]): Options {
   const variant = values.variant ?? "both";
   if (!["pointed", "natural", "both"].includes(variant))
     throw new Error("--variant must be pointed, natural or both");
+  const suite = values.suite ?? "planted";
+  if (!SUITES.includes(suite as Suite)) throw new Error(`--suite must be ${SUITES.join(", ")}`);
   const arm = values.arm ?? "on";
   if (!["on", "off", "both"].includes(arm)) throw new Error("--arm must be on, off or both");
   return {
@@ -96,6 +130,14 @@ export function parseOptions(argv: string[]): Options {
     ...(values.out ? { out: values.out } : {}),
     ...(values.compare ? { compare: values.compare } : {}),
     build: !values["no-build"],
+    fixup: !values["no-fixup"],
+    paired: values.paired ?? false,
+    seed: Math.round(num(values.seed, 1, "seed")),
+    capUsd: num(values["cap-usd"], 60, "cap-usd"),
+    ...(values.ledger ? { ledger: values.ledger } : {}),
+    suite: suite as Suite,
+    ...(values.recheck ? { recheck: values.recheck } : {}),
     list: values.list ?? false,
+    ...(values["export-pairs"] ? { exportPairs: values["export-pairs"] } : {}),
   };
 }

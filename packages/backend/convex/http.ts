@@ -89,6 +89,46 @@ const verify = httpAction(async (ctx, req) => {
   return json(res.status, { text: res.text });
 });
 
+const AskCreate = z.object({
+  claudeSessionId: z.string(),
+  toolUseId: z.string().optional(),
+  questions: z
+    .array(
+      z.object({
+        question: z.string().max(2000),
+        header: z.string().max(200).optional(),
+        multiSelect: z.boolean().optional(),
+        options: z
+          .array(z.object({ label: z.string().max(500), description: z.string().max(2000).optional() }))
+          .max(10),
+      }),
+    )
+    .min(1)
+    .max(6),
+});
+const AskId = z.object({ id: z.string() });
+
+/** `lb ask`: create (200 {id} or {id:null} → ask in the terminal), poll status, or give up. */
+const ask = httpAction(async (ctx, req) => {
+  const tokenHash = await tokenHashOf(req);
+  if (!tokenHash) return json(401, { error: "missing token" });
+  const op = new URL(req.url).pathname.slice("/ask/".length);
+  const raw = await readJson(req);
+  if (op === "create") {
+    const body = AskCreate.safeParse(raw);
+    if (!body.success) return json(400, { error: body.error.message });
+    const id = await ctx.runMutation(internal.ask.create, { tokenHash, ...body.data });
+    return json(200, { id });
+  }
+  const body = AskId.safeParse(raw);
+  if (!body.success) return json(400, { error: body.error.message });
+  if (op === "status")
+    return json(200, (await ctx.runQuery(internal.ask.status, { tokenHash, id: body.data.id })) ?? {});
+  if (op === "expire")
+    return json(200, await ctx.runMutation(internal.ask.expire, { tokenHash, id: body.data.id }));
+  return json(404, { error: "unknown op" });
+});
+
 const http = httpRouter();
 auth.addHttpRoutes(http);
 http.route({ path: "/join", method: "POST", handler: join });
@@ -96,6 +136,7 @@ http.route({ pathPrefix: "/hook/", method: "POST", handler: hook });
 http.route({ pathPrefix: "/mcp/", method: "POST", handler: mcp });
 http.route({ path: "/session/attach", method: "POST", handler: attach });
 http.route({ path: "/verify", method: "POST", handler: verify });
+http.route({ pathPrefix: "/ask/", method: "POST", handler: ask });
 http.route({ path: "/health", method: "GET", handler: httpAction(async () => new Response("ok")) });
 
 export default http;

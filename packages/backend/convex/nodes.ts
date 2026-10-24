@@ -2,19 +2,27 @@ import { consumedTopics, type IngestEnvelope, normalizeCommand, TopicMap, type V
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { sha1Hex } from "./hash";
+import { importersFor } from "./repoGraph";
 
 type NewNode = Omit<Doc<"nodes">, "_id" | "_creationTime" | "touches" | "references" | "files"> &
   Partial<Pick<Doc<"nodes">, "touches" | "references" | "files">>;
 
-/** Copies the author's room onto the node so classifier reads can stay inside one room. */
+/**
+ * Copies the author's room onto the node so classifier reads can stay inside one room, and attaches the repo
+ * graph's importers of any interface it changes, so classification reads them off the node.
+ */
 export async function insertNode(ctx: MutationCtx, node: NewNode): Promise<Id<"nodes">> {
-  const teamId = node.teamId ?? (await ctx.db.get(node.agentId))?.teamId;
+  const agent = await ctx.db.get(node.agentId);
+  const teamId = node.teamId ?? agent?.teamId;
+  const importers =
+    agent && node.touches?.length ? await importersFor(ctx, agent.repo, node.touches) : undefined;
   return ctx.db.insert("nodes", {
     files: [],
     touches: [],
     references: [],
     ...node,
     ...(teamId ? { teamId } : {}),
+    ...(importers ? { importers } : {}),
   });
 }
 

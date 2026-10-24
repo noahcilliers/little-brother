@@ -149,9 +149,18 @@ describe("normalizeTool", () => {
   });
 
   it("uses file-level touches for other languages and read ops for Read/Grep", async () => {
-    const root = tempRepo({ "app.py": "def f():\n  pass\n" });
+    const root = tempRepo({ "app.py": "def f():\n  pass\n", "main.go": "func f() {\n  return\n}\n" });
+    const go = await pre(root, "Edit", {
+      file_path: "main.go",
+      old_string: "return",
+      new_string: "return 1",
+    });
+    expect(go.touches).toEqual([{ path: "main.go", op: "write", lines: [2, 2] }]);
     const py = await pre(root, "Edit", { file_path: "app.py", old_string: "pass", new_string: "return 1" });
-    expect(py.touches).toEqual([{ path: "app.py", op: "write", lines: [2, 2] }]);
+    expect(py.touches).toEqual([
+      { path: "app.py", op: "write", lines: [2, 2] },
+      { path: "app.py", symbol: "app.py::f", op: "write", lines: [2, 2] },
+    ]);
     expect((await pre(root, "Read", { file_path: join(root, "app.py") })).touches).toEqual([
       { path: "app.py", op: "read" },
     ]);

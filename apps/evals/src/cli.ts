@@ -1,22 +1,20 @@
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { newTokens } from "@lb/core";
 import { CASES } from "../cases";
 import { type RunRecord, type Summary, summarize } from "./aggregate";
-import { type Backend, describeBackend, healthy } from "./backend";
 import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
 import { renderCompare } from "./compare";
-import { shOrThrow } from "./exec";
+import { exportPairs } from "./export-pairs";
 import { parseOptions } from "./options";
-import { buildEvalPlugin, writeMcpConfig } from "./plugin";
+import { recheck } from "./recheck";
 import { renderReport } from "./report";
 import { type RunContext, runCase } from "./run-case";
+import { type Job, order, runPool } from "./schedule";
+import { prepareHarness, ROOT } from "./setup";
+import { runSuite } from "./suites/run-suite";
 import { prepareModules } from "./workspace";
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const CLI = join(ROOT, "apps/connector/dist/cli.js");
 
 function select(ids: string[]): EvalCase[] {
   if (!ids.length) return CASES;
@@ -25,29 +23,36 @@ function select(ids: string[]): EvalCase[] {
   return picked;
 }
 
-async function pool<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = new Array(items.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < items.length) {
-      const i = next++;
-      const item = items[i];
-      if (item !== undefined) out[i] = await fn(item);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(size, items.length) }, worker));
-  return out;
+function outcomeLine(r: RunRecord): string {
+  // With Little Brother off there are no rows to score, only whether the clash happened.
+  const outcomes =
+    r.score.expectations
+      .map((e) => (r.arm === "off" ? (e.materialized ? "clash" : "no-clash") : e.outcome))
+      .join(",") || (r.score.control ? "control" : "-");
+  const tokens = r.tokens ? ` · ${Math.round(newTokens(r.tokens) / 1000)}k tok` : "";
+  const final = r.finalSuccess === undefined ? "" : ` · final ${r.finalSuccess ? "pass" : "FAIL"}`;
+  return `${r.caseId} ${r.variant} ${r.arm === "off" ? "LB-off " : ""}#${r.run}: ${r.error ? `ERROR ${r.error}` : outcomes}${final} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`;
 }
 
-function joinAgents(lbHome: string, site: string, handles: string[]): void {
-  const env = { ...process.env, LB_HOME: lbHome };
-  const invite = process.env.LB_INVITE_CODE ?? "calhacks";
-  for (const h of handles)
-    shOrThrow("node", [CLI, "join", "--url", site, "--invite", invite, "--as", h], ROOT, env);
+/** Summary and report again for runs re-graded by --recheck, keeping the original meta. */
+function rewriteReport(outDir: string, runs: RunRecord[]): void {
+  const prev = JSON.parse(readFileSync(join(outDir, "summary.json"), "utf8")) as {
+    meta: Parameters<typeof renderReport>[0];
+  };
+  const summary = summarize(runs, spawnOverheadMs());
+  writeFileSync(join(outDir, "summary.json"), JSON.stringify({ meta: prev.meta, summary }, null, 2));
+  writeFileSync(join(outDir, "report.md"), renderReport(prev.meta, summary, runs));
 }
 
 async function main(): Promise<void> {
   const opts = parseOptions(process.argv.slice(2));
+  if (opts.exportPairs) {
+    const s = exportPairs(resolve(opts.exportPairs));
+    console.log(`pairs → ${join(resolve(opts.exportPairs), "pairs.jsonl")}: ${JSON.stringify(s)}`);
+    return;
+  }
+  if (opts.recheck) return rewriteReport(resolve(opts.recheck), await recheck(resolve(opts.recheck)));
+  if (opts.suite !== "planted") return runSuite(opts);
   const problems = CASES.flatMap((c) => caseProblems(c).map((p) => `${c.id}: ${p}`));
   if (problems.length) throw new Error(`invalid cases:\n${problems.join("\n")}`);
   const cases = select(opts.cases);
@@ -58,39 +63,20 @@ async function main(): Promise<void> {
       );
     return;
   }
-  const backend: Backend = { dir: join(ROOT, "packages/backend"), siteUrl: opts.site };
-  if (!(await healthy(backend)))
-    throw new Error(
-      `no backend at ${opts.site}: run \`npx convex dev\` in packages/backend (CONVEX_AGENT_MODE=anonymous)`,
-    );
-  const backendInfo = describeBackend(backend);
-  if (!backendInfo.includes("open mode on"))
-    throw new Error(
-      "backend is not in open mode: `npx convex env set LB_ALLOW_INVITE 1` in packages/backend",
-    );
-  if (opts.build) shOrThrow("npm", ["run", "build", "--silent"], join(ROOT, "apps/connector"));
-  if (!existsSync(CLI)) throw new Error(`connector not built at ${CLI}`);
-
-  const startedAt = new Date();
-  const tag = startedAt.toISOString().replace(/[-:]/g, "").slice(4, 13).replace("T", "");
-  const outDir = resolve(
-    opts.out ?? join(ROOT, "apps/evals/results", startedAt.toISOString().replace(/[:.]/g, "-")),
+  const h = await prepareHarness(
+    opts,
+    cases.flatMap((c) => c.agents.map((a) => a.handle)),
   );
-  const workDir = join(realpathSync("/tmp"), "lb-evals", tag);
-  mkdirSync(outDir, { recursive: true });
-  mkdirSync(workDir, { recursive: true });
-  const lbHome = join(outDir, "lb-home");
-  joinAgents(lbHome, opts.site, [...new Set(cases.flatMap((c) => c.agents.map((a) => a.handle)))]);
   const shopSrc = join(ROOT, "demo/shop");
   const ctx: RunContext = {
-    backend,
+    backend: h.backend,
     shopSrc,
-    outDir,
-    workDir,
-    pluginDir: buildEvalPlugin(join(ROOT, "plugin"), outDir, CLI),
-    mcpConfig: writeMcpConfig(outDir, CLI),
-    cliPath: CLI,
-    lbHome,
+    outDir: h.outDir,
+    workDir: h.workDir,
+    pluginDir: h.pluginDir,
+    mcpConfig: h.mcpConfig,
+    cliPath: h.cliPath,
+    lbHome: h.lbHome,
     modules: prepareModules(shopSrc, join(ROOT, "apps/evals/results/.cache")),
     limits: {
       model: opts.model,
@@ -98,43 +84,50 @@ async function main(): Promise<void> {
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
     },
-    tag,
+    tag: h.tag,
     settleSec: opts.settleSec,
+    fixup: opts.fixup,
   };
-  const jobs = cases.flatMap((c) =>
+  const jobs: Job<RunRecord>[] = cases.flatMap((c) =>
     opts.variants.flatMap((v) =>
-      opts.arms.flatMap((arm) => Array.from({ length: opts.runs }, (_, i) => ({ c, v, arm, run: i + 1 }))),
+      Array.from({ length: opts.runs }, (_, i) => i + 1).flatMap((run) =>
+        opts.arms.map((arm) => ({
+          key: `${c.id}-${v}-${arm}-${run}`,
+          arm,
+          block: `${c.id}-${v}-${run}`,
+          start: () => runCase(c, v, arm, run, ctx),
+        })),
+      ),
     ),
   );
-  console.log(`${jobs.length} run(s) · ${backendInfo}\nresults → ${outDir}\nworktrees → ${workDir}`);
-  let done = 0;
-  const runs: RunRecord[] = await pool(jobs, opts.concurrency, async ({ c, v, arm, run }) => {
-    const r = await runCase(c, v, arm, run, ctx);
-    // With Little Brother off there are no rows to score, only whether the clash happened.
-    const outcomes =
-      r.score.expectations
-        .map((e) => (arm === "off" ? (e.materialized ? "clash" : "no-clash") : e.outcome))
-        .join(",") || (r.score.control ? "control" : "-");
-    const tokens = r.tokens ? ` · ${Math.round(newTokens(r.tokens) / 1000)}k tok` : "";
-    console.log(
-      `[${++done}/${jobs.length}] ${c.id} ${v} ${arm === "off" ? "LB-off " : ""}#${run}: ${r.error ? `ERROR ${r.error}` : outcomes} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`,
-    );
-    return r;
-  });
+  console.log(
+    `${jobs.length} run(s) · ${h.backendInfo}${opts.fixup ? " · fix-up on" : ""}${opts.paired ? ` · paired, seed ${opts.seed}` : ""}\n` +
+      `results → ${h.outDir}\nworktrees → ${h.workDir}\nspent so far: ${h.budget.line()}`,
+  );
+  const { results: runs, skipped } = await runPool(
+    order(jobs, opts.paired, opts.seed),
+    opts.concurrency,
+    h.budget,
+    "planted",
+    outcomeLine,
+  );
 
-  const spawnMs = spawnOverheadMs();
-  const summary = summarize(runs, spawnMs);
+  const summary = summarize(runs, spawnOverheadMs());
   const meta = {
-    startedAt: startedAt.toISOString(),
+    startedAt: h.startedAt.toISOString(),
     model: opts.model,
     variants: opts.variants,
     arms: opts.arms,
     runsPerCase: opts.runs,
-    backend: backendInfo,
-    wallSec: (Date.now() - startedAt.getTime()) / 1000,
+    backend: h.backendInfo,
+    wallSec: (Date.now() - h.startedAt.getTime()) / 1000,
+    fixup: opts.fixup,
+    paired: opts.paired,
+    seed: opts.seed,
+    skipped,
   };
-  writeFileSync(join(outDir, "summary.json"), JSON.stringify({ meta, summary }, null, 2));
-  writeFileSync(join(outDir, "runs.json"), JSON.stringify(runs, null, 2));
+  writeFileSync(join(h.outDir, "summary.json"), JSON.stringify({ meta, summary }, null, 2));
+  writeFileSync(join(h.outDir, "runs.json"), JSON.stringify(runs, null, 2));
   let report = renderReport(meta, summary, runs);
   if (opts.compare) {
     const base = JSON.parse(readFileSync(join(resolve(opts.compare), "summary.json"), "utf8")) as {
@@ -142,8 +135,8 @@ async function main(): Promise<void> {
     };
     report += `\n${renderCompare(base.summary, summary)}`;
   }
-  writeFileSync(join(outDir, "report.md"), report);
-  console.log(`\nreport → ${join(outDir, "report.md")}`);
+  writeFileSync(join(h.outDir, "report.md"), report);
+  console.log(`\nreport → ${join(h.outDir, "report.md")} · ${h.budget.line()}`);
 }
 
 main().catch((e: unknown) => {

@@ -1,4 +1,5 @@
 import type { Op } from "../ingest";
+import type { ImporterLink } from "../repo-graph";
 
 export const RELATIONS = [
   "independent",
@@ -58,6 +59,7 @@ export type ClassifiedNode = {
   landed?: Landed;
   preview?: string; // ≤40 lines of the change (diff hunk / content / command) — what the judge reads
   consumes?: string[]; // topics whose consumers globs cover this node's files
+  importers?: ImporterLink[]; // files importing the symbols whose interface this node changes (repo graph)
   priority?: Priority;
 };
 

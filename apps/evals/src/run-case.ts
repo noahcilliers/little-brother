@@ -1,18 +1,20 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Limits } from "./agent";
 import type { RunRecord } from "./aggregate";
 import type { Arm } from "./arm";
 import { type Backend, closeRun, openRun, snapshot } from "./backend";
 import type { EvalCase, Variant } from "./case";
+import { distinctCatchSavings } from "./catches";
+import { type FixupResult, runFixup } from "./fixup";
 import { hookUsage, parseTimingLog } from "./hook-timing";
 import { mergeAll, runChecks } from "./oracle";
 import { runAgents, type Started, sleep, timingFile } from "./run-agents";
 import { scoreRun } from "./score";
 import { logTokens } from "./stream";
 import { addTokens, ZERO_TOKENS } from "./tokens";
-import { commitAgentWork, createWorkspace } from "./workspace";
+import { commitAgentWork, createWorkspace, linkModules } from "./workspace";
 
 export type RunContext = {
   backend: Backend;
@@ -29,6 +31,11 @@ export type RunContext = {
   tag: string;
   /** Wait after the last agent exits, so scheduled classifier actions (judge, re-classification) land. */
   settleSec: number;
+  /** Per-agent variables for suites outside the demo shop (a Python checkout's PATH and PYTHONPATH). */
+  agentEnv?: (handle: string, cwd: string) => Record<string, string>;
+  extraTools?: string[];
+  /** Run a fix-up agent on the merged tree after the agents finish (fixup.ts). */
+  fixup: boolean;
 };
 
 const readTiming = (file: string) => (existsSync(file) ? parseTimingLog(readFileSync(file, "utf8")) : []);
@@ -64,6 +71,7 @@ export async function runCase(
     [...started.values()].map((s) => logTokens(s.agent.log)).reduce(addTokens, ZERO_TOKENS);
   try {
     const wsDir = join(ctx.workDir, name);
+    rmSync(wsDir, { recursive: true, force: true });
     const ws = createWorkspace(ctx.shopSrc, wsDir, handles, ctx.modules);
     if (arm === "on") openRun(ctx.backend, code, name);
     started = await runAgents(c, variant, arm, runDir, code, ctx, ws.worktrees);
@@ -88,19 +96,35 @@ export async function runCase(
     }));
     const classifications = snap?.classifications ?? [];
     const score = scoreRun(c, classifications, timing, checks);
-    const hooks = snap
-      ? hookUsage(
-          timingLog,
-          classifications.reduce((n, k) => n + (k.tokensSaved ?? 0), 0),
-        )
-      : undefined;
+    const catches = distinctCatchSavings(classifications);
+    const hooks = snap ? hookUsage(timingLog, catches.tokensSaved) : undefined;
+    const agentsUsage = { tokens: tokens(), costUsd: spent(), wallSec: (Date.now() - t0) / 1000 };
+    let fixup: FixupResult | null = null;
+    if (ctx.fixup)
+      fixup = await runFixup({
+        repo: ws.repo,
+        dir: join(wsDir, "fixup"),
+        handles,
+        tasks: c.agents.map((a) => ({ handle: a.handle, prompt: a.prompt[variant] })),
+        success: c.success,
+        runDir,
+        lbHome: ctx.lbHome,
+        limits: ctx.limits,
+        linkDeps: (dir) => linkModules(ctx.modules, dir),
+      });
     const record: RunRecord = {
       ...base,
       score,
-      costUsd: spent(),
-      tokens: tokens(),
+      costUsd: agentsUsage.costUsd + (fixup?.costUsd ?? 0),
+      tokens: fixup ? addTokens(agentsUsage.tokens, fixup.tokens) : agentsUsage.tokens,
       wallSec: (Date.now() - t0) / 1000,
       ...(hooks ? { hooks } : {}),
+      ...(snap ? { catches: catches.catches } : {}),
+      phases: {
+        agents: agentsUsage,
+        ...(fixup ? { fixup: { tokens: fixup.tokens, costUsd: fixup.costUsd, wallSec: fixup.wallSec } } : {}),
+      },
+      ...(fixup ? { finalSuccess: fixup.success, mergeConflict: fixup.conflicted.length > 0 } : {}),
     };
     const agents = [...started].map(([h, s]) => ({
       handle: h,
@@ -119,7 +143,7 @@ export async function runCase(
     }));
     writeFileSync(
       join(runDir, "run.json"),
-      JSON.stringify({ ...record, code, agents, checks, merged, snapshot: snap }, null, 2),
+      JSON.stringify({ ...record, code, agents, checks, merged, fixup, snapshot: snap }, null, 2),
     );
     return record;
   } catch (e) {

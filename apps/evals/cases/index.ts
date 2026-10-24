@@ -8,6 +8,7 @@ import {
   semanticUserRename,
 } from "./dependency";
 import { dupOrderEmail, dupOrderModel, dupUsersTable } from "./duplicate";
+import { largeDupPricing, largeDupRateLimit, largeStaleComponentTests } from "./large";
 import { staleCorsWildcard, staleJsdomEnv } from "./stale";
 
 export const CASES: EvalCase[] = [
@@ -27,4 +28,7 @@ export const CASES: EvalCase[] = [
   controlSameMechanism,
   controlNeighbours,
   controlConfigAndTests,
+  largeDupRateLimit,
+  largeDupPricing,
+  largeStaleComponentTests,
 ];

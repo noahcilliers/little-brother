@@ -31,6 +31,7 @@ export function stored(n: Doc<"nodes">): StoredNode {
     landed: n.landed,
     preview: n.preview,
     consumes: n.consumes,
+    importers: n.importers,
     at: n.at,
   };
 }

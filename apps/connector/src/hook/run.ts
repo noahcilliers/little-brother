@@ -3,13 +3,13 @@ import { HookInput, type IngestEnvelope, IngestResponse } from "@lb/core";
 import { activeProfile } from "../config";
 import { HttpError, postJson } from "../http";
 import { type Normalized, normalizeTool } from "../normalize";
-import { loadTopicMap } from "../normalize/topic-map";
 import { sessionCodeFor } from "./attach";
 import { startBackgroundMergeCheck } from "./background";
 import { buildEnvelope } from "./envelope";
 import { type RepoInfo, repoInfo } from "./git";
 import { baseRev, gitOpFor } from "./git-state";
 import { appendOutbox, flushOutbox, type OutboxEntry } from "./outbox";
+import { addSessionContext, refreshGraphInBackground } from "./repo-graph";
 import { revertedPaths } from "./reverts";
 import { handleSessionCommand, retryPending } from "./session-command";
 import { writeSessionId } from "./session-file";
@@ -165,12 +165,14 @@ export async function runHook(event: string, raw: unknown, opts: HookRunOptions 
       now: Date.now(),
     });
     envelope.session.lbSession = code;
-    if (input.hook_event_name === "SessionStart") envelope.topicMap = loadTopicMap(repo.root);
+    if (input.hook_event_name === "SessionStart") addSessionContext(envelope, repo, opts.background === true);
     t?.mark("envelope");
     addGitContext(input, envelope, repo);
     t?.mark("git");
-    if (input.hook_event_name === "Stop" && opts.background)
+    if (input.hook_event_name === "Stop" && opts.background) {
       startBackgroundMergeCheck(repo, input.session_id, opts.as);
+      refreshGraphInBackground(repo);
+    }
     const entry: OutboxEntry = { as: opts.as, envelope };
     const res = await deliver(entry, opts.timeoutMs ?? HOOK_TIMEOUT_MS).catch((e: unknown) => {
       if (retryable(e)) appendOutbox(entry);

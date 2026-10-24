@@ -11,6 +11,7 @@ import { onStop } from "./hooks/stop";
 import { onTaskEvent, onTaskTool } from "./hooks/task";
 import type { HookHandler, HookResult } from "./hooks/types";
 import { unscoped } from "./outdated";
+import { loggedEnvelope } from "./repoGraph";
 import { sessionForCode } from "./sessionRows";
 import { memberByTokenHash } from "./tokenAuth";
 
@@ -62,7 +63,7 @@ export const ingest = internalMutation({
       tool: env.tool,
       files: env.files,
       summary: args.hook,
-      payload: { envelope: env, output: null },
+      payload: { envelope: loggedEnvelope(env), output: null },
       at: now,
     });
     const handler = handlerFor(args.hook, env.tool);
@@ -73,7 +74,7 @@ export const ingest = internalMutation({
       nodeId: result.nodeId,
       tokens: result.tokens,
       summary: result.summary,
-      payload: { envelope: env, output: result.output },
+      payload: { envelope: loggedEnvelope(env), output: result.output },
     });
     return { status: 200, output: result.output };
   },

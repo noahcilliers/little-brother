@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RepoGraph } from "./repo-graph";
 
 export const Op = z.enum(["read", "write", "create", "delete", "rename", "signature_change"]);
 export type Op = z.infer<typeof Op>;
@@ -61,6 +62,7 @@ export const IngestEnvelope = z.object({
   tool: z.string().optional(),
   toolUseId: z.string().optional(), // pairs PreToolUse with its PostToolUse
   topicMap: z.unknown().optional(), // the repo's .littlebrother.json, sent on SessionStart
+  repoGraph: RepoGraph.optional(), // one-hop import map of the repo, sent on SessionStart when cached
   baseRev: z.string().optional(), // merge-base of HEAD with the default branch; line ranges are relative to it
   git: GitOp.optional(), // set on PostToolUse when a Bash command was a git operation
   reverted: z.array(z.string()).max(200).optional(), // repo paths a git checkout/restore/reset put back; "." = all

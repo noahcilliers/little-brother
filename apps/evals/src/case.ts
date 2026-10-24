@@ -49,6 +49,20 @@ export type Expectation = {
   evidence: string[];
 };
 
+/** A feature that must survive integration: a regex (JavaScript) found in at least `minFiles` files. */
+export type Intact = { id: string; pattern: string; paths?: string[]; minFiles?: number };
+
+/**
+ * What a correct integrated result looks like, checked on the fix-up agent's tree. `run` commands must all
+ * exit 0; the default leaves out the storefront-access unit test, which fails on the untouched shop.
+ */
+export type Success = { run?: string[]; intact?: Intact[] };
+
+export const DEFAULT_SUCCESS_RUN = [
+  "npm run typecheck",
+  "npx vitest run test/unit --exclude test/unit/storefront-access.test.ts --passWithNoTests",
+];
+
 export type EvalCase = {
   id: string;
   title: string;
@@ -58,6 +72,7 @@ export type EvalCase = {
   /** Empty for controls: any finding is a false positive. */
   expect: Expectation[];
   checks: Check[];
+  success?: Success;
 };
 
 export const isControl = (c: EvalCase): boolean => c.expect.length === 0;

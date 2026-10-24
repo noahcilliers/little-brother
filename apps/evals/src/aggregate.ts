@@ -1,6 +1,8 @@
 import type { TokenCounts } from "@lb/core";
 import { type Arm, armOf } from "./arm";
+import { type ArmComparison, compareArms } from "./arm-stats";
 import type { FindingType, Variant } from "./case";
+import type { PhaseUsage } from "./fixup";
 import type { HookUsage } from "./hook-timing";
 import { type LatencyMetrics, latencyMetrics } from "./latency";
 import { measuredSavings, type SavingsSummary } from "./measured-savings";
@@ -21,6 +23,16 @@ export type RunRecord = {
   hooks?: HookUsage;
   /** Set when the run could not be scored (harness error); such runs are excluded from metrics. */
   error?: string;
+  /** Distinct catches (catchKey, else pair + type) on Little Brother on runs. */
+  catches?: number;
+  /** Usage split by phase; `tokens`, `costUsd` and `wallSec` above are the sums. */
+  phases?: { agents: PhaseUsage; fixup?: PhaseUsage };
+  /** The integrated tree passed the case's success checks (fixup.ts). Missing without a fix-up step. */
+  finalSuccess?: boolean;
+  /** Some agent branch conflicted when merged. */
+  mergeConflict?: boolean;
+  /** Which suite the run belongs to; missing means the planted demo-shop suite. */
+  suite?: string;
 };
 
 export type Metrics = {
@@ -125,6 +137,8 @@ export type Summary = {
   latency?: LatencyMetrics;
   /** Present when some runs had Little Brother off. */
   savings?: SavingsSummary;
+  /** Off vs on means and paired differences; present when some runs had Little Brother off. */
+  arms?: ArmComparison;
 };
 
 /** Detection and latency describe Little Brother, so they read only runs that had it on. */
@@ -147,5 +161,6 @@ export function summarize(all: RunRecord[], spawnOverheadMs = 0): Summary {
       spawnOverheadMs,
     ),
     ...(savings ? { savings } : {}),
+    ...(all.some((r) => armOf(r) === "off") ? { arms: compareArms(all) } : {}),
   };
 }

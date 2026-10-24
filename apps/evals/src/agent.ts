@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { createInterface } from "node:readline";
+import { claudeBin } from "./claude-bin";
 import { type AgentLog, applyLine, emptyLog } from "./stream";
 
 export type Limits = { model: string; maxTurns: number; maxBudgetUsd: number; timeoutMin: number };
@@ -22,6 +23,12 @@ export type AgentLaunch = {
   timingFile: string;
   limits: Limits;
   onFirstEdit: () => void;
+  /** Suite-specific variables, e.g. PATH and PYTHONPATH for a Python checkout. */
+  extraEnv?: Record<string, string>;
+  /** Suite-specific Bash permissions on top of ALLOWED_TOOLS, e.g. `Bash(python *)`. */
+  extraTools?: string[];
+  /** Replaces the default note; the fix-up agent works alone on the merged tree. */
+  systemNote?: string;
 };
 
 export type RunningAgent = {
@@ -54,7 +61,7 @@ export const ALLOWED_TOOLS = [
   "mcp__lb",
 ];
 
-const SYSTEM_NOTE = [
+export const SYSTEM_NOTE = [
   "You are one of several developers' Claude Code sessions working on this repo at the same time, each on its own branch.",
   "Do the task in your working directory only. Don't commit or push; the harness commits your branch when you finish.",
   "Don't start long-running servers (npm run dev, npm run web). Keep the change focused and stop when the task is done.",
@@ -73,6 +80,7 @@ function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
     LB_SESSION_DIR: a.sessionDir,
     LB_TIMING_FILE: a.timingFile,
     CLAUDE_CODE_ENABLE_TODO_TOOLS: "1",
+    ...a.extraEnv,
   };
 }
 
@@ -113,14 +121,15 @@ export function startAgent(a: AgentLaunch): RunningAgent {
     "acceptEdits",
     "--allowedTools",
     ...ALLOWED_TOOLS,
+    ...(a.extraTools ?? []),
     "--max-turns",
     String(a.limits.maxTurns),
     "--max-budget-usd",
     String(a.limits.maxBudgetUsd),
     "--append-system-prompt",
-    SYSTEM_NOTE,
+    a.systemNote ?? SYSTEM_NOTE,
   ];
-  const child = spawn("claude", args, { cwd: a.cwd, env: agentEnv(a), stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(claudeBin(), args, { cwd: a.cwd, env: agentEnv(a), stdio: ["ignore", "pipe", "pipe"] });
   const out = createWriteStream(a.logFile);
   const err = createWriteStream(`${a.logFile}.stderr`);
   child.stderr.pipe(err);

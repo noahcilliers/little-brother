@@ -18,6 +18,7 @@ export type StoredNode = {
   landed?: ClassifiedNode["landed"];
   preview?: string;
   consumes?: string[];
+  importers?: ClassifiedNode["importers"];
   at: number;
 };
 
@@ -48,6 +49,7 @@ export function toClassifiedNode(n: StoredNode): ClassifiedNode {
     ...(n.topic ? { topic: n.topic } : {}),
     ...(n.preview ? { preview: n.preview } : {}),
     ...(n.consumes?.length ? { consumes: n.consumes } : {}),
+    ...(n.importers?.length ? { importers: n.importers } : {}),
     outcome: n.outcome,
     ...(n.signature ? { signature: n.signature } : {}),
     touches,

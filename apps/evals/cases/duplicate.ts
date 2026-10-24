@@ -43,6 +43,12 @@ export const dupUsersTable: EvalCase = {
     },
     { id: "merge", kind: "mergeConflict", agents: ["noah", "joshua"] },
   ],
+  success: {
+    intact: [
+      { id: "lookup", pattern: "[Bb]y_?[Ee]mail", paths: ["db", "src"] },
+      { id: "password", pattern: "(function|const)\\s+\\w*[Pp]assword", paths: ["db", "src"] },
+    ],
+  },
 };
 
 export const dupOrderModel: EvalCase = {
@@ -90,6 +96,17 @@ export const dupOrderModel: EvalCase = {
     },
     { id: "merge", kind: "mergeConflict", agents: ["maya", "joshua"] },
   ],
+  success: {
+    intact: [
+      { id: "order-type", pattern: "(interface|type)\\s+Order\\b", paths: ["src/contracts/order.ts"] },
+      {
+        id: "save-order",
+        pattern: "(function|const)\\s+\\w*([Ss]ave|[Cc]reate|[Aa]dd|[Ii]nsert)",
+        paths: ["db/schema/orders.ts"],
+      },
+      { id: "checkout-saves", pattern: "[Oo]rder", paths: ["src/checkout/routes.ts"] },
+    ],
+  },
 };
 
 export const dupOrderEmail: EvalCase = {
@@ -132,4 +149,10 @@ export const dupOrderEmail: EvalCase = {
     },
     { id: "merge", kind: "mergeConflict", agents: ["priya", "maya"] },
   ],
+  success: {
+    intact: [
+      { id: "sender", pattern: "(function|const)\\s+\\w*([Cc]onfirmation|[Rr]eceipt)", paths: ["src"] },
+      { id: "webhook", pattern: "[Ss]ucceed", paths: ["src/payments"] },
+    ],
+  },
 };

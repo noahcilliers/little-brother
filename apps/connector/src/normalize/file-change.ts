@@ -1,4 +1,5 @@
 import type { Touch } from "@lb/core";
+import { diffPythonFile, PYTHON } from "./py-symbols";
 import { diffSymbols } from "./symbols";
 import { changedSpans, lineRange } from "./text";
 import { loadTs } from "./ts-symbols";
@@ -23,8 +24,13 @@ export async function fileChange(
   const known = after !== null && (created || before !== null);
   if (after !== null && known) fileTouch.lines = lineRange(after, changedSpans(before ?? "", after).new);
   const base: FileChange = { touches: [fileTouch], references: [] };
-  if (!known || after === null || !JS_TS.test(rel) || after.length > MAX_PARSE_BYTES) return base;
+  if (!known || after === null || after.length > MAX_PARSE_BYTES) return base;
   try {
+    if (PYTHON.test(rel)) {
+      const diff = diffPythonFile(rel, created ? null : before, after, repoRoot);
+      return { touches: [fileTouch, ...diff.touches], references: diff.references };
+    }
+    if (!JS_TS.test(rel)) return base;
     const ts = await loadTs();
     const diff = diffSymbols(ts, rel, created ? null : before, after, repoRoot);
     return { touches: [fileTouch, ...diff.touches], references: diff.references };

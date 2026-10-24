@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
+import { stored } from "./classify/load";
 
 // Readback for apps/evals. Each eval run gets its own room: failure memory is room-wide, so runs sharing
 // the local open-mode room would see each other's failed attempts as `stale`.
@@ -129,7 +130,12 @@ export const snapshot = internalQuery({
             inbox: inbox.length,
             latencyMs: c.latencyMs,
             tokensSaved: c.tokensSaved ?? null,
+            catchKey: c.catchKey ?? null,
             at: c.at,
+            // Both nodes in full, so apps/evals can turn a run into labelled training pairs (export-pairs.ts).
+            retrievalScore: c.retrievalScore,
+            direction: c.direction,
+            pair: { next: stored(n), other: against ? stored(against) : null, evidence: c.evidence },
           });
         }
       }

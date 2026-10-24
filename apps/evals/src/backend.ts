@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { convexEnv } from "./convex-target";
 import { sh } from "./exec";
 
 // Talks to the local Convex deployment through `convex run`, which can call the internal eval functions.
@@ -32,6 +33,7 @@ const Snapshot = z.object({
       inbox: z.number(),
       latencyMs: z.number(),
       tokensSaved: z.number().nullable().optional(),
+      catchKey: z.string().nullable().optional(),
       at: z.number(),
     }),
   ),
@@ -41,7 +43,7 @@ export type Snapshot = z.infer<typeof Snapshot>;
 export type Backend = { dir: string; siteUrl: string };
 
 function run(b: Backend, fn: string, args: Record<string, unknown>): unknown {
-  const env = { ...process.env, CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE ?? "anonymous" };
+  const env = convexEnv(b);
   const r = sh("npx", ["convex", "run", fn, JSON.stringify(args)], b.dir, env);
   if (!r.ok) throw new Error(`convex run ${fn} failed: ${r.out.trim().slice(-600)}`);
   const start = r.out.search(/[[{]|^null/m);
@@ -73,7 +75,7 @@ export function snapshot(b: Backend, code: string): Snapshot {
 
 /** Which classifier tiers the deployment can run, for the report header. Values are never read. */
 export function describeBackend(b: Backend): string {
-  const env = { ...process.env, CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE ?? "anonymous" };
+  const env = convexEnv(b);
   const r = sh("npx", ["convex", "env", "list"], b.dir, env);
   const names = new Set(r.out.split("\n").map((l) => l.split("=")[0]?.trim() ?? ""));
   const has = (k: string) => names.has(k);

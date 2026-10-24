@@ -1,5 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { askTables } from "./schemaAsk";
+import { graphTables, importerLink } from "./schemaGraph";
 import { members, teamTables } from "./schemaTeam";
 
 export const typeKey = v.union(
@@ -25,6 +27,8 @@ export const touch = v.object({
 
 export default defineSchema({
   ...teamTables,
+  ...graphTables,
+  ...askTables,
   members,
 
   agents: defineTable({
@@ -90,6 +94,7 @@ export default defineSchema({
     tokens: v.optional(v.number()), // actions: tokens the tool call cost (from the transcript); intents: rollup of their actions
     preview: v.optional(v.string()),
     consumes: v.optional(v.array(v.string())),
+    importers: v.optional(v.array(importerLink)), // repo graph: who imports what this node's interface change breaks
     baseRev: v.optional(v.string()),
     landed: v.optional(v.union(v.literal("committed"), v.literal("pushed"), v.literal("merged"))),
     embedding: v.optional(v.array(v.float64())),

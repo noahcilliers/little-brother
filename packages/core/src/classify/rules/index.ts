@@ -7,6 +7,7 @@ import { r5SignatureChange } from "./r5-signature-change";
 import { r6CreateVsReference } from "./r6-create-vs-reference";
 import { r10FailedSignature } from "./r10-failed-signature";
 import { r11IntentTopicFailed } from "./r11-intent-topic-failed";
+import { r12ImporterInterface } from "./r12-importer-interface";
 
 /**
  * Order breaks ties between equally severe rules: the more specific explanation (R2 "already being
@@ -18,6 +19,7 @@ export const RULES: Rule[] = [
   r4DeleteVsUse,
   r5SignatureChange,
   r6CreateVsReference,
+  r12ImporterInterface,
   r10FailedSignature,
   r11IntentTopicFailed,
   r7SameSymbol,
@@ -36,4 +38,5 @@ export {
   r9GeneratedOnly,
   r10FailedSignature,
   r11IntentTopicFailed,
+  r12ImporterInterface,
 };

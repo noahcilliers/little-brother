@@ -22,6 +22,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, internalAction } from "../_generated/server";
 import { selectEmbedder, selectJudge } from "./adapters/select";
+import { pairModelTier } from "./pairTier";
 
 const MAX_JUDGE_CALLS = 4;
 const VECTOR_LIMIT = 16;
@@ -86,7 +87,7 @@ export const classifyNode = internalAction({
     const structural = classifyStructural(view, [...semantic, ...c.structural], { thresholds: c.thresholds });
     const judge = selectJudge();
     const seen = new Set<string>(await ctx.runQuery(internal.classify.db.classifiedWith, { nodeId }));
-    const unsettled = [...structural.unsettled]
+    const open = [...structural.unsettled]
       .filter(({ pair }) => !seen.has(pair.other.id))
       // Test and build runs are evidence about code, not approaches; rules (R10/R11) already use them.
       .filter(({ pair }) => !/^(TEST|RUN)$/.test(pair.other.verb))
@@ -99,6 +100,8 @@ export const classifyNode = internalAction({
           b.pair.retrievalScore - a.pair.retrievalScore ||
           a.pair.other.at - b.pair.other.at,
       );
+    // Step 4 (behind CLASSIFIER_PAIR_MODEL=1): the learned model settles confident pairs; the rest go to the judge.
+    const unsettled = await pairModelTier(ctx, { nodeId, nextKind: view.kind, thresholds: c.thresholds }, open);
     // Commands (tests, builds) are re-run constantly; they are not approaches a model should weigh.
     const toJudge = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_JUDGE_CALLS) : [];
     const examples = toJudge.length

@@ -87,7 +87,8 @@ pnpm --filter @lb/evals eval --arm both --variant pointed --runs 3
 
 ## Layout
 
-- `cases/`: the suite. Duplicate, conflict, dependency (semantic and ordering), stale, and controls.
+- `cases/`: the suite. Duplicate, conflict, dependency (semantic and ordering), stale, controls, and
+  larger cases (`large.ts`) where the duplicated or failed work is a whole module with tests.
   Every agent has a `pointed` prompt that names files and a `natural` one that doesn't.
 - `src/`: the harness. `score.ts`, `aggregate.ts`, `measured-savings.ts`, `stream.ts`, `triggers.ts` and
   `case.ts` are pure and unit tested. The rest is I/O.
@@ -95,9 +96,58 @@ pnpm --filter @lb/evals eval --arm both --variant pointed --runs 3
   each agent's raw `stream.jsonl` and its hook timing log `hooks.jsonl`. Runs with Little Brother off go in
   `runs/<case>-<variant>-off-<n>/`. Per invocation, `summary.json`, `runs.json` and `report.md`.
 
+## Fix-up step, paired runs and the cost cap
+
+After both agents finish, a third headless agent (Little Brother off, in both arms) gets every branch merged
+into one tree, with conflict markers left in place, both tasks, and the case's success commands. Its
+tokens, cost and wall time count toward the run; `finalSuccess` records whether the integrated tree passes:
+no markers, every `success.run` command exits 0 (default: typecheck and the unit tests that pass on the
+untouched shop), and every `success.intact` pattern is still there. `--no-fixup` skips it.
+
+`--paired --seed n` queues each case, variant and repetition's off and on runs next to each other in a
+seeded order, so they run side by side; the report then adds paired differences (off − on, ± one standard
+error of the mean difference) for tokens, cache reads, dollars, wall time and final success.
+
+Every finished run is appended to a spend ledger (`results/ledger.jsonl`, `--ledger`), shared by every
+invocation; once Claude Code's estimated cost there reaches `--cap-usd` (default 60), runs not yet started
+are skipped and listed. All invocations share one `LB_HOME` (`results/.lb-home`, or `$LB_EVAL_HOME`):
+joining a handle replaces its token, so separate homes would log each other out.
+
+The harness finds `claude` on PATH, else `$LB_EVAL_CLAUDE`, else the newest VS Code extension's bundled
+binary. It reads the local backend through `anonymous:<name>` from `packages/backend/.convex/local`, since
+`.env.local` may name a cloud deployment, and refuses any production deployment.
+
+Savings estimates count each catch once (its `catchKey`, else the pair and verdict type), not each row.
+
+## External suites
+
+`--suite stale` runs [STALE-bench](https://github.com/illinoisdata/STALE-bench) Django pairs and `--suite
+cooper` runs [CooperBench](https://github.com/cooperbench/CooperBench) feature pairs, each pair as two live
+agents on worktrees at the task's base commit, with the same arms, pairing and cap. Clone the benchmark to
+`~/.cache/little-brother/benchmarks/<name>` and the repos (django, click, jinja, dirty-equals) to
+`~/.cache/little-brother/repos/`; Python venvs with each repo's dependencies are built under
+`~/.cache/little-brother/venvs/`, and agents import the package from their own checkout via PYTHONPATH.
+- **STALE-bench**: the real-derived tier (a helper's interface changes on one branch, a consumer reuses it
+  on the other; we write task A concretely: rename, required keyword-only `strict`, or a result object),
+  mined coupled pairs and controls. Agents see the PR title and body (Trac description when the body is
+  only template), never the gold patch. Grading discards agent test edits, applies both PRs' gold tests in
+  every condition and runs both PRs' labels: interference (Δblind) = tests that pass with the owning
+  branch alone and fail merged.
+- **CooperBench**: their dataset and hidden tests with our runner (theirs needs Modal or Docker plus
+  Redis). Success = a clean merge and every feature's tests passing on it. Tests that already fail on the
+  untouched base in our Python are deselected.
+
+```sh
+pnpm --filter @lb/evals eval --suite stale --list
+pnpm --filter @lb/evals eval --suite stale --arm both --runs 2 --paired --max-turns 50 --timeout-min 20
+pnpm --filter @lb/evals eval --suite cooper --cases pallets_click_task/2800/2+6 --arm both --runs 2
+pnpm --filter @lb/evals site-summary --planted <dir>,<dir> --suites <dir>,<dir> --out docs/evals/<date>-summary.json
+```
+
 ## Writing a case
 
 A case lists agents, the findings it expects (`agents`, `type`, the `evidence` check ids), and checks:
 `mergeConflict`, `grep` (on an agent's branch or the merged one), `commandFails`, `touched`, `ran`,
-`allOf`. Evidence decides whether a missing row is a miss or a clash that never happened, so pick checks
+`allOf`. `grep` patterns are JavaScript regexes matched line by line (macOS `git grep -E` has no `\s`,
+`\w` or `\b`). Evidence decides whether a missing row is a miss or a clash that never happened, so pick checks
 that only pass when the clash happened. `pnpm --filter @lb/evals test` validates every case.

@@ -1,3 +1,4 @@
+import { importerHits } from "./importers";
 import {
   isMutation,
   MUTATING_OPS,
@@ -34,6 +35,14 @@ function activeSignals(next: ClassifiedNode, other: ClassifiedNode, similarity?:
     mutationsReferencedBy(other, next, MUTATING_OPS)[0];
   if (refHit)
     out.push({ weight: 0.9, reason: `one mutates ${refHit.ref}, the other references it`, overlap: true });
+  // The repo graph links an interface change to files importing it, even when the edit never names it.
+  const imported = importerHits(next, other)[0] ?? importerHits(other, next)[0];
+  if (imported)
+    out.push({
+      weight: imported.via === "symbol" ? 0.85 : 0.6,
+      reason: `${imported.file} imports ${symbolName(imported.symbol)}`,
+      overlap: imported.via === "symbol",
+    });
   // A change to a topic and code that consumes it are the classic semantic-conflict pair (auth vs checkout).
   const consumed =
     (next.topic && other.consumes?.includes(next.topic) && next.topic) ||

@@ -34,6 +34,14 @@ program
   });
 
 program
+  .command("ask")
+  .description("AskUserQuestion hook: answer on the dashboard when the session is open there")
+  .action(async () => {
+    const { askCommand } = await import("./commands/ask");
+    await askCommand();
+  });
+
+program
   .command("hook <event>")
   .description("Claude Code hook entry: reads hook JSON on stdin (always exits 0)")
   .action(async (event: string) => {
@@ -67,6 +75,22 @@ program
   .action(async (o: { repo: string; session: string; as?: string }) => {
     const { mergeCheckCommand } = await import("./verify/background");
     await mergeCheckCommand(o);
+  });
+
+program
+  .command("graph-build", { hidden: true })
+  .description("build the repo import graph cache (spawned by SessionStart on a cache miss)")
+  .requiredOption("--repo <dir>", "repository root")
+  .option("--head <sha>", "HEAD the graph is built at (default: current HEAD)")
+  .option("--print", "print graph size and build time", false)
+  .action(async (o: { repo: string; head?: string; print: boolean }) => {
+    const { repoInfo } = await import("./hook/git");
+    const { headSha } = await import("./hook/git-state");
+    const info = repoInfo(o.repo);
+    const head = o.head ?? headSha(info);
+    if (!head) throw new Error("not a git repository with a HEAD commit");
+    const { graphBuildCommand } = await import("./commands/graph-build");
+    await graphBuildCommand({ repo: info.root, head, print: o.print });
   });
 
 program

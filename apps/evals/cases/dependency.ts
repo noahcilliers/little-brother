@@ -37,6 +37,12 @@ export const semanticUserRename: EvalCase = {
     },
   ],
   checks: [{ id: "merged-typecheck", kind: "commandFails", run: "npm run typecheck", on: "merged" }],
+  success: {
+    intact: [
+      { id: "renamed", pattern: "displayName", paths: ["src/contracts/user.ts"] },
+      { id: "greeting", pattern: "Welcome back", paths: ["web/src"] },
+    ],
+  },
 };
 
 export const semanticTokenSignature: EvalCase = {
@@ -76,6 +82,12 @@ export const semanticTokenSignature: EvalCase = {
     { id: "merged-typecheck", kind: "commandFails", run: "npm run typecheck", on: "merged" },
     { id: "merge", kind: "mergeConflict", agents: ["noah", "joshua"] },
   ],
+  success: {
+    intact: [
+      { id: "expiry", pattern: "[Ee]xpir", paths: ["src/auth/issue-token.ts"] },
+      { id: "login", pattern: "login", paths: ["src/auth/routes.ts"] },
+    ],
+  },
 };
 
 export const orderingOrderType: EvalCase = {
@@ -148,4 +160,10 @@ export const orderingRequireAdmin: EvalCase = {
     },
   ],
   checks: [{ id: "leo-typecheck", kind: "commandFails", run: "npm run typecheck", on: "leo" }],
+  success: {
+    intact: [
+      { id: "middleware", pattern: "[Aa]dmin", paths: ["src/auth"] },
+      { id: "route", pattern: "\\.delete\\(", paths: ["src/catalog/routes.ts"] },
+    ],
+  },
 };
