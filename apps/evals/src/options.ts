@@ -23,6 +23,8 @@ export type Options = {
   list: boolean;
   /** Integration agent on the merged tree after every run, both arms (fixup.ts). */
   fixup: boolean;
+  /** Keep run workspaces after grading (they are deleted by default). */
+  keepWorkspaces: boolean;
   /** Off and on runs scheduled in adjacent seeded blocks (paired.ts). */
   paired: boolean;
   seed: number;
@@ -53,6 +55,7 @@ export const USAGE = `pnpm --filter @lb/evals eval [options]
   --compare dir      earlier results directory to diff against
   --no-build         skip building the connector
   --suite s          planted (demo shop) | stale (STALE-bench Django) | cooper (CooperBench) (default: planted)
+  --keep-workspaces  keep each run's repo and worktrees after grading (default: delete, keep results only)
   --no-fixup         skip the integration agent that repairs the merged tree after each run
   --paired           schedule off/on runs in adjacent seeded blocks and report paired differences
   --seed n           schedule seed for --paired (default: 1)
@@ -88,6 +91,7 @@ export function parseOptions(argv: string[]): Options {
       compare: { type: "string" },
       "no-build": { type: "boolean" },
       "no-fixup": { type: "boolean" },
+      "keep-workspaces": { type: "boolean" },
       paired: { type: "boolean" },
       seed: { type: "string" },
       "cap-usd": { type: "string" },
@@ -131,6 +135,7 @@ export function parseOptions(argv: string[]): Options {
     ...(values.compare ? { compare: values.compare } : {}),
     build: !values["no-build"],
     fixup: !values["no-fixup"],
+    keepWorkspaces: values["keep-workspaces"] ?? false,
     paired: values.paired ?? false,
     seed: Math.round(num(values.seed, 1, "seed")),
     capUsd: num(values["cap-usd"], 60, "cap-usd"),

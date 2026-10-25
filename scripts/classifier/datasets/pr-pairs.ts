@@ -19,7 +19,7 @@ export const PAIRS_DIR = join(DATASETS, "pairs");
 
 export type Side = { id: string; agentId: string; files: DiffFile[]; at: number; text?: string };
 
-function nodeOf(side: Side): ClassifiedNode {
+export function nodeOf(side: Side): ClassifiedNode {
   const { touches, references } = diffTouches(side.files);
   const paths = [...new Set(side.files.map((f) => f.path))];
   return {
@@ -41,14 +41,15 @@ export function prPair(
   group: string,
   next: Side,
   other: Side,
-  gold: Gold,
+  gold: Gold | ((features: number[]) => Gold | null),
   meta: Record<string, string | number | boolean>,
 ): LabelledPair | null {
   const n = nodeOf(next);
   const o = nodeOf(other);
   const [pair] = scoreCandidates(n, [{ node: o, failedMemory: false }]);
   if (!pair) return null;
-  return labelPair({ id, group, pair, gold, meta: { ...pairMeta(n, o), ...meta } });
+  const label = typeof gold === "function" ? { goldFrom: gold } : { gold };
+  return labelPair({ id, group, pair, ...label, meta: { ...pairMeta(n, o), ...meta } });
 }
 
 export function writeJsonl(path: string, rows: LabelledPair[]): void {

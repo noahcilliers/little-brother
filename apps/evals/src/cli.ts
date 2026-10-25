@@ -87,6 +87,7 @@ async function main(): Promise<void> {
     tag: h.tag,
     settleSec: opts.settleSec,
     fixup: opts.fixup,
+    keepWorkspaces: opts.keepWorkspaces,
   };
   const jobs: Job<RunRecord>[] = cases.flatMap((c) =>
     opts.variants.flatMap((v) =>
@@ -122,6 +123,7 @@ async function main(): Promise<void> {
     backend: h.backendInfo,
     wallSec: (Date.now() - h.startedAt.getTime()) / 1000,
     fixup: opts.fixup,
+    keepWorkspaces: opts.keepWorkspaces,
     paired: opts.paired,
     seed: opts.seed,
     skipped,

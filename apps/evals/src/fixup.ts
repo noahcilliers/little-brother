@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { TokenCounts } from "@lb/core";
 import { type Limits, startAgent } from "./agent";
 import { DEFAULT_SUCCESS_RUN, type Success } from "./case";
+import { walkFiles } from "./cleanup";
 import { sh, shAsync, shOrThrow } from "./exec";
 import { matchingFiles } from "./grep-ref";
 import { logTokens } from "./stream";
@@ -61,9 +62,10 @@ export function fixupPrompt(tasks: { handle: string; prompt: string }[], conflic
 }
 
 function trackedFiles(dir: string): string[] {
-  return sh("git", ["ls-files", "-co", "--exclude-standard"], dir)
-    .out.split("\n")
-    .filter((f) => f && !f.startsWith("node_modules/"));
+  const r = sh("git", ["ls-files", "-co", "--exclude-standard"], dir);
+  // A tree restored from its archive (--recheck) has no git metadata.
+  if (!r.ok) return walkFiles(dir);
+  return r.out.split("\n").filter((f) => f && !f.startsWith("node_modules/"));
 }
 
 const under = (paths: string[] | undefined) => (f: string) =>

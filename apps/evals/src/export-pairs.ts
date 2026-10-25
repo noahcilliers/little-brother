@@ -13,89 +13,14 @@ import {
   reasonsFromEvidence,
   toClassifiedNode,
 } from "@lb/core";
-import { z } from "zod";
 import type { FindingType } from "./case";
+import { type Row, RunFile } from "./run-file";
 import { isFinding, pairKey } from "./score";
 
 // Turns live eval runs into gold-labelled training pairs for the pair model, using the scorer's own
 // definitions (score.ts): a row on an expected pair whose clash materialized is a gold positive; any row
 // on another pair, or in a control, is a gold negative. Rows on an expected pair whose clash never
 // happened, and `normal` rows there, keep only their teacher label.
-
-const StoredNode = z.object({
-  _id: z.string(),
-  agentId: z.string(),
-  kind: z.enum(["intent", "action", "knowledge"]),
-  verb: z.string(),
-  text: z.string(),
-  topic: z.string().optional(),
-  files: z.array(z.string()),
-  touches: z.array(
-    z.object({
-      path: z.string(),
-      symbol: z.string().optional(),
-      op: z.string(),
-      lines: z.array(z.number()).optional(),
-      generated: z.boolean().optional(),
-    }),
-  ),
-  references: z.array(z.string()),
-  outcome: z.enum(["open", "succeeded", "failed", "superseded"]),
-  signature: z.string().optional(),
-  baseRev: z.string().optional(),
-  landed: z.enum(["committed", "pushed", "merged"]).optional(),
-  preview: z.string().optional(),
-  consumes: z.array(z.string()).optional(),
-  at: z.number(),
-});
-
-const Row = z.object({
-  id: z.string(),
-  type: z.string(),
-  relation: z.string(),
-  action: z.string(),
-  reason: z.string(),
-  source: z.enum(["rule", "pair_model", "llm", "fallback"]),
-  agents: z.array(z.string()),
-  confidence: z.number(),
-  evidence: z.array(z.string()),
-  nodeKind: z.enum(["intent", "action", "knowledge"]),
-  nodeText: z.string(),
-  againstText: z.string().nullable(),
-  latencyMs: z.number(),
-  at: z.number(),
-  retrievalScore: z.number().optional(),
-  direction: z.enum(["new_needs_other", "other_needs_new", "none"]).optional(),
-  pair: z
-    .object({ next: StoredNode, other: StoredNode.nullable(), evidence: z.array(z.string()) })
-    .optional(),
-});
-
-export const RunFile = z.object({
-  caseId: z.string(),
-  variant: z.string(),
-  arm: z.string().optional(),
-  run: z.number(),
-  code: z.string().optional(),
-  error: z.string().optional(),
-  score: z.object({
-    control: z.boolean(),
-    expectations: z.array(
-      z.object({
-        agents: z.array(z.string()),
-        type: z.string(),
-        relation: z.string().optional(),
-        outcome: z.string(),
-        materialized: z.boolean(),
-      }),
-    ),
-  }),
-  snapshot: z
-    .object({ classifications: z.array(Row) })
-    .nullable()
-    .optional(),
-});
-export type RunFile = z.infer<typeof RunFile>;
 
 const isRelation = (r: string | undefined): r is Relation =>
   !!r && (RELATIONS as readonly string[]).includes(r);
@@ -129,8 +54,6 @@ export function nodeFromText(
     at: 0,
   };
 }
-
-type Row = z.infer<typeof Row>;
 
 function goldFor(run: RunFile, r: Row): ((f: number[]) => Gold | null) | null {
   const negative = (f: number[]): Gold => ({ relation: negativeRelation(f), origin: "eval" });

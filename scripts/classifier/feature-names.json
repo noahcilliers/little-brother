@@ -1,5 +1,5 @@
 {
-  "featureVersion": 2,
+  "featureVersion": 3,
   "featureNames": [
     "next_intent",
     "next_action",
@@ -73,6 +73,17 @@
     "hint_r7",
     "hint_r8",
     "hint_r9",
-    "log_minutes_apart"
+    "log_minutes_apart",
+    "shared_nouns",
+    "polarity_opposed",
+    "next_negative_polarity",
+    "other_negative_polarity",
+    "next_dependency_cue",
+    "other_dependency_cue",
+    "next_mentions_other_target",
+    "other_mentions_next_target",
+    "next_mentions_other_creation",
+    "other_is_lesson",
+    "text_length_ratio"
   ]
 }

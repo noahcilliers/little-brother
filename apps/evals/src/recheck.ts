@@ -1,9 +1,13 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { CASES } from "../cases";
 import type { RunRecord } from "./aggregate";
 import { armOf } from "./arm";
+import { removeWorkspace, restoreTree } from "./cleanup";
 import { checkSuccess } from "./fixup";
+import { ROOT } from "./setup";
+import { linkModules, prepareModules } from "./workspace";
 
 /** Where a run's fix-up tree lives: next to its merged tree, which run.json records. */
 function fixupDir(runJson: string): string | null {
@@ -28,9 +32,18 @@ export async function recheck(outDir: string): Promise<RunRecord[]> {
     if (r.error || r.finalSuccess === undefined) continue;
     const c = CASES.find((x) => x.id === r.caseId);
     const runJson = join(outDir, "runs", runName(r), "run.json");
-    const dir = existsSync(runJson) ? fixupDir(runJson) : null;
+    const archive = join(outDir, "runs", runName(r), "fixup.tar");
+    let dir = existsSync(runJson) ? fixupDir(runJson) : null;
+    let restored: string | null = null;
+    if (existsSync(archive) && (!dir || !existsSync(dir))) {
+      restored = mkdtempSync(join(tmpdir(), "lb-recheck-"));
+      if (!restoreTree(archive, restored)) continue;
+      linkModules(prepareModules(join(ROOT, "demo/shop"), join(ROOT, "apps/evals/results/.cache")), restored);
+      dir = restored;
+    }
     if (!c || !dir || !existsSync(dir)) continue;
     const { success, checks } = await checkSuccess(dir, c.success);
+    if (restored) removeWorkspace(restored);
     if (success !== r.finalSuccess) changed++;
     r.finalSuccess = success;
     const full = JSON.parse(readFileSync(runJson, "utf8")) as Record<string, unknown>;

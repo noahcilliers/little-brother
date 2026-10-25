@@ -56,6 +56,7 @@ export async function runSuite(opts: Options): Promise<void> {
     tag: h.tag,
     settleSec: opts.settleSec,
     fixup: false,
+    keepWorkspaces: opts.keepWorkspaces,
   };
   const jobs: Job<PairRecord>[] = tasks.flatMap((t) =>
     Array.from({ length: opts.runs }, (_, i) => i + 1).flatMap((run) =>

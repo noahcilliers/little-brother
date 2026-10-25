@@ -6,6 +6,7 @@ import type { Arm } from "../arm";
 import { closeRun, openRun, snapshot } from "../backend";
 import type { EvalCase } from "../case";
 import { distinctCatchSavings } from "../catches";
+import { removeWorkspace } from "../cleanup";
 import { shOrThrow } from "../exec";
 import { hookUsage, parseTimingLog } from "../hook-timing";
 import { runAgents, type Started, sleep, timingFile } from "../run-agents";
@@ -59,7 +60,7 @@ export type PairRecord = RunRecord & { kind: string; grade?: PairGrade };
 /** One external pair, one arm, one repetition: agents live, then grade the branches and the merge. */
 export async function runPair(t: PairTask, arm: Arm, run: number, ctx: RunContext): Promise<PairRecord> {
   const c = asCase(t);
-  const name = `${t.suite}-${t.id}-${arm}-${run}`;
+  const name = `${t.suite}-${t.id.replaceAll("/", "_")}-${arm}-${run}`;
   const runDir = join(ctx.outDir, "runs", name);
   const code = `ev${ctx.tag}-${createHash("sha1").update(name).digest("hex").slice(0, 10)}`;
   mkdirSync(runDir, { recursive: true });
@@ -70,8 +71,8 @@ export async function runPair(t: PairTask, arm: Arm, run: number, ctx: RunContex
   const spent = () => [...started.values()].reduce((n, s) => n + s.agent.log.costUsd, 0);
   const tokens = () =>
     [...started.values()].map((s) => logTokens(s.agent.log)).reduce(addTokens, ZERO_TOKENS);
+  const wsDir = join(ctx.workDir, name);
   try {
-    const wsDir = join(ctx.workDir, name);
     rmSync(wsDir, { recursive: true, force: true });
     const ws = pairWorkspace(t, wsDir);
     if (arm === "on") openRun(ctx.backend, code, name);
@@ -137,5 +138,7 @@ export async function runPair(t: PairTask, arm: Arm, run: number, ctx: RunContex
     };
     writeFileSync(join(runDir, "run.json"), JSON.stringify({ ...record, code }, null, 2));
     return record;
+  } finally {
+    if (!ctx.keepWorkspaces) removeWorkspace(wsDir);
   }
 }

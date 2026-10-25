@@ -3,7 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FEATURE_NAMES } from "@lb/core";
 import { describe, expect, it } from "vitest";
-import { exportPairs, nodeFromText, pairsFromRun, type RunFile } from "../src/export-pairs";
+import { exportPairs, nodeFromText, pairsFromRun } from "../src/export-pairs";
+import type { RunFile } from "../src/run-file";
 
 const node = (id: string, agentId: string, text: string, path: string) => ({
   _id: id,

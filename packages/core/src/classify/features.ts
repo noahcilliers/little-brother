@@ -1,4 +1,5 @@
 import type { Op } from "../ingest";
+import { dependencyCue, mentions, polarity, polarityOpposed, sharedNouns } from "./intent-signals";
 import { lexicalSimilarity } from "./lexical";
 import {
   anyRefHit,
@@ -22,7 +23,7 @@ import type { CandidatePair, ClassifiedNode, Hint } from "./types";
  * Bump whenever a feature is added, removed, reordered or redefined: a model trained on another version
  * is refused at load, so the tier falls back to the judge instead of reading the wrong columns.
  */
-export const FEATURE_VERSION = 2;
+export const FEATURE_VERSION = 3;
 
 const VERBS = ["PLAN", "EDIT", "FIX", "TEST", "RUN", "EXPLORE", "LEARN", "REVERT", "DECIDE"] as const;
 const SIGNATURE_OPS: ReadonlySet<Op> = new Set<Op>(["signature_change"]);
@@ -126,7 +127,24 @@ const SPEC: [string, (c: Ctx) => number][] = [
   ["hint_r8", (c) => b(c.hints.has("R8"))],
   ["hint_r9", (c) => b(c.hints.has("R9"))],
   ["log_minutes_apart", (c) => Math.min(1, Math.log1p(Math.abs(c.next.at - c.other.at) / 60_000) / 8)],
+  // v3, appended so a v2 vector is a prefix of a v3 one: plan-level signals (intent-signals.ts).
+  ["shared_nouns", (c) => Math.min(sharedNouns(c.next.text, c.other.text), 6) / 6],
+  ["polarity_opposed", (c) => b(polarityOpposed(c.next.text, c.other.text))],
+  ["next_negative_polarity", (c) => b(polarity(c.next.text).neg)],
+  ["other_negative_polarity", (c) => b(polarity(c.other.text).neg)],
+  ["next_dependency_cue", (c) => b(dependencyCue(c.next.text))],
+  ["other_dependency_cue", (c) => b(dependencyCue(c.other.text))],
+  ["next_mentions_other_target", (c) => b(mentions(c.next.text, c.other))],
+  ["other_mentions_next_target", (c) => b(mentions(c.other.text, c.next))],
+  ["next_mentions_other_creation", (c) => b(mentions(c.next.text, c.other, true))],
+  ["other_is_lesson", (c) => b(c.other.kind === "knowledge" && /\bFAIL\b/.test(c.other.text))],
+  ["text_length_ratio", (c) => lengthRatio(c.next.text, c.other.text)],
 ];
+
+function lengthRatio(a: string, z: string): number {
+  const [x, y] = [a.length, z.length];
+  return x && y ? Math.min(x, y) / Math.max(x, y) : 0;
+}
 
 export const FEATURE_NAMES: readonly string[] = SPEC.map(([name]) => name);
 

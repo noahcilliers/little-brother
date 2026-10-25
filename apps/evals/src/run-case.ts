@@ -7,6 +7,7 @@ import type { Arm } from "./arm";
 import { type Backend, closeRun, openRun, snapshot } from "./backend";
 import type { EvalCase, Variant } from "./case";
 import { distinctCatchSavings } from "./catches";
+import { archiveTree, removeWorkspace } from "./cleanup";
 import { type FixupResult, runFixup } from "./fixup";
 import { hookUsage, parseTimingLog } from "./hook-timing";
 import { mergeAll, runChecks } from "./oracle";
@@ -36,6 +37,8 @@ export type RunContext = {
   extraTools?: string[];
   /** Run a fix-up agent on the merged tree after the agents finish (fixup.ts). */
   fixup: boolean;
+  /** Keep each run's repo and worktrees after grading; by default only results are kept (cleanup.ts). */
+  keepWorkspaces?: boolean;
 };
 
 const readTiming = (file: string) => (existsSync(file) ? parseTimingLog(readFileSync(file, "utf8")) : []);
@@ -69,8 +72,8 @@ export async function runCase(
   const spent = () => [...started.values()].reduce((n, s) => n + s.agent.log.costUsd, 0);
   const tokens = () =>
     [...started.values()].map((s) => logTokens(s.agent.log)).reduce(addTokens, ZERO_TOKENS);
+  const wsDir = join(ctx.workDir, name);
   try {
-    const wsDir = join(ctx.workDir, name);
     rmSync(wsDir, { recursive: true, force: true });
     const ws = createWorkspace(ctx.shopSrc, wsDir, handles, ctx.modules);
     if (arm === "on") openRun(ctx.backend, code, name);
@@ -158,5 +161,10 @@ export async function runCase(
     };
     writeFileSync(join(runDir, "run.json"), JSON.stringify({ ...record, code }, null, 2));
     return record;
+  } finally {
+    if (!ctx.keepWorkspaces) {
+      archiveTree(join(wsDir, "fixup"), join(runDir, "fixup.tar"));
+      removeWorkspace(wsDir);
+    }
   }
 }

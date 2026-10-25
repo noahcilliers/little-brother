@@ -37,6 +37,9 @@ from pairmodel.fit import (  # noqa: E402
     oof_probs,
     settled_mask,
 )
+from pairmodel.compare import learning_curve, previous_model, rules_baseline  # noqa: E402
+from pairmodel.results import build  # noqa: E402
+from pairmodel.results import markdown as results_markdown  # noqa: E402
 from pairmodel.report import blocking_precision, confusion, ece, macro_f1, markdown, per_relation, settle_stats  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -61,6 +64,8 @@ def main() -> None:
     ap.add_argument("--version", default=None)
     ap.add_argument("--allow-mixed", action="store_true")
     ap.add_argument("--roundtrip", default=None, help="also write a TS round-trip fixture (both estimators) here")
+    ap.add_argument("--prev-model", default=None, help="an earlier model.json to compare against")
+    ap.add_argument("--results", default=None, help="write the citable <path>.md/.json (with learning curves)")
     a = ap.parse_args()
 
     ds = load(a.data.split(","), allow_mixed=a.allow_mixed)
@@ -124,6 +129,15 @@ def main() -> None:
         for i, row_id in enumerate(ds.ids):
             f.write(json.dumps({"id": row_id, "probs": dict(zip(classes, Q[i].round(6).tolist()))}) + "\n")
     print(markdown(metrics))
+    if a.results:
+        prev = previous_model(a.prev_model, ds, gold, classes) if a.prev_model else None
+        curve = learning_curve(CANDIDATES[best], ds, classes, a.folds, gold)
+        res = build(ds, names, classes, gold, pred, settled, metrics, curve, prev, rules_baseline(ds, gold, classes))
+        with open(f"{a.results}.json", "w") as f:
+            json.dump(res, f, indent=2)
+        with open(f"{a.results}.md", "w") as f:
+            f.write(results_markdown(res) + "\n")
+        print(f"results → {a.results}.md/.json")
     if a.roundtrip:
         write_roundtrip(a.roundtrip, ds, names, classes, cal)
 

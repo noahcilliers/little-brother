@@ -102,3 +102,45 @@ describe("pairFeatures", () => {
     expect(medianMs(() => pairFeatures(p, []))).toBeLessThan(2);
   });
 });
+
+describe("plan-level signals (v3)", () => {
+  const plan = (text: string, agentId = "a") => node({ kind: "intent", verb: "PLAN", text, agentId });
+
+  it("sees opposite polarity on a shared noun", () => {
+    const f = features(
+      pair(
+        plan("PLAN remove the legacy session cookie auth"),
+        plan("PLAN extend session cookie auth with remember-me", "b"),
+      ),
+    );
+    expect(f.polarity_opposed).toBe(1);
+    expect(f.shared_nouns).toBeGreaterThan(0);
+    const same = features(
+      pair(plan("PLAN add retry to the http client"), plan("PLAN add retries to the http client", "b")),
+    );
+    expect(same.polarity_opposed).toBe(0);
+  });
+
+  it("flags a plan that builds on something the other side is creating", () => {
+    const creator = node({
+      agentId: "b",
+      touches: [
+        {
+          path: "src/auth/require-admin.ts",
+          symbol: "src/auth/require-admin.ts::requireAdmin",
+          op: "create",
+        },
+      ],
+    });
+    const user = plan("PLAN delete products, protected by requireAdmin which a teammate is adding");
+    const f = features(pair(user, creator));
+    expect([f.next_dependency_cue, f.next_mentions_other_creation, f.next_mentions_other_target]).toEqual([
+      1, 1, 1,
+    ]);
+  });
+
+  it("keeps v2 features as a prefix so older models still read their columns", () => {
+    expect(FEATURE_NAMES.indexOf("log_minutes_apart")).toBeLessThan(FEATURE_NAMES.indexOf("shared_nouns"));
+    expect(FEATURE_NAMES.at(-1)).toBe("text_length_ratio");
+  });
+});

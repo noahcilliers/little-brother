@@ -33,8 +33,9 @@ LLM judge (as before)
 - `calibration`: one isotonic (`x`, `y`, linear interpolation, clipped) or Platt (`a`, `b`) map per class,
   then renormalized.
 - `thresholds`: minimum calibrated confidence to settle, per relation. Defaults are 0.9 for blocking
-  relations and 0.75 otherwise; the trainer sets 1.01 ("never settle") for any relation it could not verify
-  on at least 5 gold pairs.
+  relations and 0.75 otherwise. The trainer sets them from out-of-fold predictions: 0.9 precision for
+  findings, 0.95 for "nothing here" verdicts that also may not settle away more than 10% of any finding
+  relation's gold positives, and 1.01 ("never settle") for a relation with fewer than 5 gold positives.
 - `domain`: the `next>other` kind pairs and failure-memory setting seen in training. Anything else goes to
   the judge, so a model trained on PR diffs never rules on two plans.
 - A model whose `featureVersion`/`featureNames` differ from the running build is refused at upload and at load.
@@ -65,9 +66,29 @@ npx tsx scripts/classifier/datasets/agenticflict.ts
 git clone --depth 1 https://github.com/illinoisdata/STALE-bench ~/.cache/little-brother/datasets/stale-bench
 npx tsx scripts/classifier/datasets/stale-bench.ts          # --labels uncorrected to use real_delta_blind.jsonl
 
+# Our eval runs, all three levels: plans (prompts as each case/suite built them, plus every case's designed
+# plans), final diffs (from /tmp/lb-evals worktrees, saved under datasets/eval-diffs before they are cleaned),
+# and stored classification rows. Gold from the evidence checks / graded merge.
+npx tsx scripts/classifier/datasets/eval-runs.ts --results apps/evals/results/pilot-1024,apps/evals/results/pilot-1024b
+
+# CooperBench gold patches (benchmarks/CooperBench): 652 feature pairs, merge-checked → textual vs compatible
+npx tsx scripts/classifier/datasets/cooperbench.ts
+
+# GitHub mining (gh api, cached): "duplicate of #N" PRs, "depends on / blocked by #N" PRs, reverted relands,
+# and a pool of merged PRs for negatives; then pairs at plan and code level
+npx tsx scripts/classifier/datasets/github-mine.ts --per-repo 25
+npx tsx scripts/classifier/datasets/github-mine.ts --relands-only llvm/llvm-project,pytorch/pytorch --per-repo 80
+npx tsx scripts/classifier/datasets/github-pairs.ts
+
+# TEACHER (weight 0.3): opposite-intent PR titles + matched controls, labelled by our Gemini judge adapter
+npx tsx scripts/classifier/datasets/contradiction-teacher.ts --per-repo 12
+
 # CI only: SYNTHETIC pairs from the eval cases and fixtures/scenario.jsonl (simulated judge)
 npx tsx scripts/classifier/synth.ts --replicates 4 --out scripts/classifier/fixtures/synthetic.jsonl
 ```
+
+Plan pairs are retrieved by intent similarity, as in production: Gemini cosine when the embedding cache
+(`datasets/embeddings/`) has both texts, else the lexical score the backend falls back to without an embedder.
 
 Label notes:
 - **AgenticFlict** labels a PR against the base branch at the simulation anchor, so a pair is "the PR's
@@ -105,4 +126,10 @@ per source), `report.md`, `oof.jsonl`. `--roundtrip <file>` also writes the fixt
 After changing features, bump `FEATURE_VERSION`, run `npx tsx scripts/classifier/feature-names.ts`, re-export
 the data and retrain; old models are then refused instead of misread.
 
-Results: `results/2026-10-24-real.md` (real data) and `results/synthetic-fixture.md` (CI fixture: **not real metrics**).
+`--prev-model <model.json> --results <path>` adds the citable report: per-relation metrics on gold against
+rules only and the earlier model (feature lists are append-only, so an older model reads a prefix of today's
+vector), settle rates per relation, plan- vs code-level F1 and a learning curve (10/25/50/100% of training
+repositories per fold).
+
+Results: `results/2026-10-24-v2.{md,json}` (current), `results/2026-10-24-real.md` (first real-data model) and
+`results/synthetic-fixture.md` (CI fixture: **not real metrics**).
