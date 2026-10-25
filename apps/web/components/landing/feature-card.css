@@ -1,4 +1,4 @@
-/* Feature bento: separate cards on a 6-column grid, each a dotted stage holding one looping scene.
+/* Feature bento: separate cards on a 6-column grid, each a dotted stage holding one looping scene and a title.
    Every scene is CSS keyframes on a shared --loop. The un-animated styles are the finished frame, so
    reduced motion (which strips animations in landing.css) shows the end of the story, not a blank stage. */
 .lp .bento {
@@ -48,18 +48,12 @@
   display: grid;
   gap: 8px;
   align-content: start;
-  padding: 22px 24px 26px;
+  padding: 18px 24px 20px;
 }
 .lp .feat-copy h3 {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  margin-top: 4px;
-}
-.lp .feat-copy p {
-  color: var(--muted);
-  font-size: 14.5px;
-  max-width: 62ch;
 }
 
 /* the loop: fade in, play, fade out, and freeze while off screen */

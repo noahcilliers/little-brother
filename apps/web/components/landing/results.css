@@ -1,4 +1,4 @@
-/* Results: measured headline cards, the off-vs-on chart, and the compact "Measured" strip. */
+/* Results: measured headline cards and the off-vs-on chart. */
 .lp .rs-cards {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -21,11 +21,6 @@
 .lp .rs-card span {
   font-size: 14px;
   color: var(--muted);
-}
-.lp .rs-card small,
-.lp .ms-strip small {
-  font: 400 11px var(--mono);
-  color: var(--faint);
 }
 .lp .rs-chart {
   margin: 28px 0 0;
@@ -72,8 +67,8 @@
   font-size: 14px;
 }
 .lp .rs-name small {
-  font: 400 11px var(--mono);
-  color: var(--faint);
+  font: 400 12px var(--mono);
+  color: var(--muted);
 }
 .lp .rs-bars {
   display: grid;
@@ -105,38 +100,8 @@
   color: var(--fg);
 }
 
-/* compact strip in the "why" section */
-.lp .ms-strip {
-  display: grid;
-  grid-template-columns: auto repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  margin-top: 14px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-.lp .ms-strip > * {
-  display: grid;
-  align-content: center;
-  gap: 4px;
-  padding: 14px 16px;
-  background: var(--bg);
-  min-width: 0;
-}
-.lp .ms-strip b {
-  font: 500 22px var(--mono);
-  letter-spacing: -0.04em;
-}
-.lp .ms-strip span {
-  font-size: 13px;
-  color: var(--muted);
-}
-.lp .ms-strip a {
-  font: 500 12px var(--mono);
-  color: var(--fg);
-}
 @media (max-width: 960px) {
-  .lp .rs-cards,
-  .lp .ms-strip {
+  .lp .rs-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .lp .rs-row {

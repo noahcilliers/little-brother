@@ -6,7 +6,6 @@
   font-size: clamp(20px, 2.4vw, 24px);
   font-weight: 600;
   letter-spacing: -0.02em;
-  margin-top: 8px;
 }
 .lp .tl-cls {
   display: grid;
@@ -80,8 +79,8 @@
 }
 .lp .tl-rel small,
 .lp .tl-note {
-  font: 400 11.5px / 1.5 var(--mono);
-  color: var(--faint);
+  font: 400 12px / 1.5 var(--mono);
+  color: var(--muted);
 }
 .lp .tl-note {
   margin: 0;

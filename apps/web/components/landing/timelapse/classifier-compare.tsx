@@ -70,12 +70,7 @@ export function ClassifierCompare({ bench }: { bench: ClassifierBench }) {
           </li>
         ))}
       </ul>
-      <p className="tl-note">
-        Always handed to the judge: {abstains.join(", ")}. Pair model {bench.version}:{" "}
-        {count(bench.goldPairs)} gold-labelled pairs from {count(bench.groups)} repositories and eval cases,
-        scored out-of-fold. Model time is inference in an offline replay; judge time is the median call in our
-        live evals.
-      </p>
+      <p className="tl-note">Always handed to the judge: {abstains.join(", ")}.</p>
     </div>
   );
 }
