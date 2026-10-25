@@ -1,5 +1,6 @@
 import GitHub from "@auth/core/providers/github";
 import { convexAuth } from "@convex-dev/auth/server";
+import { DemoSignIn } from "./demoSignIn";
 
 // GitHub sign-in for the dashboard. The provider reads AUTH_GITHUB_ID and AUTH_GITHUB_SECRET from the
 // deployment env; the login is kept so it can become the member's handle.
@@ -19,5 +20,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         };
       },
     }),
+    // Local recordings only; refuses everywhere else (demoSignIn.ts).
+    DemoSignIn,
   ],
 });
