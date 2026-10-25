@@ -2,9 +2,10 @@
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { PLAYBACK_DURATION, playbackAt } from "./film-tempo";
+import { STORY_SHIFT } from "./film-timeline";
 
 // A poster frame on the wide story layout until the film scrolls into view.
-const START_AT = playbackAt(38.6);
+const START_AT = playbackAt(STORY_SHIFT + 38.6);
 const LOOP_HOLD = 2.5;
 
 /** Playback clock, in playback seconds (see film-tempo): autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
