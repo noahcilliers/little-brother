@@ -13,3 +13,4 @@ apps/web/public/install.sh
 
 # Local benchmark checkouts
 cooperbench-*/
+.claude/worktrees/
