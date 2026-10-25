@@ -17,8 +17,9 @@ async function sessionByCode(ctx: QueryCtx, code: string): Promise<Doc<"sessions
 }
 
 export const openRun = internalMutation({
-  args: { code: v.string(), name: v.string() },
-  handler: async (ctx, { code, name }) => {
+  // `room` names the room for recorded demos; eval runs keep the "eval …" name that marks them as such.
+  args: { code: v.string(), name: v.string(), room: v.optional(v.string()) },
+  handler: async (ctx, { code, name, room }) => {
     if (await sessionByCode(ctx, code)) throw new Error(`session code ${code} is taken`);
     const runner =
       (await ctx.db
@@ -29,7 +30,7 @@ export const openRun = internalMutation({
     if (!runner) throw new Error("runner member insert failed");
     const now = Date.now();
     const teamId = await ctx.db.insert("teams", {
-      name: `eval ${name}`,
+      name: room ?? `eval ${name}`,
       inviteCode: `eval-${code}`,
       createdAt: now,
     });
