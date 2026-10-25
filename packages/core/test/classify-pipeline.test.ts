@@ -168,7 +168,7 @@ describe("renderEvidence", () => {
     const lines = text.split("\n");
     expect(lines).toHaveLength(2);
     expect(lines[0]).toBe(
-      "[little-brother] conflict · both create db/schema/users.ts · noah (agent active): EDIT db.users db/schema/users.ts. Let it land first, or work on something else meanwhile.",
+      "[little-brother] conflict · both create db/schema/users.ts · noah (agent active): EDIT db.users db/schema/users.ts. Not a stop: keep your change out of their lines (add it beside theirs, e.g. as a new function) and retry now, or let theirs land first.",
     );
     expect(lines[1]).toContain("stale · already failed for ash: EDIT api.cors src/server.ts → FAIL");
   });

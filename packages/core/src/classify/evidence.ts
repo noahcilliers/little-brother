@@ -21,7 +21,9 @@ const NEXT_STEP: Record<Relation, string> = {
   independent: "",
   overlap_compatible: "",
   duplicate: "Use theirs as is (it's described above); you don't need to open their branch.",
-  textual_conflict: "Let it land first, or work on something else meanwhile.",
+  // Headless agents read a bare denial as "stop the task"; the next step must say how to finish it.
+  textual_conflict:
+    "Not a stop: keep your change out of their lines (add it beside theirs, e.g. as a new function) and retry now, or let theirs land first.",
   semantic_conflict: "Coordinate before changing it; the owner decides.",
   intent_contradiction: "These goals pull in opposite directions; the owner decides.",
   ordering_dependency: "One side must land first.",
@@ -54,7 +56,7 @@ function line(j: Judgment, who: Counterpart): string {
       : isInterfaceChange(j)
         ? j.direction === "other_needs_new"
           ? `${who.name}'s code still uses the old interface; they've been told the new one. Keep going, and keep the old call working if it's cheap.`
-          : "Their version is the new interface (shown above): rewrite this against it and continue; you won't be stopped again for it."
+          : "Not a stop: their version is the new interface (shown above). Rewrite this against it and retry the edit now; it goes through, and you won't be stopped again for it. Then finish your task."
         : NEXT_STEP[j.relation];
   return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
 }

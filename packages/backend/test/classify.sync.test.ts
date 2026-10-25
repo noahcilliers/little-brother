@@ -207,7 +207,7 @@ describe("runSyncChecks", () => {
     });
     const { inbox } = await rows(t);
     const told = new Map(inbox.map((i) => [i.agentId, i.text]));
-    expect(told.get(joshua)).toContain("rewrite this against it");
+    expect(told.get(joshua)).toContain("Rewrite this against it");
     expect(told.get(noah)).toContain("still uses the old interface");
     // The caller's next edit against the old interface is denied once, with the new shape; then it may go on.
     const goal = await insert(t, {
