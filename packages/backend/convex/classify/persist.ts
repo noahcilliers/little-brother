@@ -87,7 +87,6 @@ export async function persistJudgments(
       action: interventionAction({
         ...raw,
         avoidedTokens: await avoidedTokens(ctx, other),
-        otherFinished: them0.finished,
       }),
     };
     const key = catchKey(next, other);

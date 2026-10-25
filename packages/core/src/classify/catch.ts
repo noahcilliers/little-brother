@@ -32,8 +32,6 @@ export type InterventionInput = {
   direction?: "new_needs_other" | "other_needs_new" | "none";
   /** The same catch was already raised (and its denial shown) for an earlier step of this work. */
   repeat?: boolean;
-  /** The other side's goal is closed: only this side can keep the old interface working. */
-  otherFinished?: boolean;
   /** Tokens the catch would spare (the duplicated task, or the failed attempt behind a lesson); unknown → undefined. */
   avoidedTokens?: number;
 };
@@ -44,15 +42,13 @@ export type InterventionInput = {
  * apply; never raises one.
  */
 export function interventionAction(i: InterventionInput): Action {
-  // An interface change (rename, signature change, an imported symbol changing) has a mechanical fix: use the
-  // new interface. A block made agents wait for a human; a mere warning was ignored (STALE-bench interference
-  // went back to 100%). So the first edit against it is denied with the new shape; `repeat` lets later ones by.
-  // Only the side that uses the old interface is denied; the side that changed it is told who still uses it,
-  // unless that side already finished: then nobody else can fix the call, so the changer is denied once.
+  // An interface change (rename, signature change, an imported symbol changing) on separate branches can only be
+  // made safe by the side that changes it: the caller's branch doesn't have the new interface, so a caller told to
+  // use it either breaks its own code or ignores us (STALE-bench: every merge still broke). So the changer is
+  // denied once and told to keep the old interface working; the caller is only told; `repeat` lets later edits by.
   if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize")) {
     if (i.repeat) return "warn";
-    if (i.direction === "new_needs_other") return "serialize";
-    return i.direction === "other_needs_new" && i.otherFinished ? "serialize" : "warn";
+    return i.direction === "other_needs_new" ? "serialize" : "warn";
   }
   if (i.action !== "serialize" || NEVER_DOWNGRADE.has(i.relation)) return i.action;
   if (i.avoidedTokens === undefined) return i.action;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { interventionAction } from "../src/classify/catch";
+import { otherSideAction } from "../src/classify/decide";
 import { type Counterpart, renderEvidence } from "../src/classify/evidence";
 import type { Judgment } from "../src/classify/types";
 
@@ -10,43 +11,41 @@ const rename = {
   evidence: ["R4: base36_to_int is renamed on one side but referenced on the other"],
 };
 
-describe("interface changes", () => {
-  it("deny the caller once, then let it through", () => {
-    expect(interventionAction({ ...rename, direction: "new_needs_other" })).toBe("serialize");
-    expect(interventionAction({ ...rename, direction: "new_needs_other", repeat: true })).toBe("warn");
+const judgment = (direction: Judgment["direction"]): Judgment => ({
+  otherNodeId: "n2",
+  relation: "semantic_conflict",
+  direction,
+  action: "serialize",
+  confidence: 0.85,
+  evidence: rename.evidence,
+  source: "rule",
+});
+const them = (name: string): Counterpart => ({ name, active: true, text: "EDIT django/utils/http.py → OK" });
+
+describe("interface changes: the changer keeps the old interface working", () => {
+  it("denies the changer once, then lets it through", () => {
+    expect(interventionAction({ ...rename, direction: "other_needs_new" })).toBe("serialize");
+    expect(interventionAction({ ...rename, direction: "other_needs_new", repeat: true })).toBe("warn");
   });
 
-  it("only warn the changer while the caller can still hear about it", () => {
-    expect(interventionAction({ ...rename, direction: "other_needs_new" })).toBe("warn");
+  it("only tells the caller, whose branch doesn't have the new interface", () => {
+    expect(interventionAction({ ...rename, direction: "new_needs_other" })).toBe("warn");
   });
 
-  it("deny the changer once when the caller already finished, since nobody else can keep its call working", () => {
-    expect(interventionAction({ ...rename, direction: "other_needs_new", otherFinished: true })).toBe(
-      "serialize",
+  it("holds a changer found later at Stop, and only tells a caller found later", () => {
+    expect(otherSideAction(judgment("new_needs_other"), { kind: "action", failedMemory: false })).toBe(
+      "block",
     );
-    expect(
-      interventionAction({ ...rename, direction: "other_needs_new", otherFinished: true, repeat: true }),
-    ).toBe("warn");
+    expect(otherSideAction(judgment("other_needs_new"), { kind: "action", failedMemory: false })).toBe(
+      "warn",
+    );
   });
 
-  it("tell the changer to keep the old interface working when the caller is done", () => {
-    const j: Judgment = {
-      otherNodeId: "n2",
-      relation: "semantic_conflict",
-      direction: "other_needs_new",
-      action: "serialize",
-      confidence: 0.85,
-      evidence: rename.evidence,
-      source: "rule",
-    };
-    const ash: Counterpart = {
-      name: "ash",
-      active: true,
-      finished: true,
-      text: "EDIT django/utils/http.py → OK",
-    };
-    const text = renderEvidence([j], () => ash);
-    expect(text).toContain("ash already finished");
-    expect(text).toContain("Keep the old interface working too");
+  it("tells each side what to do", () => {
+    const toChanger = renderEvidence([judgment("other_needs_new")], () => them("ash"));
+    expect(toChanger).toContain("ash's code calls the old interface on their branch");
+    expect(toChanger).toContain("Keep the old interface working too");
+    const toCaller = renderEvidence([judgment("new_needs_other")], () => them("noah"));
+    expect(toCaller).toContain("keep using the current one here");
   });
 });

@@ -1,3 +1,4 @@
+import { isInterfaceChange } from "./catch";
 import { applyCollisionPolicy } from "./collision";
 import { isCrossCutting } from "./judge-gate";
 import {
@@ -79,6 +80,10 @@ export function decide(
  */
 export function otherSideAction(j: Judgment, other: { kind: string; failedMemory: boolean }): Action {
   if (j.relation === "repeats_failure" || other.failedMemory) return "ignore";
+  // The changer of an interface hears about a caller found later as a hold at Stop: it alone can keep the old
+  // interface working for the merge (see interventionAction).
+  if (isInterfaceChange(j) && j.direction === "new_needs_other") return "block";
+  if (isInterfaceChange(j)) return "warn";
   let action = j.action;
   if (j.relation === "ordering_dependency") action = j.direction === "other_needs_new" ? "serialize" : "warn";
   // The redirected side adapts on its own; the owner doesn't need to hear that someone was stopped.

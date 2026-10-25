@@ -49,7 +49,15 @@ export const onStop: HookHandler = async ({ ctx, agent, env }) => {
       await ctx.db.patch(item._id, { attempts: item.attempts + 1, state: "delivered" });
     }
     const digest = renderDigest(urgent.map((i) => ({ id: i._id, text: i.text })));
-    const reason = `${digest}\n${DASHBOARD_DECIDES} Avoid the contested change until then, or stop.`;
+    // A hold is either a decision waiting on a person (an enforcing catch nobody has a claim on) or work only this
+    // agent can do before it stops, like keeping an interface it changed working for a caller's branch.
+    const rows = await Promise.all(urgent.map((i) => ctx.db.get(i.classificationId)));
+    const waitsOnPerson = rows.some(
+      (c) => c !== null && (c.action === "block" || c.action === "serialize") && !c.winnerAgentId,
+    );
+    const reason = waitsOnPerson
+      ? `${digest}\n${DASHBOARD_DECIDES} Avoid the contested change until then, or stop.`
+      : `${digest}\nDo this before you finish; it's what keeps the merge working.`;
     return {
       output: blockStop(reason),
       summary: `stop blocked by ${urgent.length} item(s)`,

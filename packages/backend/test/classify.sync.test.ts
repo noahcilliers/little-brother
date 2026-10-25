@@ -178,7 +178,7 @@ describe("runSyncChecks", () => {
     expect(inbox.map((i) => [i.agentId, i.action])).toEqual([[ash, "warn"]]);
   });
 
-  test("signature change of a function another agent calls → semantic_conflict; the caller's next edit is denied once with the new shape, the changer is only told", async () => {
+  test("signature change of a function another agent calls → semantic_conflict; the changer is denied once and keeps the old interface working, the caller is only told", async () => {
     await insert(t, {
       agentId: joshua,
       text: "EDIT checkout src/checkout/pay-flow.ts",
@@ -186,108 +186,93 @@ describe("runSyncChecks", () => {
       touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
       references: ["src/billing/pay.ts::pay"],
     });
-    const mine = await insert(t, {
-      agentId: noah,
-      text: "EDIT billing src/billing/pay.ts",
-      files: ["src/billing/pay.ts"],
-      touches: [
-        {
-          path: "src/billing/pay.ts",
-          symbol: "src/billing/pay.ts::pay",
-          op: "signature_change",
-          lines: [1, 4],
-        },
-      ],
-    });
-    const js = await sync(t, mine);
+    const goal = await insert(t, { agentId: noah, kind: "intent", verb: "PLAN", text: "PLAN billing pay" });
+    const change = () =>
+      insert(t, {
+        parentId: goal,
+        agentId: noah,
+        text: "EDIT billing src/billing/pay.ts",
+        files: ["src/billing/pay.ts"],
+        touches: [
+          {
+            path: "src/billing/pay.ts",
+            symbol: "src/billing/pay.ts::pay",
+            op: "signature_change",
+            lines: [1, 4],
+          },
+        ],
+      });
+    const first = await change();
+    const js = await sync(t, first);
     expect(js[0]).toMatchObject({
       relation: "semantic_conflict",
-      action: "warn",
+      action: "serialize",
       direction: "other_needs_new",
     });
     const { inbox } = await rows(t);
-    const told = new Map(inbox.map((i) => [i.agentId, i.text]));
-    expect(told.get(joshua)).toContain("Rewrite this against it");
-    expect(told.get(noah)).toContain("still uses the old interface");
-    // The caller's next edit against the old interface is denied once, with the new shape; then it may go on.
-    const goal = await insert(t, {
-      agentId: joshua,
-      kind: "intent",
-      verb: "PLAN",
-      text: "PLAN checkout pay flow",
-    });
-    const callerEdit = () =>
-      insert(t, {
-        parentId: goal,
-        agentId: joshua,
-        text: "EDIT checkout src/checkout/pay-flow.ts",
-        files: ["src/checkout/pay-flow.ts"],
-        touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
-        references: ["src/billing/pay.ts::pay"],
-      });
-    expect((await sync(t, await callerEdit()))[0]?.action).toBe("serialize");
-    // The hook denies on the rows it gets back: the retry must not carry the catch's stored serialize.
-    const retry = await callerEdit();
+    const told = new Map(inbox.map((i) => [i.agentId, i]));
+    expect(told.get(joshua)).toMatchObject({ action: "warn" });
+    expect(told.get(joshua)?.text).toContain("keep using the current one here");
+    // The hook's denial text tells the changer what to keep working; the retry goes through.
+    const denied = await t.run((ctx) => ctx.db.query("classifications").first());
+    expect(denied?.reason).toContain("Keep the old interface working too");
+    const retry = await change();
     const again = await t.run((ctx) => runSyncChecks(ctx, retry));
     expect(again.judgments[0]?.action).toBe("warn");
     expect(again.rowIds).toEqual([]);
   });
 
   test("a milder notice between the same goals earlier doesn't turn the first real interface clash into a repeat", async () => {
-    const goal = await insert(t, {
+    await insert(t, {
       agentId: joshua,
-      kind: "intent",
-      verb: "PLAN",
-      text: "PLAN checkout pay flow",
+      text: "EDIT checkout src/checkout/pay-flow.ts",
+      files: ["src/checkout/pay-flow.ts"],
+      touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
+      references: ["src/billing/pay.ts::pay"],
     });
-    const callerEdit = () =>
-      insert(t, {
-        parentId: goal,
-        agentId: joshua,
-        text: "EDIT checkout src/checkout/pay-flow.ts",
-        files: ["src/checkout/pay-flow.ts"],
-        touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
-        references: ["src/billing/pay.ts::pay"],
-      });
-    const change = await insert(t, {
-      agentId: noah,
-      text: "EDIT billing src/billing/pay.ts",
-      files: ["src/billing/pay.ts"],
-      touches: [
-        {
-          path: "src/billing/pay.ts",
-          symbol: "src/billing/pay.ts::pay",
-          op: "signature_change",
-          lines: [1, 4],
-        },
-      ],
-    });
-    // Earlier, the judge read joshua's plan against noah's change: a warning, stored as the catch between the goals.
+    const caller = await insert(t, { agentId: joshua, kind: "intent", verb: "PLAN", text: "PLAN checkout" });
+    const goal = await insert(t, { agentId: noah, kind: "intent", verb: "PLAN", text: "PLAN billing pay" });
+    // Earlier, the judge read the two plans against each other: a warning, stored as the catch between the goals.
     await t.run((ctx) =>
       ctx.db.insert("classifications", {
         nodeId: goal,
-        againstNodeId: change,
+        againstNodeId: caller,
         type: "conflict",
         relation: "ordering_dependency",
-        direction: "new_needs_other",
+        direction: "none",
         action: "warn",
-        agentIds: [joshua, noah],
-        reason: "plan touches billing",
+        agentIds: [noah, joshua],
+        reason: "plans touch billing",
         evidence: [],
         confidence: 0.6,
         retrievalScore: 1,
         source: "llm",
         status: "open",
         latencyMs: 1,
-        catchKey: catchKey({ _id: goal, kind: "intent" }, { _id: change, kind: "action" }),
+        catchKey: catchKey({ _id: goal, kind: "intent" }, { _id: caller, kind: "intent" }),
         at: Date.now(),
       }),
     );
-    const firstEdit = await callerEdit();
+    const change = () =>
+      insert(t, {
+        parentId: goal,
+        agentId: noah,
+        text: "EDIT billing src/billing/pay.ts",
+        files: ["src/billing/pay.ts"],
+        touches: [
+          {
+            path: "src/billing/pay.ts",
+            symbol: "src/billing/pay.ts::pay",
+            op: "signature_change",
+            lines: [1, 4],
+          },
+        ],
+      });
+    const firstEdit = await change();
     const first = await t.run((ctx) => runSyncChecks(ctx, firstEdit));
     expect(first.judgments[0]?.action).toBe("serialize");
     expect(first.rowIds).toHaveLength(1);
-    const secondEdit = await callerEdit();
+    const secondEdit = await change();
     const second = await t.run((ctx) => runSyncChecks(ctx, secondEdit));
     expect(second.rowIds).toEqual([]);
   });
