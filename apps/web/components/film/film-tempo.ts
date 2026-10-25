@@ -3,26 +3,26 @@ import { STORY_SHIFT } from "./film-timeline";
 
 // Playback speed per stretch of the film. Every scene, beat and camera move is timed on the film clock; this map
 // decides how many real seconds each stretch gets, so the catches play slowly enough to follow without re-timing
-// the dozens of beats keyed to them. Rate is film-clock seconds per second of playback. Stretches with only
-// numbers and stats on screen run faster; the app UI (story, how it works) keeps its pace.
+// the dozens of beats keyed to them. Rate is film-clock seconds per second of playback. The film runs about
+// 1:25; the catches and the phone decision stay the slowest stretches so they can be followed.
 
 const ST = STORY_SHIFT;
 // biome-ignore format: one stretch per row
 const TEMPO: [clock: number, rate: number][] = [
-  [0, 1.8],          // the problem and its stats
-  [ST + 5.6, 0.9],   // people join
-  [ST + 19.2, 0.45], // duplicate catch
-  [ST + 23.2, 0.45], // stale catch
-  [ST + 28.4, 0.55], // two auth approaches diverge
-  [ST + 32, 0.5],    // conflict, decided from the phone
-  [ST + 38.6, 1],    // back out to the wide shot
-  [42.8, 1],         // why not git (research stats)
-  [51.2, 0.65],      // how it works
-  [57.6, 1.1],       // learning: six short beats, one idea each
-  [73.6, 1.3],       // benchmark timelapse, then why we run it
-  [86.6, 1.35],      // results
-  [101.6, 1.3],      // impact
-  [105, 1],          // close
+  [0, 2.2],          // the problem and its stats
+  [ST + 5.6, 1.3],   // people join
+  [ST + 19.2, 0.7],  // duplicate catch
+  [ST + 23.2, 0.7],  // stale catch
+  [ST + 28.4, 0.85], // two auth approaches diverge
+  [ST + 32, 0.75],   // conflict, decided from the phone
+  [ST + 38.6, 1.4],  // back out to the wide shot
+  [42.8, 1.5],       // why not git (research stats)
+  [51.2, 1],         // how it works
+  [57.6, 1.6],       // learning: six short beats, one idea each
+  [73.6, 1.7],       // benchmark timelapse, then why we run it
+  [86.6, 1.8],       // results
+  [101.6, 1.6],      // impact
+  [105, 1.2],        // close
 ];
 
 /** Playback second at which each stretch starts. */

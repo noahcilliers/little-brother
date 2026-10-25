@@ -55,7 +55,7 @@ export function ReportEval() {
       <p>
         On STALE-bench with Haiku agents, a shared mailbox left 100% of merges broken, the same as no
         coordination (20 runs each); a hand-written note about the change up front brought it to 45%. After
-        the fixes below, Little Brother caught 34 of 36 planted interface clashes with none mislabelled, but
+        the fixes below, Little Brother caught 46 of 48 planted interface clashes with none mislabelled, but
         once both agents finish their tasks most merges still break: the caller tends to keep the name its own
         branch has. Every rerun and its numbers are in the eval report. <Src k="haiku" />
       </p>
