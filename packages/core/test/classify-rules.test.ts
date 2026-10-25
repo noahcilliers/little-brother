@@ -69,6 +69,22 @@ describe("R2 same create", () => {
     const b = node({ agentId: "b", touches: [{ path: "b.ts", symbol: "User", op: "create" }] });
     expect(verdict(r2SameCreate.check(pair(a, b))).relation).toBe("textual_conflict");
   });
+  it("does not call two different new functions in one existing file a duplicate", () => {
+    const a = node({
+      touches: [
+        { path: "django/utils/http.py", op: "write" },
+        { path: "django/utils/http.py", symbol: "django/utils/http.py::QueryString", op: "create" },
+      ],
+    });
+    const b = node({
+      agentId: "b",
+      touches: [
+        { path: "django/utils/http.py", op: "write" },
+        { path: "django/utils/http.py", symbol: "django/utils/http.py::build_query_url", op: "create" },
+      ],
+    });
+    expect(r2SameCreate.check(pair(a, b))).toBeNull();
+  });
   it("does not fire for create vs write", () => {
     const a = node({ touches: [{ path: "x.ts", op: "create" }] });
     const b = node({ agentId: "b", touches: [{ path: "x.ts", op: "write" }] });
