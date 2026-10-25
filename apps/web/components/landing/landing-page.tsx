@@ -3,6 +3,7 @@ import { Film } from "../film/film";
 import { Features } from "./features";
 import { Hero } from "./hero";
 import { LandingNav } from "./landing-nav";
+import { PairModel } from "./pair-model/pair-model";
 import { Results } from "./results";
 import { Stack } from "./stack";
 import { EvalTimelapse } from "./timelapse/eval-timelapse";
@@ -16,6 +17,7 @@ export function LandingPage({ origin, signedIn }: { origin: string; signedIn: bo
         <Film />
         <Results />
         <EvalTimelapse />
+        <PairModel />
         <Features />
         <Stack />
         <footer>

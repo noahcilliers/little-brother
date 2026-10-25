@@ -15,6 +15,7 @@ export function LandingNav({ signedIn, links = true }: Props) {
             <a href="/#demo">demo</a>
             <a href="/#results">results</a>
             <a href="/#replay">replay</a>
+            <a href="/#model">model</a>
             <a href="/#features">features</a>
             <a href="/#stack">stack</a>
             <a href="/report">report</a>

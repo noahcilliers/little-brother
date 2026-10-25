@@ -1,0 +1,82 @@
+/* The pair model's loop: features light up, trees fire, scores grow, the pair settles. Off when not on screen
+   (PlayOnView) and for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lp .pm-card[data-play="on"] .pm-group rect {
+    animation: pm-cell 6s ease-in-out infinite;
+  }
+  .lp .pm-card[data-play="on"] .pm-tree {
+    animation: pm-tree 6s ease-in-out infinite;
+  }
+  .lp .pm-card[data-play="on"] .pm-bar {
+    animation: pm-bar 6s ease-out infinite;
+  }
+  .lp .pm-card[data-play="on"] .pm-decide polygon {
+    animation: pm-decide 6s ease-in-out infinite;
+  }
+  .lp .pm-card[data-play="on"] .pm-out.settled rect {
+    animation: pm-settle 6s ease-in-out infinite;
+  }
+}
+@keyframes pm-cell {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  12%,
+  70% {
+    opacity: 0.95;
+  }
+}
+@keyframes pm-tree {
+  0%,
+  18% {
+    opacity: 0.3;
+  }
+  30%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+@keyframes pm-bar {
+  0%,
+  34% {
+    transform: scaleX(0);
+  }
+  50%,
+  88% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+@keyframes pm-decide {
+  0%,
+  52% {
+    stroke-width: 2;
+  }
+  58%,
+  64% {
+    stroke-width: 4;
+  }
+  70%,
+  100% {
+    stroke-width: 2;
+  }
+}
+@keyframes pm-settle {
+  0%,
+  60% {
+    fill: var(--bg);
+  }
+  68%,
+  92% {
+    fill: color-mix(in srgb, var(--agent-1) 16%, var(--bg));
+  }
+  100% {
+    fill: var(--bg);
+  }
+}

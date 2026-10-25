@@ -1,0 +1,156 @@
+/* Pair model section: one 6 s loop that walks a pair through the model, stage by stage. */
+.lp .pm-card {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 28px 28px 20px;
+}
+.lp .pm-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.lp .pm-h {
+  font: 600 17px var(--sans);
+  fill: var(--fg);
+}
+.lp .pm-l {
+  font: 400 12.5px var(--mono);
+  fill: var(--muted);
+}
+.lp .pm-l.sm {
+  font-size: 11.5px;
+}
+.lp .pm-l.big {
+  font-size: 20px;
+}
+.lp .pm-l.strong {
+  fill: var(--fg);
+  font-weight: 500;
+}
+.lp .pm-arrow,
+.lp .pm-rule {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 2;
+}
+.lp .pm-rule {
+  stroke: var(--line);
+}
+
+/* features: six groups, told apart by the agent palette */
+.lp .pm-group rect {
+  opacity: 0.85;
+}
+.lp .pm-group.g1 rect {
+  fill: var(--agent-1);
+}
+.lp .pm-group.g2 rect {
+  fill: var(--agent-5);
+}
+.lp .pm-group.g3 rect {
+  fill: var(--agent-4);
+}
+.lp .pm-group.g4 rect {
+  fill: var(--agent-3);
+}
+.lp .pm-group.g5 rect {
+  fill: var(--accent);
+}
+.lp .pm-group.g6 rect {
+  fill: var(--agent-6);
+}
+
+/* trees */
+.lp .pm-tree line {
+  stroke: var(--line-2);
+  stroke-width: 2.5;
+}
+.lp .pm-tree .split {
+  fill: var(--fg);
+}
+.lp .pm-tree .leaf {
+  fill: var(--agent-1);
+}
+
+/* calibrated scores */
+.lp .pm-track {
+  fill: var(--sunk);
+}
+.lp .pm-bar {
+  fill: var(--line-2);
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+.lp .pm-bar.top {
+  fill: var(--agent-1);
+}
+
+/* decision and outcomes */
+.lp .pm-decide polygon {
+  fill: var(--bg);
+  stroke: var(--fg);
+  stroke-width: 2;
+}
+.lp .pm-out rect {
+  fill: var(--bg);
+  stroke: var(--line-2);
+  stroke-width: 2;
+}
+.lp .pm-out.settled rect {
+  stroke: var(--agent-1);
+}
+.lp .pm-out.judge rect {
+  stroke-dasharray: 6 5;
+}
+.lp .pm-out.judge {
+  opacity: 0.7;
+}
+.lp .pm-arrow.ok {
+  stroke: var(--agent-1);
+}
+.lp .pm-arrow.judge {
+  stroke-dasharray: 6 5;
+}
+
+.lp .pm-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+.lp .pm-stats li {
+  display: grid;
+  gap: 4px;
+  padding: 18px 22px;
+}
+.lp .pm-stats li + li {
+  border-left: 1px solid var(--line);
+}
+.lp .pm-stats b {
+  font: 600 26px var(--sans);
+  letter-spacing: -0.03em;
+}
+.lp .pm-stats span {
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 680px) {
+  .lp .pm-card {
+    padding: 16px 12px 12px;
+    overflow-x: auto;
+  }
+  .lp .pm-svg {
+    min-width: 760px;
+  }
+  .lp .pm-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp .pm-stats li + li {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}

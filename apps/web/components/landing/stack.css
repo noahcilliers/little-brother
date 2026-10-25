@@ -34,6 +34,9 @@
 .lp .stack-tile .chips {
   display: flex;
   flex-wrap: wrap;
+  /* The list fills the tile's spare row; chips keep their own height instead of stretching into pills. */
+  align-items: flex-start;
+  align-content: flex-start;
   gap: 6px;
   margin: 8px 0 0;
   padding: 0;
