@@ -5,27 +5,27 @@ export type SceneId = "hook" | "story" | "why" | "how" | "learn" | "measure" | "
 export type Transition = "cut" | "zoom" | "wipe" | "iris";
 
 /** The story's clock runs this far behind the film's: story second x plays at film second x + STORY_SHIFT. */
-export const STORY_SHIFT = 5.6;
+export const STORY_SHIFT = 3.6;
 const ST = STORY_SHIFT;
 
 /** [start, end, how it enters]. Scenes overlap their neighbour by the transition length. */
 export const SCENES: Record<SceneId, [start: number, end: number, enter: Transition]> = {
-  hook: [0, 11.2, "cut"],
-  story: [10.7, 45.2, "zoom"],
-  why: [44.6, 53.6, "wipe"],
-  how: [53, 60, "wipe"],
+  hook: [0, 9.2, "cut"],
+  story: [ST + 5.1, ST + 39.6, "zoom"],
+  why: [42.6, 51.6, "wipe"],
+  how: [51, 58, "wipe"],
   // learn holds six one-idea beats (scene-learn.tsx LEARN_SPAN, 16.6 s); everything after it moves with it.
-  learn: [59.4, 76, "iris"],
-  measure: [75.4, 91, "zoom"],
-  impact: [90.4, 94.4, "iris"],
-  close: [93.8, 98.6, "zoom"],
+  learn: [57.4, 74, "iris"],
+  measure: [73.4, 89, "zoom"],
+  impact: [88.4, 92.4, "iris"],
+  close: [91.8, 96.6, "zoom"],
 };
 export const TRANSITION_S = 0.6;
 
 // biome-ignore format: tabular scenario data
 export const CHAPTERS: [s: number, name: string][] = [
   [0, "Hook"], [ST + 5.5, "Connect"], [ST + 18.8, "Duplicate"], [ST + 23.2, "Stale"], [ST + 28.4, "Conflict"],
-  [44.8, "Why not git"], [53.2, "How it works"], [59.6, "Learning"], [75.6, "Results"], [90.6, "Impact"], [94, "Close"],
+  [42.8, "Why not git"], [51.2, "How it works"], [57.6, "Learning"], [73.6, "Results"], [88.6, "Impact"], [92, "Close"],
 ];
 
 // One short caption per beat: the picture carries the detail, so a caption only says what to watch. Scenes with
@@ -46,7 +46,7 @@ export const SUBS: [s: number, text: string][] = [
   [ST + 32.2, "Conflict. Both sides go to Noah."],
   [ST + 35, "He picks one from his phone."],
   [ST + 36.8, "Ash's agent switches over."],
-  [44.8, ""],
+  [42.8, ""],
 ];
 
 /** Story beats shared by the dashboard, phones and terminals, on the story's clock. */

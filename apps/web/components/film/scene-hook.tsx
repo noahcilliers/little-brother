@@ -1,14 +1,22 @@
 import { CATCH_ICON, InlineIcon } from "@/components/board/icons";
 import { prog } from "./film-clock";
 import { rise } from "./film-fx";
-import { HookStat, type Stat } from "./hook-stat";
+import { type Stat, StatTile } from "./hook-stat";
+
+// Scene 1: the problem in one line with three sourced numbers under it, then what it costs.
 
 // biome-ignore format: one stat per row
 const STATS: Stat[] = [
-  { from: 0.15, to: 2.4, value: 42, unit: "%", text: "of committed code is written by AI", src: "Sonar State of Code 2026" },
-  { from: 2.6, to: 5, lead: "Agents burn", pre: "~", value: 5, unit: "×", text: "the tokens a human does", src: "OpenRouter / Futurum 2026 · a16z × OpenRouter" },
-  { from: 5.2, to: 7.5, lead: "Agent teams succeed", pre: "~", value: 30, unit: "% less", text: "often than one agent alone", src: "CooperBench, Jan 2026" },
+  { value: 42, unit: "%", text: "of committed code is written by AI", src: "Sonar State of Code 2026" },
+  { lead: "Agents burn", pre: "~", value: 5, unit: "×", text: "the tokens a human does", src: "OpenRouter / Futurum 2026 · a16z × OpenRouter" },
+  { lead: "Agent teams succeed", pre: "~", value: 30, unit: "%", text: "less often than one agent alone", src: "CooperBench, Jan 2026" },
 ];
+/** When each stat rises in under the statement. */
+const STAT_AT = [1, 1.6, 2.2];
+/** When the statement and its stats leave and the cost line takes over. */
+const THEN = 6.8;
+/** Half the stats row plus the gap above it, in stage pixels: the cost line slides this far to sit centered. */
+const RECENTER = 150;
 const PROBLEMS = [
   ["redo work", CATCH_ICON.duplicate],
   ["repeat failures", CATCH_ICON.stale],
@@ -47,22 +55,25 @@ function Words({
   );
 }
 
-/** Scene 1: the scale of the problem in three sourced numbers, then why it happens. */
 export function SceneHook({ s }: { s: number }) {
+  const out = prog(s, THEN - 0.2, 0.4);
   return (
     <div className="fh">
       <div className="fh-grid" aria-hidden="true" />
-      {STATS.map((st) => (
-        <HookStat key={st.src} s={s} st={st} />
-      ))}
-      <div className="fh-stack">
-        {s >= 7.6 && s < 9.7 ? (
-          <Words text="They can't see each other." s={s} from={7.65} to={9.3} accent={["can't", "see"]} />
+      <div className="fh-stack" style={{ transform: `translateY(${out * RECENTER}px)` }}>
+        {s < THEN + 0.4 ? (
+          <Words
+            text="Your team's agents can't see each other."
+            s={s}
+            from={0.1}
+            to={THEN - 0.2}
+            accent={["can't", "see"]}
+          />
         ) : null}
-        {s >= 9.3 ? (
+        {s >= THEN - 0.1 ? (
           <span className="fh-line fh-three">
             <span className="fh-mask">
-              <span className="fh-word" style={rise(prog(s, 9.35, 0.4))}>
+              <span className="fh-word" style={rise(prog(s, THEN, 0.4))}>
                 So they
               </span>
             </span>
@@ -70,7 +81,7 @@ export function SceneHook({ s }: { s: number }) {
               <span key={label} className="fh-mask">
                 <span
                   className={i === 2 ? "fh-chip accent" : "fh-chip"}
-                  style={rise(prog(s, 9.55 + i * 0.28, 0.45))}
+                  style={rise(prog(s, THEN + 0.25 + i * 0.3, 0.45))}
                 >
                   <InlineIcon name={icon} color="currentColor" size={34} />
                   {label}
@@ -80,6 +91,12 @@ export function SceneHook({ s }: { s: number }) {
             ))}
           </span>
         ) : null}
+      </div>
+      {/* Stays in the layout once faded, so the cost line doesn't jump when the stats leave. */}
+      <div className="hs-row" style={{ opacity: 1 - out, transform: `translateY(${-out * 30}px)` }}>
+        {STATS.map((st, i) => (
+          <StatTile key={st.src} s={s} st={st} at={STAT_AT[i] ?? 0} />
+        ))}
       </div>
     </div>
   );

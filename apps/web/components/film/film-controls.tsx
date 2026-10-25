@@ -6,13 +6,15 @@ type Props = {
   /** Playback seconds, not film-clock seconds: the scrubber and clock show real time. */
   p: number;
   playing: boolean;
+  fast: boolean;
   onToggle: () => void;
+  onSpeed: () => void;
   onRestart: () => void;
   onSeek: (p: number) => void;
 };
 
-/** Play/pause, restart, a scrubber with chapter jumps, and the clock. */
-export function FilmControls({ p, playing, onToggle, onRestart, onSeek }: Props) {
+/** Play/pause, restart, 1×/2× speed, a scrubber with chapter jumps, and the clock. */
+export function FilmControls({ p, playing, fast, onToggle, onSpeed, onRestart, onSeek }: Props) {
   const chapter = lastBefore(CHAPTERS, clockAt(p));
   return (
     <div className="fc-controls">
@@ -21,6 +23,15 @@ export function FilmControls({ p, playing, onToggle, onRestart, onSeek }: Props)
       </button>
       <button type="button" className="fc-ctl" onClick={onRestart}>
         Restart
+      </button>
+      <button
+        type="button"
+        className="fc-ctl"
+        aria-pressed={fast}
+        aria-label="Double speed"
+        onClick={onSpeed}
+      >
+        {fast ? "2×" : "1×"}
       </button>
       <div className="fc-scrub">
         <input
