@@ -9,9 +9,12 @@ export async function counterpartOf(ctx: QueryCtx, node: Doc<"nodes">): Promise<
   const agent = await ctx.db.get(node.agentId);
   const member = agent ? await ctx.db.get(agent.memberId) : null;
   const card = node.kind === "action" ? contractCard(node) : "";
+  // Stop closes the goal; status stays "active" until the session ends, so the goal says who is done.
+  const goal = node.kind === "intent" ? node : node.parentId ? await ctx.db.get(node.parentId) : null;
   return {
     name: member?.handle ?? "another agent",
     active: agent?.status === "active",
+    finished: goal !== null && goal.outcome !== "open",
     text: node.text,
     ...(card ? { card } : {}),
   };

@@ -81,12 +81,16 @@ export async function persistJudgments(
     const otherId = ctx.db.normalizeId("nodes", raw.otherNodeId);
     const other = otherId ? await ctx.db.get(otherId) : null;
     if (!other) continue;
+    const them0 = await counterpartOf(ctx, other);
     const j: Judgment = {
       ...raw,
-      action: interventionAction({ ...raw, avoidedTokens: await avoidedTokens(ctx, other) }),
+      action: interventionAction({
+        ...raw,
+        avoidedTokens: await avoidedTokens(ctx, other),
+        otherFinished: them0.finished,
+      }),
     };
     const key = catchKey(next, other);
-    const them0 = await counterpartOf(ctx, other);
     const existing = j.action === "ignore" ? undefined : await openCatch(ctx, key);
     const settled = j.action === "ignore" || existing ? undefined : await settledCatch(ctx, key);
     if (settled) {

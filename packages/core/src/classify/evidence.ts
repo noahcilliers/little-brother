@@ -7,6 +7,8 @@ export type Counterpart = {
   name: string; // member handle, supplied by the caller
   active: boolean;
   text: string; // their node's compact signature
+  /** Their goal is closed (they stopped): nothing they wrote will change again, and no notice will reach them. */
+  finished?: boolean;
   /** What they built (files, exports, head of diff), so the reader can use it without opening their branch. */
   card?: string;
 };
@@ -55,7 +57,9 @@ function line(j: Judgment, who: Counterpart): string {
       ? NEXT_STEP.duplicate
       : isInterfaceChange(j)
         ? j.direction === "other_needs_new"
-          ? `${who.name}'s code still uses the old interface; they've been told the new one. Keep going, and keep the old call working if it's cheap.`
+          ? who.finished
+            ? `Not a stop: ${who.name} already finished, their code still calls the old interface, and they won't see this. Keep the old interface working too (e.g. an alias to the new one), then retry.`
+            : `${who.name}'s code still uses the old interface; they've been told the new one. Keep going, and keep the old call working if it's cheap.`
           : "Not a stop: their version is the new interface (shown above). Rewrite this against it and retry the edit now; it goes through, and you won't be stopped again for it. Then finish your task."
         : NEXT_STEP[j.relation];
   return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
