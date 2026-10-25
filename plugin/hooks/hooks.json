@@ -30,7 +30,7 @@
           {
             "type": "command",
             "command": "PATH=\"$HOME/.local/bin:$PATH\" lb hook PreToolUse",
-            "timeout": 3
+            "timeout": 8
           }
         ]
       },

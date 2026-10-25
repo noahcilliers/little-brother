@@ -1,6 +1,6 @@
 {
   "name": "little-brother",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Coordinates independent Claude Code sessions on one team: flags duplicate work, conflicts and known-failed approaches before they cost tokens.",
   "author": {
     "name": "Little Brother team"
