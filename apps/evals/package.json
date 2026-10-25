@@ -7,7 +7,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p .",
     "site-summary": "tsx src/site-summary-cli.ts",
-    "multi-arm": "tsx src/multi-arm-cli.ts"
+    "multi-arm": "tsx src/multi-arm-cli.ts",
+    "publish-results": "tsx src/publish-cli.ts"
   },
   "dependencies": {
     "@lb/core": "workspace:*",

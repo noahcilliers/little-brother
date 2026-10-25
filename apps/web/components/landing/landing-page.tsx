@@ -7,6 +7,7 @@ import { HowStrip } from "./how-strip";
 import { LandingNav } from "./landing-nav";
 import { Results } from "./results";
 import { Stack } from "./stack";
+import { EvalTimelapse } from "./timelapse/eval-timelapse";
 import { Why } from "./why";
 
 export function LandingPage({ origin, signedIn }: { origin: string; signedIn: boolean }) {
@@ -17,6 +18,7 @@ export function LandingPage({ origin, signedIn }: { origin: string; signedIn: bo
         <Hero origin={origin} />
         <Film />
         <Results />
+        <EvalTimelapse />
         <Features />
         <HowStrip />
         <Why />
