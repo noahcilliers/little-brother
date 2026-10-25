@@ -80,10 +80,9 @@ export function decide(
  */
 export function otherSideAction(j: Judgment, other: { kind: string; failedMemory: boolean }): Action {
   if (j.relation === "repeats_failure" || other.failedMemory) return "ignore";
-  // The changer of an interface hears about a caller found later as a hold at Stop: it alone can keep the old
-  // interface working for the merge (see interventionAction).
-  if (isInterfaceChange(j) && j.direction === "new_needs_other") return "block";
-  if (isInterfaceChange(j)) return "warn";
+  // An interface clash found after the other side's edit reaches it as a hold at Stop: each side has its own fix
+  // to make before it finishes (see interventionAction), and no person needs to decide.
+  if (isInterfaceChange(j) && j.direction !== "none") return "block";
   let action = j.action;
   if (j.relation === "ordering_dependency") action = j.direction === "other_needs_new" ? "serialize" : "warn";
   // The redirected side adapts on its own; the owner doesn't need to hear that someone was stopped.

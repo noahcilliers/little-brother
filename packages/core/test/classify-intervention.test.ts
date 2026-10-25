@@ -22,22 +22,23 @@ const judgment = (direction: Judgment["direction"]): Judgment => ({
 });
 const them = (name: string): Counterpart => ({ name, active: true, text: "EDIT django/utils/http.py → OK" });
 
-describe("interface changes: the changer keeps the old interface working", () => {
+describe("interface changes: each side is stopped once with its own fix", () => {
   it("denies the changer once, then lets it through", () => {
     expect(interventionAction({ ...rename, direction: "other_needs_new" })).toBe("serialize");
     expect(interventionAction({ ...rename, direction: "other_needs_new", repeat: true })).toBe("warn");
   });
 
-  it("only tells the caller, whose branch doesn't have the new interface", () => {
-    expect(interventionAction({ ...rename, direction: "new_needs_other" })).toBe("warn");
+  it("denies the caller once too, to write against the new interface", () => {
+    expect(interventionAction({ ...rename, direction: "new_needs_other" })).toBe("serialize");
+    expect(interventionAction({ ...rename, direction: "new_needs_other", repeat: true })).toBe("warn");
   });
 
-  it("holds a changer found later at Stop, and only tells a caller found later", () => {
+  it("holds whichever side was found later at Stop", () => {
     expect(otherSideAction(judgment("new_needs_other"), { kind: "action", failedMemory: false })).toBe(
       "block",
     );
     expect(otherSideAction(judgment("other_needs_new"), { kind: "action", failedMemory: false })).toBe(
-      "warn",
+      "block",
     );
   });
 
@@ -46,6 +47,6 @@ describe("interface changes: the changer keeps the old interface working", () =>
     expect(toChanger).toContain("ash's code calls the old interface on their branch");
     expect(toChanger).toContain("Keep the old interface working too");
     const toCaller = renderEvidence([judgment("new_needs_other")], () => them("noah"));
-    expect(toCaller).toContain("keep using the current one here");
+    expect(toCaller).toContain("write this against their new interface");
   });
 });

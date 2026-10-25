@@ -56,7 +56,7 @@ function line(j: Judgment, who: Counterpart): string {
       : isInterfaceChange(j)
         ? j.direction === "other_needs_new"
           ? `Not a stop: ${who.name}'s code calls the old interface on their branch, and only your side can keep the merge working. Keep the old interface working too (an alias for a rename, a default for a new required argument, a compatible type for a new return value), then retry.`
-          : "Not a stop: their new interface (shown above) isn't on your branch yet, so keep using the current one here; they're keeping it working for the merge. Carry on with your task."
+          : "Not a stop: write this against their new interface (shown above). Your branch doesn't have it yet, so your own tests may fail until the branches merge; that's expected, and the merged code is what has to work. Then finish your task."
         : NEXT_STEP[j.relation];
   return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
 }

@@ -1,3 +1,4 @@
+import { isInterfaceChange, type Relation } from "@lb/core";
 import type { Id } from "../_generated/dataModel";
 import { clip, lbSentence, subjectThing } from "./labels";
 import type { Source } from "./source";
@@ -69,7 +70,9 @@ export function buildDecisions(
       c.type !== "normal" &&
       c.status === "open" &&
       (c.action === "block" || c.action === "serialize") &&
-      !c.winnerAgentId;
+      !c.winnerAgentId &&
+      // Interface clashes have a mechanical fix each side is told to make; nobody needs to choose.
+      !isInterfaceChange({ relation: c.relation as Relation, evidence: c.evidence });
     if (!needed || !c.againstNodeId || c.type === "normal") continue;
     const a = side(c.againstNodeId);
     const b = side(c.nodeId);

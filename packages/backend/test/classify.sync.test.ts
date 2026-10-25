@@ -178,7 +178,7 @@ describe("runSyncChecks", () => {
     expect(inbox.map((i) => [i.agentId, i.action])).toEqual([[ash, "warn"]]);
   });
 
-  test("signature change of a function another agent calls → semantic_conflict; the changer is denied once and keeps the old interface working, the caller is only told", async () => {
+  test("signature change of a function another agent calls → semantic_conflict; the changer is denied once and keeps the old interface working, the caller is held to adapt", async () => {
     await insert(t, {
       agentId: joshua,
       text: "EDIT checkout src/checkout/pay-flow.ts",
@@ -211,8 +211,8 @@ describe("runSyncChecks", () => {
     });
     const { inbox } = await rows(t);
     const told = new Map(inbox.map((i) => [i.agentId, i]));
-    expect(told.get(joshua)).toMatchObject({ action: "warn" });
-    expect(told.get(joshua)?.text).toContain("keep using the current one here");
+    expect(told.get(joshua)).toMatchObject({ action: "block" });
+    expect(told.get(joshua)?.text).toContain("write this against their new interface");
     // The hook's denial text tells the changer what to keep working; the retry goes through.
     const denied = await t.run((ctx) => ctx.db.query("classifications").first());
     expect(denied?.reason).toContain("Keep the old interface working too");

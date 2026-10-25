@@ -1,4 +1,4 @@
-import { blockStop, DASHBOARD_DECIDES, renderDigest } from "@lb/core";
+import { blockStop, DASHBOARD_DECIDES, isInterfaceChange, type Relation, renderDigest } from "@lb/core";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
@@ -53,7 +53,11 @@ export const onStop: HookHandler = async ({ ctx, agent, env }) => {
     // agent can do before it stops, like keeping an interface it changed working for a caller's branch.
     const rows = await Promise.all(urgent.map((i) => ctx.db.get(i.classificationId)));
     const waitsOnPerson = rows.some(
-      (c) => c !== null && (c.action === "block" || c.action === "serialize") && !c.winnerAgentId,
+      (c) =>
+        c !== null &&
+        (c.action === "block" || c.action === "serialize") &&
+        !c.winnerAgentId &&
+        !isInterfaceChange({ relation: c.relation as Relation, evidence: c.evidence }),
     );
     const reason = waitsOnPerson
       ? `${digest}\n${DASHBOARD_DECIDES} Avoid the contested change until then, or stop.`

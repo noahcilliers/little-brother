@@ -42,14 +42,12 @@ export type InterventionInput = {
  * apply; never raises one.
  */
 export function interventionAction(i: InterventionInput): Action {
-  // An interface change (rename, signature change, an imported symbol changing) on separate branches can only be
-  // made safe by the side that changes it: the caller's branch doesn't have the new interface, so a caller told to
-  // use it either breaks its own code or ignores us (STALE-bench: every merge still broke). So the changer is
-  // denied once and told to keep the old interface working; the caller is only told; `repeat` lets later edits by.
-  if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize")) {
-    if (i.repeat) return "warn";
-    return i.direction === "other_needs_new" ? "serialize" : "warn";
-  }
+  // An interface change (rename, signature change, an imported symbol changing) on separate branches: both sides
+  // are stopped once. The caller is told to write against the new interface, which its own branch only gets at
+  // merge; the changer is told to keep the old one working where its task allows. Either alone left STALE-bench
+  // merges broken: callers kept the old name that works on their branch, and changers told "no alias" refused one.
+  if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize"))
+    return i.repeat || !i.direction || i.direction === "none" ? "warn" : "serialize";
   if (i.action !== "serialize" || NEVER_DOWNGRADE.has(i.relation)) return i.action;
   if (i.avoidedTokens === undefined) return i.action;
   const expected = i.confidence * i.avoidedTokens;
