@@ -76,19 +76,24 @@ const CARD_MAX = 240;
  */
 export function contractCard(n: CardNode): string {
   const files = [...new Set([...n.touches.map((t) => t.path), ...n.files])].slice(0, 2);
-  const symbols = [
-    ...new Set(
-      n.touches.filter((t) => t.symbol && t.op !== "delete").map((t) => t.symbol?.split("::").pop()),
-    ),
-  ].slice(0, 4);
+  const name = (t: { symbol?: string }) => t.symbol?.split("::").pop();
+  // A renamed-away or deleted name is gone: listing it as an export told callers to keep using it.
+  const gone = n.touches.filter((t) => t.symbol && (t.op === "delete" || t.op === "rename"));
+  const symbols = [...new Set(n.touches.filter((t) => t.symbol && !gone.includes(t)).map(name))].slice(0, 4);
+  const renamed = n.touches.find((t) => t.op === "rename");
+  const created = renamed && n.touches.find((t) => t.op === "create" && t.symbol && t.path === renamed.path);
   const code = (n.preview ?? "")
     .split("\n")
-    .map((l) => l.replace(/^[+-]\s?/, "").trim())
+    // Removed lines describe the old version; only what the file holds now is shown.
+    .filter((l) => !l.startsWith("-"))
+    .map((l) => l.replace(/^\+\s?/, "").trim())
     .filter((l) => l && !l.startsWith("@@") && !l.startsWith("//") && !l.startsWith("import "))
     .slice(0, 3)
     .join(" ⏎ ");
   const parts = [
     files.length ? files.join(", ") : "",
+    renamed && created ? `renamed ${name(renamed)} → ${name(created)}` : "",
+    gone.length && !created ? `removed ${gone.map(name).join(", ")}` : "",
     symbols.length ? `exports ${symbols.join(", ")}` : "",
     code ? `\`${code}\`` : "",
   ].filter(Boolean);

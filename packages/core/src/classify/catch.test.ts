@@ -47,6 +47,24 @@ describe("contractCard", () => {
   });
 });
 
+describe("contract card for a rename", () => {
+  it("names the rename and never lists the old name or removed lines as current", () => {
+    const card = contractCard({
+      files: ["django/utils/http.py"],
+      touches: [
+        { path: "django/utils/http.py", op: "write" },
+        { path: "django/utils/http.py", symbol: "django/utils/http.py::base36_to_int", op: "rename" },
+        { path: "django/utils/http.py", symbol: "django/utils/http.py::decode_base36", op: "create" },
+      ],
+      preview: "-def base36_to_int(s):\n+def decode_base36(s):",
+    });
+    expect(card).toContain("renamed base36_to_int → decode_base36");
+    expect(card).toContain("def decode_base36(s):");
+    expect(card).not.toContain("def base36_to_int");
+    expect(card).not.toMatch(/exports[^·]*base36_to_int/);
+  });
+});
+
 describe("interface changes", () => {
   it("deny the first edit against the old interface with the new one, then let the agent continue", () => {
     const j = { relation: "semantic_conflict" as const, action: "block" as const, confidence: 0.9 };
