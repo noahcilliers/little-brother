@@ -48,7 +48,7 @@ function Outcome({ replay, on }: { replay: EvalReplay; on: boolean }) {
 }
 
 /** One eval run's agent logs, replayed as a terminal: every agent interleaved, catches highlighted. */
-export function TerminalReplay({ replay, live }: { replay: EvalReplay; live: boolean }) {
+export function TerminalReplay({ replay }: { replay: EvalReplay }) {
   const box = useRef<HTMLOListElement>(null);
   const { shown, done, restart } = useReplay(replay.events, box);
 
@@ -87,9 +87,6 @@ export function TerminalReplay({ replay, live }: { replay: EvalReplay; live: boo
         {!done ? <li className="tl-cursor" aria-hidden="true" /> : null}
       </ol>
       <Outcome replay={replay} on={done} />
-      <p className="tl-src">
-        {live ? "live from Convex" : "bundled snapshot"} · run {replay.runKey}
-      </p>
     </figure>
   );
 }

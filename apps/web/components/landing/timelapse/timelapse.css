@@ -121,21 +121,7 @@
   color: var(--ok);
   font-weight: 600;
 }
-.lp .tl-outcome span,
-.lp .tl-src {
-  color: var(--muted);
-}
-.lp .tl-src {
-  margin: 0;
-  padding: 6px 12px;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-  color: var(--faint);
-  overflow-wrap: anywhere;
-}
-.lp .tl-runs {
-  margin-top: 12px;
-  font-size: 14px;
+.lp .tl-outcome span {
   color: var(--muted);
 }
 

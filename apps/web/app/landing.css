@@ -191,10 +191,9 @@
   padding: 56px 40px 44px;
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: 40px;
+  gap: 48px;
   align-items: end;
 }
-.lp .lead-main,
 .lp .lead-side {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -257,10 +256,6 @@
   color: var(--fg);
   background: var(--sunk);
 }
-.lp .meta {
-  font: 400 12px var(--mono);
-  color: var(--faint);
-}
 
 /* sections */
 .lp section {
@@ -279,106 +274,10 @@
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 600;
   letter-spacing: -0.03em;
-  margin-top: 8px;
 }
 .lp .sec-head p {
   color: var(--muted);
   max-width: 52ch;
-}
-
-.lp .two {
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-}
-/* Separated cards with a hover lift, like the feature bento, instead of one hairline grid. */
-.lp .tiles.two {
-  gap: 14px;
-  background: none;
-  border: 0;
-}
-.lp .tiles.two > .tile {
-  border: 1px solid var(--line);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
-}
-.lp .tiles.two > .tile:hover {
-  transform: translateY(-3px);
-  border-color: var(--line-2);
-  box-shadow: var(--shadow);
-}
-
-.lp .connect {
-  display: grid;
-  gap: 20px;
-  align-content: start;
-  padding: 28px;
-}
-.lp .connect h3,
-.lp .privacy h3 {
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.lp .steps {
-  display: grid;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: s;
-}
-.lp .steps li {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 4px 12px;
-  counter-increment: s;
-}
-.lp .steps li::before {
-  content: counter(s);
-  font: 500 12px / 34px var(--mono);
-  color: var(--faint);
-  grid-row: span 2;
-}
-.lp .steps .cmd {
-  width: fit-content;
-}
-.lp .steps small {
-  color: var(--muted);
-  font-size: 13px;
-}
-.lp .note {
-  color: var(--muted);
-  font-size: 14px;
-  border-left: 2px solid var(--fg);
-  padding-left: 12px;
-}
-.lp .privacy {
-  display: grid;
-  gap: 18px;
-  align-content: start;
-  padding: 28px;
-}
-.lp .cols {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-.lp .cols ul {
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 6px;
-  font-size: 14px;
-}
-.lp .cols li::before {
-  content: "+ ";
-  font-family: var(--mono);
-  color: var(--faint);
-}
-.lp .cols .never li::before {
-  content: "− ";
 }
 
 .lp footer {
@@ -390,7 +289,7 @@
   gap: 16px;
   flex-wrap: wrap;
   font: 400 12px var(--mono);
-  color: var(--faint);
+  color: var(--muted);
 }
 
 @media (max-width: 960px) {
@@ -412,15 +311,8 @@
   .lp .hero .lead {
     padding: 32px 20px 28px;
   }
-  .lp .tile.connect,
-  .lp .tile.privacy {
-    padding: 22px;
-  }
 }
 @media (max-width: 520px) {
-  .lp .cols {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .lp .chrome {
     grid-template-columns: auto 1fr;
     gap: 12px;
@@ -455,9 +347,6 @@
 .lp .nav-spacer {
   margin-left: auto;
 }
-.lp .steps small a {
-  color: var(--fg);
-}
 @media (max-width: 960px) {
   .lp .nav .theme {
     margin-left: auto;
@@ -467,12 +356,6 @@
   .lp .nav-signin {
     display: none;
   }
-}
-.lp .cmd-stack {
-  display: grid;
-  gap: 6px;
-  justify-items: start;
-  min-width: 0;
 }
 
 /* relation chips (duplicate, stale, conflict, normal), told apart by line style rather than hue */

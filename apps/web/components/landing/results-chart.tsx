@@ -5,7 +5,7 @@ export function ResultsChart() {
   return (
     <figure className="rs-chart">
       <figcaption>
-        Runs whose merge broke: a merge conflict, or a teammate's tests failing after a clean merge
+        Runs whose merge broke: a conflict, or a teammate's tests failing
         <span className="rs-key">
           <i className="off" /> off <i className="on" /> on
         </span>
@@ -14,9 +14,7 @@ export function ResultsChart() {
         <div key={r.suite} className="rs-row">
           <span className="rs-name">
             {r.suite}
-            <small>
-              {r.metric} · pilot · {r.runs} runs
-            </small>
+            <small>{r.runs} runs</small>
           </span>
           <span className="rs-bars">
             <span className="rs-bar off" style={{ width: `${r.off}%` }}>
