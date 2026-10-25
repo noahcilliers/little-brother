@@ -5,6 +5,7 @@ import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
 import { sha256Hex } from "./hash";
+import { evalBatchPost, evalRunPost } from "./httpEvals";
 import { join } from "./httpJoin";
 import { bearerToken } from "./tokenAuth";
 import { VerifyBody } from "./verify";
@@ -137,6 +138,8 @@ http.route({ pathPrefix: "/mcp/", method: "POST", handler: mcp });
 http.route({ path: "/session/attach", method: "POST", handler: attach });
 http.route({ path: "/verify", method: "POST", handler: verify });
 http.route({ pathPrefix: "/ask/", method: "POST", handler: ask });
+http.route({ path: "/evals/batches", method: "POST", handler: evalBatchPost });
+http.route({ path: "/evals/runs", method: "POST", handler: evalRunPost });
 http.route({ path: "/health", method: "GET", handler: httpAction(async () => new Response("ok")) });
 
 export default http;

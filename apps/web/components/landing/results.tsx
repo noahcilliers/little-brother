@@ -31,7 +31,7 @@ export function Results() {
       </PlayOnView>
       <p className="rs-foot">
         Pilot runs: small samples, reported with every number.{" "}
-        <a href="/report">Read the technical report →</a>
+        <a href="/report">Read the technical report →</a> · <a href="/benchmarks">Live benchmark runs →</a>
       </p>
     </section>
   );

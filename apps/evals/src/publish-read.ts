@@ -12,25 +12,33 @@ export type LoadedRun = { row: EvalRunRow; record: PublishedRecord; dir: string 
 const readJson = (file: string): unknown => JSON.parse(readFileSync(file, "utf8"));
 const isDir = (p: string) => existsSync(p) && statSync(p).isDirectory();
 
-/** Suite result dirs under `root` (or `root` itself), each labelled `<parent>/<dir>` as its batch. */
+/** A results dir's batch label, `<parent>/<dir>`: the live stream and the publisher must agree on it. */
+export const batchLabel = (dir: string): string => `${basename(dirname(dir))}/${basename(dir)}`;
+
+/** Suite result dirs under `root` (or `root` itself), each labelled by batchLabel. */
 export function findBatches(root: string): { batch: string; dir: string }[] {
-  const label = (dir: string) => `${basename(dirname(dir))}/${basename(dir)}`;
-  if (isDir(join(root, "runs"))) return [{ batch: label(root), dir: root }];
+  if (isDir(join(root, "runs"))) return [{ batch: batchLabel(root), dir: root }];
   return readdirSync(root)
     .map((name) => join(root, name))
     .filter((dir) => isDir(join(dir, "runs")))
-    .map((dir) => ({ batch: label(dir), dir }));
+    .map((dir) => ({ batch: batchLabel(dir), dir }));
 }
 
 const keyOf = (r: PublishedRecord) => [r.caseId, r.variant, armOf(r), r.run].join("|");
 
+/** A finished run's record: the harness writes run.json once the run is graded, never before. */
+export function readRunRecord(runDir: string): PublishedRecord | null {
+  const file = join(runDir, "run.json");
+  if (!existsSync(file)) return null;
+  const parsed = PublishedRecord.safeParse(readJson(file));
+  return parsed.success ? parsed.data : null;
+}
+
 function runDirs(dir: string): Map<string, { dir: string; record: PublishedRecord }> {
   const out = new Map<string, { dir: string; record: PublishedRecord }>();
   for (const name of readdirSync(join(dir, "runs"))) {
-    const file = join(dir, "runs", name, "run.json");
-    if (!existsSync(file)) continue;
-    const parsed = PublishedRecord.safeParse(readJson(file));
-    if (parsed.success) out.set(keyOf(parsed.data), { dir: join(dir, "runs", name), record: parsed.data });
+    const record = readRunRecord(join(dir, "runs", name));
+    if (record) out.set(keyOf(record), { dir: join(dir, "runs", name), record });
   }
   return out;
 }
@@ -77,10 +85,21 @@ export function loadBatch(batch: string, dir: string): LoadedRun[] {
   return records.map((listedRecord) => {
     // run.json is the same record plus agent start times, so it wins when present.
     const found = dirs.get(keyOf(listedRecord));
-    const record = found?.record ?? listedRecord;
-    const runDir = found?.dir ?? null;
-    const voided = runDir ? agentFiles(runDir).some((a) => isVoidedStream(a.stream)) : false;
-    const meta = { batch, suite: basename(dir), model, voided, fallbackAt };
-    return { row: toRunRow(record, meta), record, dir: runDir };
+    return loadRun(found?.record ?? listedRecord, found?.dir ?? null, { batch, dir, model, fallbackAt });
   });
+}
+
+export type BatchMeta = { batch: string; dir: string; model: string; fallbackAt: number };
+
+/** One run's published row; the live stream calls this per run, loadBatch for a whole results dir. */
+export function loadRun(record: PublishedRecord, runDir: string | null, meta: BatchMeta): LoadedRun {
+  const voided = runDir ? agentFiles(runDir).some((a) => isVoidedStream(a.stream)) : false;
+  const row = toRunRow(record, {
+    batch: meta.batch,
+    suite: basename(meta.dir),
+    model: meta.model,
+    voided,
+    fallbackAt: meta.fallbackAt,
+  });
+  return { row, record, dir: runDir };
 }

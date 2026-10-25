@@ -23,6 +23,22 @@ concurrency.
 Set `GEMINI_API_KEY` (or `CLASSIFIER_JUDGE=claude` + `ANTHROPIC_API_KEY`) on the deployment to include
 the embedding and judge tiers. Without a key, only the rules run, and the report header says so.
 
+### Streaming results to /benchmarks
+
+The agents still run against the local backend; graded results can also stream to the public
+deployment, where `/benchmarks` shows them live. Set a shared secret on that deployment once, then export
+it with the deployment's site URL when you launch an eval:
+
+```sh
+cd packages/backend && npx convex env set --prod EVAL_INGEST_TOKEN <secret>
+export LB_EVAL_PUBLISH_URL=https://<deployment>.convex.site EVAL_INGEST_TOKEN=<secret>
+pnpm --filter @lb/evals eval --suite stale --arm both
+```
+
+The harness posts the batch plan, each run as soon as it is graded, and the finish (`live-publish.ts`).
+Without both variables nothing is sent; a failing post is logged once and never stops the eval. Rows are
+the ones `publish-results` would write for the same results dir, so publishing afterwards changes nothing.
+
 ## What a run does
 
 1. Copies `demo/shop` into a new git repo under `/tmp/lb-evals/<tag>/`, with one branch and worktree per

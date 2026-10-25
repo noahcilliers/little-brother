@@ -1,0 +1,119 @@
+/* /benchmarks: live eval batches in the landing's hairline tiles. Ink on paper; the one accent marks a batch
+   that is running and the catches in the feed, as it marks catches on the landing. */
+.lp .bm-head {
+  display: grid;
+  gap: 14px;
+  padding: 56px 0 32px;
+  max-width: 760px;
+}
+.lp .bm-head h1 {
+  font-size: clamp(28px, 4.4vw, 44px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.lp .bm-head p,
+.lp .bm-note {
+  color: var(--muted);
+}
+.lp .bm-note {
+  padding: 40px 0;
+  font: 400 13px var(--mono);
+}
+.lp .bm-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+.lp .bm-batches {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.lp .bm-empty {
+  font: 400 13px var(--mono);
+  color: var(--faint);
+}
+.lp .bm-feed {
+  position: sticky;
+  top: 80px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.lp .bm-feed ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+}
+.lp .bm-run {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  animation: bm-in 0.5s ease-out;
+}
+.lp .bm-run:last-child {
+  border-bottom: 0;
+}
+.lp .bm-run-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+.lp .bm-arm {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--line-2);
+  font: 500 11px var(--mono);
+}
+.lp .bm-run[data-arm="on"] .bm-arm {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.lp .bm-case {
+  font: 500 13px var(--mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp .bm-outcome {
+  font-size: 13px;
+}
+.lp .bm-run[data-voided] .bm-outcome {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.lp .bm-run small {
+  font: 400 11px var(--mono);
+  color: var(--faint);
+}
+.lp .bm footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 64px;
+  font: 400 13px var(--mono);
+}
+@keyframes bm-in {
+  from {
+    background: var(--accent-wash);
+  }
+}
+@media (max-width: 960px) {
+  .lp .bm-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp .bm-feed {
+    position: static;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .bm-run {
+    animation: none;
+  }
+}
