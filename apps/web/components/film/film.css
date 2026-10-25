@@ -175,3 +175,16 @@
     font-size: 13.5px;
   }
 }
+
+/* Fullscreen: the window keeps 16:9 and fits the screen's height, with the subtitle and controls under it. */
+.lp .showcase:fullscreen {
+  border: 0;
+  padding: 16px;
+  align-content: center;
+  justify-items: center;
+  overflow: hidden;
+}
+.lp .showcase:fullscreen > .window,
+.lp .showcase:fullscreen > .fc-controls {
+  width: min(100%, calc((100vh - 170px) * 16 / 9));
+}

@@ -11,10 +11,12 @@ type Props = {
   onSpeed: () => void;
   onRestart: () => void;
   onSeek: (p: number) => void;
+  /** Absent where the browser can't fullscreen an element. */
+  fullscreen?: { on: boolean; toggle: () => void };
 };
 
-/** Play/pause, restart, 1×/2× speed, a scrubber with chapter jumps, and the clock. */
-export function FilmControls({ p, playing, fast, onToggle, onSpeed, onRestart, onSeek }: Props) {
+/** Play/pause, restart, 1×/2× speed, a scrubber with chapter jumps, the clock, and fullscreen. */
+export function FilmControls({ p, playing, fast, onToggle, onSpeed, onRestart, onSeek, fullscreen }: Props) {
   const chapter = lastBefore(CHAPTERS, clockAt(p));
   return (
     <div className="fc-controls">
@@ -59,6 +61,17 @@ export function FilmControls({ p, playing, fast, onToggle, onSpeed, onRestart, o
       <span className="fc-clock">
         {mmss(p)} / {mmss(PLAYBACK_DURATION)}
       </span>
+      {fullscreen ? (
+        <button
+          type="button"
+          className="fc-ctl"
+          aria-pressed={fullscreen.on}
+          title={fullscreen.on ? "Exit fullscreen (f)" : "Fullscreen (f)"}
+          onClick={fullscreen.toggle}
+        >
+          {fullscreen.on ? "Exit full screen" : "Full screen"}
+        </button>
+      ) : null}
     </div>
   );
 }

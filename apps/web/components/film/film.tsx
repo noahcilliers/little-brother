@@ -28,11 +28,14 @@ import { SceneMeasure } from "./scene-measure";
 import { SceneStory, W } from "./scene-story";
 import { SceneWhy } from "./scene-why";
 import { useFilm } from "./use-film";
+import { useFullscreen } from "./use-fullscreen";
 import { useWidth } from "./use-stage";
 
 /** The landing page's launch video: one clock, eight scenes, the real dashboard in the middle of it. */
 export function Film() {
   const wrap = useRef<HTMLDivElement>(null);
+  const shell = useRef<HTMLDivElement>(null);
+  const full = useFullscreen(shell);
   const width = useWidth(wrap, W);
   const film = useFilm(wrap);
   const s = clockAt(film.t);
@@ -50,7 +53,7 @@ export function Film() {
     ) : null;
   };
   return (
-    <div className="showcase" id="demo">
+    <div className="showcase" id="demo" ref={shell}>
       <div className="window">
         <div className="chrome">
           <span className="dots" aria-hidden="true">
@@ -86,6 +89,7 @@ export function Film() {
         onSpeed={film.toggleSpeed}
         onRestart={film.restart}
         onSeek={film.seek}
+        fullscreen={full.supported ? { on: full.on, toggle: full.toggle } : undefined}
       />
     </div>
   );
