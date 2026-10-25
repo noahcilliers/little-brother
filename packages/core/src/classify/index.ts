@@ -13,6 +13,7 @@ export * from "./importers";
 export * from "./judge-gate";
 export * from "./judge-prompt";
 export * from "./lexical";
+export * from "./needs-person";
 export * from "./pair-dataset";
 export * from "./pair-direction";
 export * from "./pair-model";

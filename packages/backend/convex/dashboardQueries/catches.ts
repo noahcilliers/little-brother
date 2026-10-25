@@ -1,4 +1,4 @@
-import { isInterfaceChange, type Relation } from "@lb/core";
+import { needsPerson } from "@lb/core";
 import type { Id } from "../_generated/dataModel";
 import { lbSentence, lowerFirst, subjectThing } from "./labels";
 import { type Klass, payloadField } from "./shared";
@@ -87,12 +87,7 @@ export function buildCatches(
     if (!kind || !from || !to || from === to) continue;
     const fromTask = taskById.get(from);
     // A denial nobody holds a claim on waits for a person (the dashboard decides); the rest settle when the step ends.
-    const waits =
-      kind !== "ordering" &&
-      c.status === "open" &&
-      (c.action === "block" || c.action === "serialize") &&
-      !c.winnerAgentId &&
-      !isInterfaceChange({ relation: c.relation as Relation, evidence: c.evidence });
+    const waits = kind !== "ordering" && needsPerson(c);
     // An ordering wait lasts as long as the waiting step does.
     const ordering = kind === "ordering" && c.status === "open";
     const settled =
