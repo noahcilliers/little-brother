@@ -225,7 +225,11 @@ describe("runSyncChecks", () => {
         references: ["src/billing/pay.ts::pay"],
       });
     expect((await sync(t, await callerEdit()))[0]?.action).toBe("serialize");
-    expect((await sync(t, await callerEdit()))[0]?.action).toBe("warn");
+    // The hook denies on the rows it gets back: the retry must not carry the catch's stored serialize.
+    const retry = await callerEdit();
+    const again = await t.run((ctx) => runSyncChecks(ctx, retry));
+    expect(again.judgments[0]?.action).toBe("warn");
+    expect(again.rowIds).toEqual([]);
   });
 
   test("unrelated files → nothing", async () => {

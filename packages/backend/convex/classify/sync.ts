@@ -8,8 +8,8 @@ import { priorityLoader } from "./priority";
 
 /**
  * Classifier steps 2–3 + 6 on the hook's hot path (PreToolUse budget < 150 ms): indexed reads and rules
- * only, no network. Returns non-ignore judgments, most severe first, and the catch rows they map to (a
- * repeat attempt maps to the catch already open, so it is denied again without a new row or notice). Pairwise ones are persisted (other
+ * only, no network. Returns non-ignore judgments, most severe first, and the catch rows that still enforce a
+ * denial (a repeat attempt maps to the catch already open, without a new row or notice). Pairwise ones are persisted (other
  * agents get inbox items; warnings are queued for this agent too, since the hook acts only on
  * serialize/block). Gate verdicts (open topic conflicts, collision claims held by another agent) point at an
  * already-open row, so they are returned, not stored.
@@ -29,6 +29,9 @@ export async function runSyncChecks(ctx: MutationCtx, nodeId: Id<"nodes">): Prom
   const gated = [...(await openConflictGate(ctx, next, view)), ...(await claimGate(ctx, next, view, now))];
   // The stored action wins: the intervention policy may have turned a denial into a hint.
   const applied: Judgment[] = [];
+  // Only rows that still enforce after the repeat downgrade: the hook denies on them, and a consumer told "you
+  // won't be stopped again" was being denied again by its catch's stored serialize.
+  const enforcing = new Set<Id<"classifications">>();
   for (const j of judgments) {
     const id = rows.get(j.otherNodeId);
     const row = id ? await ctx.db.get(id) : null;
@@ -39,6 +42,7 @@ export async function runSyncChecks(ctx: MutationCtx, nodeId: Id<"nodes">): Prom
         ? row.action
         : interventionAction({ ...j, repeat: row !== null && row !== undefined });
     if (action !== "ignore") applied.push({ ...j, action });
+    if (id && (action === "serialize" || action === "block")) enforcing.add(id);
   }
-  return { judgments: [...gated, ...applied].sort(bySeverity), rowIds: [...new Set(rows.values())] };
+  return { judgments: [...gated, ...applied].sort(bySeverity), rowIds: [...enforcing] };
 }
