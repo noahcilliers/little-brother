@@ -36,6 +36,20 @@ function mutatedPaths(n: ClassifiedNode): Set<string> {
   return new Set(n.touches.filter((t) => isMutation(t) && !t.generated).map((t) => t.path));
 }
 
+const PROGRESS_CLAIM = "claim: is further along";
+type Lines = [number, number] | undefined;
+const overlaps = (a: Lines, b: Lines): boolean => !a || !b || (a[0] <= b[1] && b[0] <= a[1]);
+
+/** The first path where my mutation meets the claimed one's lines (unknown lines count as the whole file). */
+function claimedHit(mine: ClassifiedNode, held: ClassifiedNode): string | undefined {
+  const theirs = held.touches.filter((t) => isMutation(t) && !t.generated && !t.symbol);
+  for (const t of mine.touches) {
+    if (!isMutation(t) || t.generated || t.symbol) continue;
+    if (theirs.some((h) => h.path === t.path && overlaps(t.lines, h.lines))) return t.path;
+  }
+  return undefined;
+}
+
 /**
  * Collisions settled by claim strength stay settled: while the winner's work is live and not yet shared,
  * the losing agent may not edit the files it claimed, even where no pairwise rule would fire again.
@@ -63,8 +77,14 @@ export async function claimGate(
     const held = sides.find((n) => n?.agentId === c.winnerAgentId);
     if (!held || !RELATION_SET.has(c.relation)) continue;
     if (held.outcome === "superseded" || isShared(held) || !isActive(held, now)) continue;
-    const claimed = mutatedPaths(toClassifiedNode(stored(held)));
-    const hit = [...mine].find((p) => claimed.has(p));
+    // An owner, an approved decision or an assigned scope holds the whole file. A claim won only by being
+    // further along holds its lines: the denial tells the other agent to keep out of them and retry, so an edit
+    // elsewhere in the file must go through (CooperBench agents were denied on every retry and gave up).
+    const byProgress = c.evidence.some((e) => e.startsWith(PROGRESS_CLAIM));
+    const claimedNode = toClassifiedNode(stored(held));
+    const hit = byProgress
+      ? claimedHit(view, claimedNode)
+      : [...mine].find((p) => mutatedPaths(claimedNode).has(p));
     if (!hit) continue;
     out.push({
       otherNodeId: held._id,

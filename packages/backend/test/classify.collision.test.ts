@@ -200,3 +200,47 @@ describe("collisions settled by claim strength", () => {
     expect(js[0]).toMatchObject({ relation: "textual_conflict", action: "warn", confidence: 0.6 });
   });
 });
+
+describe("claims won by progress hold lines, not the file", () => {
+  test("the other agent may edit elsewhere in the file, but not the claimed lines", async () => {
+    const t = makeT();
+    const priya = await agent(t, "priya");
+    const leo = await agent(t, "leo");
+    const edit = (agentId: Id<"agents">, lines: [number, number]): NodeIn => ({
+      agentId,
+      text: "EDIT src/jinja2/ext.py",
+      files: ["src/jinja2/ext.py"],
+      touches: [{ path: "src/jinja2/ext.py", op: "write", lines }],
+    });
+    const held = await insert(t, edit(priya, [260, 294]));
+    const first = await insert(t, edit(leo, [269, 300]));
+    await t.run((ctx) =>
+      ctx.db.insert("classifications", {
+        nodeId: first,
+        againstNodeId: held,
+        type: "conflict",
+        relation: "textual_conflict",
+        direction: "none",
+        action: "serialize",
+        winnerAgentId: priya,
+        agentIds: [leo, priya],
+        reason: "both edit src/jinja2/ext.py",
+        evidence: [
+          "R1: both edit src/jinja2/ext.py lines 269-300 vs 260-294",
+          "claim: is further along (8 verified steps)",
+        ],
+        confidence: 0.9,
+        retrievalScore: 1,
+        source: "rule",
+        status: "open",
+        latencyMs: 1,
+        at: Date.now(),
+      }),
+    );
+    const sync = (id: Id<"nodes">) => t.run((ctx) => runSyncChecks(ctx, id));
+    const elsewhere = await sync(await insert(t, edit(leo, [400, 420])));
+    expect(elsewhere.judgments.filter((j) => j.action === "serialize")).toEqual([]);
+    const inside = await sync(await insert(t, edit(leo, [270, 275])));
+    expect(inside.judgments[0]).toMatchObject({ action: "serialize", winner: "other" });
+  });
+});
