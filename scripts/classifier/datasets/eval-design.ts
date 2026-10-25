@@ -45,5 +45,29 @@ export function designedPairs(skip: ReadonlySet<string>): LabelledPair[] {
         if (row) out.push(row);
       }
   }
+  return [...out, ...designedLessonNegatives()];
+}
+
+/** Every case's second plan against the failure lessons of the OTHER stale cases (one room: the demo shop). */
+function designedLessonNegatives(): LabelledPair[] {
+  const stale = CASES.filter((c) => c.expect[0]?.type === "stale");
+  const out: LabelledPair[] = [];
+  for (const c of CASES) {
+    const b = c.agents[1];
+    if (!b) continue;
+    for (const l of stale) {
+      const first = l.agents[0];
+      if (l.id === c.id || !first) continue;
+      const row = intentPair(
+        `eval:${c.id}~${l.id}:lesson-negative`,
+        `eval:${c.id}`,
+        planNode(`${c.id}:b`, "b", b.prompt.pointed, 60_000),
+        lessonNode(`${l.id}:lesson~${c.id}`, "a", first.prompt.pointed, [], 0),
+        (f: number[]) => ({ relation: negativeRelation(f), origin: "eval" }),
+        { source: "eval-lesson-negative", repo: `eval:${c.id}` },
+      );
+      if (row) out.push(row);
+    }
+  }
   return out;
 }

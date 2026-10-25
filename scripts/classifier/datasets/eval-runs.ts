@@ -3,9 +3,6 @@ import { join, resolve } from "node:path";
 import { pairsFromRun } from "../../../apps/evals/src/export-pairs";
 import { RunFile } from "../../../apps/evals/src/run-file";
 import {
-  type ClassifiedNode,
-  type DiffFile,
-  diffTouches,
   type Gold,
   type LabelledPair,
   negativeRelation,
@@ -17,7 +14,7 @@ import { designedPairs } from "./eval-design";
 import { promptsFor } from "./eval-prompts";
 import { runDiffs } from "./eval-worktree";
 import { intentPair, lessonNode, planNode } from "./intent-pair";
-import { PAIRS_DIR, prPair, tally, writeJsonl } from "./pr-pairs";
+import { nodeOf, PAIRS_DIR, prPair, tally, writeJsonl } from "./pr-pairs";
 
 // Our live eval runs → gold pairs at three levels: the two agents' plans (as the case planted them), their
 // final diffs (from the run's worktrees, labelled by the evidence checks / graded merge), and the stored
@@ -145,7 +142,7 @@ async function main(): Promise<void> {
           ? intentPair(
               `eval:${r.rel}:diff`,
               caseGroup,
-              diffNode(r, p.second.handle, diffs.b, at.b),
+              nodeOf({ id: `${r.rel}:${p.second.handle}`, agentId: "b", files: diffs.b, at: at.b }),
               lessonNode(`${r.rel}:lesson`, "a", p.first.prompt, r.touched[p.first.handle] ?? [], at.a),
               lab,
               meta,
@@ -180,22 +177,6 @@ async function main(): Promise<void> {
     `eval runs: ${runs.length} runs, ${intents.size} case×variant → ${rows.length} pairs (${worktrees} from worktrees) → ${out}\n` +
       `  intent ${JSON.stringify(by("eval-intent"))}\n  diff ${JSON.stringify(by("eval-diff"))}\n  rows ${JSON.stringify(by("eval-row"))}`,
   );
-}
-
-function diffNode(r: Run, handle: string, files: DiffFile[], at: number): ClassifiedNode {
-  const { touches, references } = diffTouches(files);
-  const paths = [...new Set(files.map((f) => f.path))];
-  return {
-    id: `${r.rel}:${handle}`,
-    agentId: "b",
-    kind: "action",
-    verb: "EDIT",
-    text: `EDIT ${paths.slice(0, 3).join(" ")}`,
-    outcome: "open",
-    touches,
-    references,
-    at,
-  };
 }
 
 main().catch((e: unknown) => {

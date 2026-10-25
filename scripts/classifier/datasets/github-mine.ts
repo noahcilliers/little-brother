@@ -113,7 +113,8 @@ async function relands(repo: string, limit: number): Promise<number> {
   let n = 0;
   const pages = [1, 2, 3];
   const items: SearchItem[] = [];
-  for (const page of pages) items.push(...(await search(`repo:${repo} is:pr is:merged in:title "Revert" "Reland"`, page)));
+  for (const page of pages)
+    items.push(...(await search(`repo:${repo} is:pr is:merged in:title "Revert" "Reland"`, page)));
   for (const item of items.filter(isPr)) {
     if (n >= limit) break;
     if (!/^Revert\s+"?(Reland|Reapply|Recommit)/i.test(item.title)) continue;

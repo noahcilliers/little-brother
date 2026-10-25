@@ -12,6 +12,7 @@ import { DATASETS } from "./common";
 import { cached, type Pr, type PrFile } from "./gh-cache";
 import type { Candidate } from "./github-mine";
 import { intentPair, lessonNode, planNode } from "./intent-pair";
+import { type LessonCase, lessonNegatives } from "./lesson-negatives";
 import { nodeOf, PAIRS_DIR, tally, writeJsonl } from "./pr-pairs";
 
 // Mined GitHub candidates → pairs at the plan level (title + opening of the body) and the code level (diffs).
@@ -107,13 +108,38 @@ function negatives(pool: Candidate[]): LabelledPair[] {
   return out;
 }
 
+/** Each reland's plan and its reverted original as a lesson, for the unrelated-lesson negatives. */
+function relandLessons(cands: Candidate[]): LessonCase[] {
+  return cands.flatMap((c) => {
+    if (c.kind !== "repeats_failure") return [];
+    const next = cached<Pr>(`repos/${c.repo}/pulls/${c.next}`);
+    const other = cached<Pr>(`repos/${c.repo}/pulls/${c.other}`);
+    if (!next || !other) return [];
+    const id = `gh:${c.repo}#${c.next}-${c.other}`;
+    return [
+      {
+        id,
+        group: `github:${c.repo}`,
+        room: c.repo,
+        plan: planNode(`${id}:pb`, "b", plan(next), 60_000),
+        lesson: lessonNode(`${id}:lesson`, "a", `${other.title} (reverted)`, [], 0),
+      },
+    ];
+  });
+}
+
 function main(): void {
   const cands = readFileSync(join(DATASETS, "github", "candidates.jsonl"), "utf8")
     .split("\n")
     .filter(Boolean)
     .map((l) => JSON.parse(l) as Candidate)
     // Concurrent miner passes can append the same candidate twice.
-    .filter((c, i, all) => all.findIndex((d) => `${d.kind}|${d.repo}|${d.next}|${d.other}` === `${c.kind}|${c.repo}|${c.next}|${c.other}`) === i);
+    .filter(
+      (c, i, all) =>
+        all.findIndex(
+          (d) => `${d.kind}|${d.repo}|${d.next}|${d.other}` === `${c.kind}|${c.repo}|${c.next}|${c.other}`,
+        ) === i,
+    );
   const rows: LabelledPair[] = [];
   for (const c of cands.filter((x) => x.kind !== "pool" && x.other !== undefined)) {
     const next = cached<Pr>(`repos/${c.repo}/pulls/${c.next}`);
@@ -123,6 +149,7 @@ function main(): void {
     rows.push(...labelled(c, next, other, f(c.next), f(c.other)));
   }
   rows.push(...negatives(cands.filter((c) => c.kind === "pool")));
+  rows.push(...lessonNegatives(relandLessons(cands), 3, "github-lesson-negative"));
   const out = join(PAIRS_DIR, "github.jsonl");
   writeJsonl(out, rows);
   console.log(

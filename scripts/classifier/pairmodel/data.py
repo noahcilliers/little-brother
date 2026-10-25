@@ -51,6 +51,13 @@ def load(paths: List[str], allow_mixed: bool = False) -> Dataset:
     for p in paths:
         with open(p) as f:
             rows.extend(json.loads(line) for line in f if line.strip())
+    # One classification can reach us twice (an eval run's snapshot and the deployment export): keep the
+    # gold-labelled copy, so the same pair never sits in two groups across a split.
+    best = {}
+    for r in rows:
+        if r["id"] not in best or (r.get("gold") and not best[r["id"]].get("gold")):
+            best[r["id"]] = r
+    rows = list(best.values())
     kept = [(r, target(r)) for r in rows]
     kept = [(r, t) for r, t in kept if t is not None]
     if not kept:
