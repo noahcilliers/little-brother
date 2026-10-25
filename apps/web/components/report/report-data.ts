@@ -9,6 +9,7 @@ export const SRC = {
   cooper: "apps/evals/results/pilot-1024/cooper/report.md",
   model: "scripts/classifier/results/2026-10-24-real.md",
   curve: "scripts/classifier/results/2026-10-24-learning-curve.md",
+  haiku: "docs/evals/2026-10-25-report.md",
 } as const;
 
 export const REPO = "https://github.com/noahcilliers/little-brother/blob/main/";

@@ -16,12 +16,13 @@ const METRICS: [name: string, def: string][] = [
   ],
 ];
 
-// From commit a8e631e.
 // biome-ignore format: tabular data
 const FIXES: [title: string, what: string][] = [
-  ["Adapt, don't stop", "Interface changes (R4/R5/R12) warn with the new interface instead of blocking; stopping made agents abandon their own task on STALE-bench."],
-  ["Runner crashes are failures", "A test run that dies before running (missing dependency, import error) counts as failed, so its lesson is learned; the jsdom stale case was missed 4/4."],
-  ["Finished teammates still count", "Agents that already finished stay candidates within the active window; ordering cases were missed 3/3 when the author had gone offline."],
+  ["Deny once means once", "The hook got the open catch back and denied every retry on its stored action; agents told they wouldn't be stopped again were, and gave up."],
+  ["Calls inside f-strings", "Masking whole Python f-strings hid calls like f\"{slugify(name)}\", so a signature change never met its caller."],
+  ["Say how to finish", "Headless agents read a bare denial as \"stop the task\". Every denial now says it isn't a stop and what to do next."],
+  ["Interface clashes have two fixes", "The caller writes against the new interface, the changer keeps the old one working; the side found later is held at Stop."],
+  ["Hook timeout", "A cold start plus a slow backend crossed Claude Code's 3 s limit and dropped the deny; the limit is now 8 s."],
 ];
 
 export function ReportEval() {
@@ -50,7 +51,15 @@ export function ReportEval() {
         72% and 94% → 66%), and the hook round trip measured on the larger suite (p95 1.4 s, Node start-up
         included) misses the 150 ms edit-path target. <Src k="stale2" />
       </p>
-      <h3>What the pilots changed</h3>
+      <h3>Haiku agents, four arms</h3>
+      <p>
+        On STALE-bench with Haiku agents, a shared mailbox left 100% of merges broken, the same as no
+        coordination (20 runs each); a hand-written note about the change up front brought it to 45%. After
+        the fixes below, Little Brother caught 34 of 36 planted interface clashes with none mislabelled, but
+        once both agents finish their tasks most merges still break: the caller tends to keep the name its own
+        branch has. Every rerun and its numbers are in the eval report. <Src k="haiku" />
+      </p>
+      <h3>What the runs changed</h3>
       <ul className="rp-list">
         {FIXES.map(([title, what]) => (
           <li key={title}>
