@@ -1,7 +1,6 @@
 import * as nodeModule from "node:module";
 import { join } from "node:path";
 import { Command } from "commander";
-import type { AgentOptions } from "./commands/agent";
 import { lbHome } from "./config";
 
 // Hooks spawn a fresh process per tool call; V8's compile cache makes the typescript load cheap.
@@ -48,38 +47,6 @@ program
   .action(async (event: string) => {
     const { hookCommand } = await import("./commands/hook");
     await hookCommand(event);
-  });
-
-program
-  .command("agent [prompt]")
-  .description(
-    "run a Gemini or OpenAI-compatible coding agent through Little Brother's hooks (JSONL on stdout)",
-  )
-  .requiredOption(
-    "--provider <name>",
-    "gemini | openai (any OpenAI-compatible server: Ollama, LM Studio, vLLM)",
-  )
-  .requiredOption(
-    "--model <id>",
-    "model id, e.g. gemini-2.5-flash or qwen2.5-coder:7b; for gemini, a comma list falls through on spent quota",
-  )
-  .option("--base-url <url>", "OpenAI-compatible base URL (default http://localhost:11434/v1)")
-  .option("--session <code>", "Little Brother session code to join (sets LB_SESSION)")
-  .option("--session-id <uuid>", "session id the hooks report (default: a new uuid)")
-  .option("--max-turns <n>", "model calls before giving up", "30")
-  .option("--max-budget-usd <usd>", "stop once the estimated cost reaches this")
-  .option("--max-tokens <n>", "output token cap per model call")
-  .option("--cwd <dir>", "working directory (default: current)")
-  .option("--no-hooks", "run without Little Brother hooks")
-  .option("--hold-session-end", "don't send SessionEnd at exit (the eval harness sends it)")
-  .option("--append-system-prompt <text>", "extra system instructions")
-  .option("--transcript <path>", "transcript JSONL path")
-  .option("--price <in/out>", "USD per million input/output tokens, overriding the built-in table")
-  .action(async (prompt: string | undefined, o: AgentOptions) => {
-    const { agentCommand } = await import("./commands/agent");
-    await agentCommand(prompt, o);
-    // Keep-alive sockets and detached children must not hold the agent open once it has finished.
-    process.stdout.write("", () => process.exit(process.exitCode ?? 0));
   });
 
 program

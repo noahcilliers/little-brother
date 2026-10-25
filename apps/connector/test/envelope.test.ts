@@ -14,9 +14,9 @@ const build = (raw: unknown, extra: Partial<Parameters<typeof buildEnvelope>[1]>
   IngestEnvelope.parse(buildEnvelope(HookInput.parse(raw), { ...ctx, ...extra }));
 
 describe("buildEnvelope", () => {
-  it("truncates the prompt to 500 chars", () => {
-    const e = build(fx.userPrompt);
-    expect(e.prompt).toHaveLength(500);
+  it("truncates the prompt to 2000 chars", () => {
+    const e = build({ ...fx.userPrompt, prompt: "x".repeat(2500) });
+    expect(e.prompt).toHaveLength(2000);
     expect(e.session).toEqual({
       claudeSessionId: "9f1c2a",
       repo: "lb-demo-shop",
