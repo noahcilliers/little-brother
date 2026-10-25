@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { askTables } from "./schemaAsk";
+import { evalTables } from "./schemaEvals";
 import { graphTables, importerLink } from "./schemaGraph";
 import { members, teamTables } from "./schemaTeam";
 
@@ -29,6 +30,7 @@ export default defineSchema({
   ...teamTables,
   ...graphTables,
   ...askTables,
+  ...evalTables,
   members,
 
   agents: defineTable({

@@ -1,0 +1,176 @@
+/* Eval replay: a terminal of interleaved agent logs, catches in the one accent, then the classifier table.
+   Landing tokens only (landing.css). */
+.lp .tl-term {
+  margin: 0;
+  border: 1px solid var(--line-2);
+  background: var(--sunk);
+  font: 400 12.5px / 1.55 var(--mono);
+  min-width: 0;
+}
+.lp .tl-term figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.lp .tl-dots {
+  display: inline-flex;
+  gap: 5px;
+}
+.lp .tl-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+}
+.lp .tl-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp .tl-again {
+  font: 500 12px var(--mono);
+  border: 1px solid var(--fg);
+  padding: 3px 9px;
+}
+.lp .tl-again:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.lp .tl-log {
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
+  height: 380px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.lp .tl-row {
+  display: grid;
+  grid-template-columns: 64px 84px 44px minmax(0, 1fr);
+  gap: 10px;
+  padding: 1px 12px;
+  animation: tl-in 0.25s ease-out;
+}
+.lp .tl-row time,
+.lp .tl-tag {
+  color: var(--faint);
+}
+.lp .tl-agent {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp .tl-text {
+  overflow-wrap: anywhere;
+}
+.lp .tl-row.k-tool .tl-text {
+  color: var(--muted);
+}
+.lp .tl-row.k-test .tl-tag,
+.lp .tl-row.k-decision .tl-tag {
+  color: var(--fg);
+}
+.lp .tl-row.k-catch,
+.lp .tl-row.k-deny {
+  margin: 4px 0;
+  padding-block: 5px;
+  background: var(--accent-wash);
+  border-left: 2px solid var(--accent);
+  color: var(--accent-ink);
+}
+.lp .tl-row.k-catch .tl-tag,
+.lp .tl-row.k-deny .tl-tag {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.lp .tl-cursor {
+  width: 8px;
+  height: 15px;
+  margin: 2px 12px;
+  background: var(--fg);
+  animation: tl-blink 1s steps(1) infinite;
+}
+.lp .tl-outcome {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  transition: opacity 0.4s ease;
+}
+.lp .tl-outcome[data-on="off"] {
+  opacity: 0;
+}
+.lp .tl-outcome p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--bg);
+}
+.lp .tl-outcome b {
+  font-weight: 500;
+}
+.lp .tl-outcome .tl-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.lp .tl-outcome span,
+.lp .tl-src {
+  color: var(--muted);
+}
+.lp .tl-src {
+  margin: 0;
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--faint);
+  overflow-wrap: anywhere;
+}
+.lp .tl-runs {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@keyframes tl-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes tl-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (max-width: 720px) {
+  .lp .tl-term {
+    font-size: 11.5px;
+  }
+  .lp .tl-row {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 2px 8px;
+  }
+  .lp .tl-row .tl-text {
+    grid-column: 1 / -1;
+  }
+  .lp .tl-log {
+    height: 420px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .tl-row,
+  .lp .tl-cursor {
+    animation: none;
+  }
+  .lp .tl-outcome {
+    transition: none;
+  }
+}

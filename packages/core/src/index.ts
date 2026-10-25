@@ -4,6 +4,8 @@ export * from "./classify/index";
 export * from "./code/index";
 export * from "./command-outcome";
 export * from "./dashboard-note";
+export * from "./eval-board";
+export * from "./eval-summary";
 export * from "./hook-timing";
 export * from "./hooks";
 export * from "./inbox";
