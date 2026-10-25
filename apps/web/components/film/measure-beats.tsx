@@ -15,7 +15,7 @@ export function ResultBeat({ t, r }: { t: number; r: Result }) {
             <MBar
               key={b.name}
               t={t}
-              delay={0.5 + i * 0.15}
+              delay={0.35 + i * 0.12}
               name={b.name}
               value={b.value}
               max={r.max ?? 100}
@@ -25,7 +25,7 @@ export function ResultBeat({ t, r }: { t: number; r: Result }) {
           ))}
         </div>
       ) : null}
-      <p className="ms-note" style={{ opacity: prog(t, 0.9 + bars.length * 0.15, 0.4) }}>
+      <p className="ms-note" style={{ opacity: prog(t, 0.6 + bars.length * 0.12, 0.35) }}>
         {r.note}
       </p>
     </>

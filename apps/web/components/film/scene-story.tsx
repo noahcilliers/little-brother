@@ -52,7 +52,7 @@ function camera(s: number, still: boolean): string {
   return `translate(${W / 2 - cx * z}px, ${H / 2 - cy * z}px) scale(${z})`;
 }
 
-/** s is the story's clock (film seconds minus STORY_SHIFT). */
+/** s is the film clock; the story keeps its own beats on it. */
 export function SceneStory({ s, still }: { s: number; still: boolean }) {
   return (
     <>

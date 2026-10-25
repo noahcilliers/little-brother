@@ -17,7 +17,7 @@ import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";
 import { layerStyle } from "./film-fx";
 import { clockAt } from "./film-tempo";
-import { CHAPTERS, SCENES, type SceneId, STORY_SHIFT, SUBS } from "./film-timeline";
+import { CHAPTERS, SCENES, type SceneId, SUBS } from "./film-timeline";
 import { SceneClose } from "./scene-close";
 import { SceneHook } from "./scene-hook";
 import { SceneHow } from "./scene-how";
@@ -63,7 +63,7 @@ export function Film() {
         <div className="film-view" ref={wrap}>
           <div className="film-stage" aria-hidden="true" inert style={{ transform: `scale(${width / W})` }}>
             {layer("hook", <SceneHook s={s} />)}
-            {layer("story", <SceneStory s={s - STORY_SHIFT} still={still} />)}
+            {layer("story", <SceneStory s={s} still={still} />)}
             {layer("why", <SceneWhy s={local("why")} />)}
             {layer("how", <SceneHow s={local("how")} />)}
             {layer("learn", <SceneLearn s={local("learn")} />)}
