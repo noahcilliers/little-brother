@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { newTokens } from "@lb/core";
 import { CASES } from "../cases";
-import { agentLabel, runnerFor } from "./agent-spec";
 import { type RunRecord, type Summary, summarize } from "./aggregate";
 import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
@@ -84,7 +83,6 @@ async function main(): Promise<void> {
       maxTurns: opts.maxTurns,
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
-      ...runnerFor(opts.agent, h.cliPath),
     },
     tag: h.tag,
     settleSec: opts.settleSec,
@@ -118,7 +116,7 @@ async function main(): Promise<void> {
   const summary = summarize(runs, spawnOverheadMs());
   const meta = {
     startedAt: h.startedAt.toISOString(),
-    model: opts.agent.kind === "lb" ? agentLabel(opts.agent) : opts.model,
+    model: opts.model,
     variants: opts.variants,
     arms: opts.arms,
     runsPerCase: opts.runs,

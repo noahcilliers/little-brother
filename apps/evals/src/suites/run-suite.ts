@@ -1,7 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { newTokens } from "@lb/core";
-import { runnerFor } from "../agent-spec";
 import type { Options } from "../options";
 import type { RunContext } from "../run-case";
 import { type Job, order, runPool } from "../schedule";
@@ -53,7 +52,6 @@ export async function runSuite(opts: Options): Promise<void> {
       maxTurns: opts.maxTurns,
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
-      ...runnerFor(opts.agent, h.cliPath),
     },
     tag: h.tag,
     settleSec: opts.settleSec,
