@@ -89,4 +89,40 @@ describe("catches", () => {
     const caught = await rows(t);
     expect(caught.map((c) => c.relation)).toContain("ordering_dependency");
   });
+
+  test("a clash first caught as an ordering wait becomes a duplicate once the same thing is created", async () => {
+    const t = makeT();
+    const maya = await joinMember(t, "maya");
+    const josh = await joinMember(t, "joshua");
+    const order = (path: string, toolUseId: string, op: string, extra = "") => ({
+      tool: "Write",
+      toolUseId,
+      files: [path],
+      touches: [{ path, op, symbol: "src/contracts/order.ts::Order" }],
+      preview: `+export type Order = { id: string${extra} };`,
+    });
+    await hook(t, maya, envelope("UserPromptSubmit", "m3", { prompt: "add the Order model" }));
+    await hook(t, maya, envelope("PreToolUse", "m3", order("src/contracts/order.ts", "m-o", "create")));
+    await hook(t, maya, envelope("PostToolUse", "m3", order("src/contracts/order.ts", "m-o", "create")));
+    await hook(t, josh, envelope("UserPromptSubmit", "j3", { prompt: "checkout needs orders" }));
+    await hook(
+      t,
+      josh,
+      envelope("PreToolUse", "j3", {
+        tool: "Edit",
+        toolUseId: "j-use",
+        files: ["src/checkout/flow.ts"],
+        touches: [{ path: "src/checkout/flow.ts", op: "write" }],
+        references: ["src/contracts/order.ts::Order"],
+      }),
+    );
+    await hook(
+      t,
+      josh,
+      envelope("PreToolUse", "j3", order("src/contracts/order.ts", "j-o", "create", "; total: number")),
+    );
+    const caught = await rows(t);
+    expect(caught).toHaveLength(1);
+    expect(caught[0]?.type).toBe("duplicate");
+  });
 });

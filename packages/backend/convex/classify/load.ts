@@ -70,7 +70,8 @@ export async function toCandidates(
   const out: Candidate[] = [];
   const seen = new Set<string>();
   for (const n of nodes) {
-    if (n._id === next._id || seen.has(n._id) || n.outcome === "superseded") continue;
+    // A revert restores the committed version: it is nobody's work, so it can't duplicate or conflict with any.
+    if (n._id === next._id || seen.has(n._id) || n.outcome === "superseded" || n.verb === "REVERT") continue;
     seen.add(n._id);
     const sim = similarity.get(n._id);
     const base = { node: toClassifiedNode(stored(n)), ...(sim !== undefined ? { similarity: sim } : {}) };

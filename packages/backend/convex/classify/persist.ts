@@ -85,11 +85,24 @@ export async function persistJudgments(
       action: interventionAction({ ...raw, avoidedTokens: await avoidedTokens(ctx, other) }),
     };
     const key = catchKey(next, other);
+    const them0 = await counterpartOf(ctx, other);
     const existing = j.action === "ignore" ? undefined : await openCatch(ctx, key);
     if (existing) {
       rows.set(j.otherNodeId, existing._id);
-      // Same catch, no more severe: the agents already know. Only a rise in severity is news.
-      if (ACTION_RANK[j.action] <= ACTION_RANK[existing.action]) continue;
+      // Same catch, no more severe: the agents already know. Only a rise in severity is news. A clash first
+      // seen as an order or a file collision can turn out to be duplicated work or a repeated failure; then the
+      // row takes the more specific reading, quietly, so the board and the stats say what it was.
+      if (ACTION_RANK[j.action] <= ACTION_RANK[existing.action]) {
+        const type = j.type ?? TYPE_OF[j.relation];
+        if (sharperType(existing, type))
+          await ctx.db.patch(existing._id, {
+            type,
+            relation: j.relation,
+            reason: renderEvidence([j], () => them0),
+            evidence: j.evidence,
+          });
+        continue;
+      }
     }
     // Both sides of a pair get classified (often concurrently, in separate actions), so look both ways:
     // A-vs-B and B-vs-A are one collision and must not alert twice.
@@ -169,6 +182,13 @@ export async function persistJudgments(
     }
   }
   return rows;
+}
+
+/** Duplicate work and repeated failures say more than "order" or "same file" about one clash. */
+function sharperType(existing: { type: string; relation: string }, type: string): boolean {
+  const vague =
+    existing.type === "conflict" && ["ordering_dependency", "textual_conflict"].includes(existing.relation);
+  return vague && (type === "duplicate" || type === "stale");
 }
 
 export const SYNC_SELF: ReadonlySet<Action> = new Set<Action>(["warn"]);
