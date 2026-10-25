@@ -127,6 +127,8 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
 
   await classifyPool.enqueueAction(ctx, internal.classify.run.classifyNode, { nodeId });
   // Claude Code only accepts additionalContext tagged PostToolUse; failure hooks leave items queued for the next hook.
+  // Every queued item goes out, not only warnings: a clash found after this agent's edit (async classify) has no
+  // later PreToolUse to deny on, and the agent must hear it to fix what it already wrote.
   if (hook !== "PostToolUse") return { output: null, summary, nodeId };
-  return { output: context("PostToolUse", await deliverPending(ctx, agent._id, ["warn"])), summary, nodeId };
+  return { output: context("PostToolUse", await deliverPending(ctx, agent._id)), summary, nodeId };
 };

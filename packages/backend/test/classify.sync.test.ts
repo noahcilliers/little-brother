@@ -1,3 +1,4 @@
+import { catchKey } from "@lb/core";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { internal } from "../convex/_generated/api";
 import type { Doc, Id } from "../convex/_generated/dataModel";
@@ -230,6 +231,65 @@ describe("runSyncChecks", () => {
     const again = await t.run((ctx) => runSyncChecks(ctx, retry));
     expect(again.judgments[0]?.action).toBe("warn");
     expect(again.rowIds).toEqual([]);
+  });
+
+  test("a milder notice between the same goals earlier doesn't turn the first real interface clash into a repeat", async () => {
+    const goal = await insert(t, {
+      agentId: joshua,
+      kind: "intent",
+      verb: "PLAN",
+      text: "PLAN checkout pay flow",
+    });
+    const callerEdit = () =>
+      insert(t, {
+        parentId: goal,
+        agentId: joshua,
+        text: "EDIT checkout src/checkout/pay-flow.ts",
+        files: ["src/checkout/pay-flow.ts"],
+        touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
+        references: ["src/billing/pay.ts::pay"],
+      });
+    const change = await insert(t, {
+      agentId: noah,
+      text: "EDIT billing src/billing/pay.ts",
+      files: ["src/billing/pay.ts"],
+      touches: [
+        {
+          path: "src/billing/pay.ts",
+          symbol: "src/billing/pay.ts::pay",
+          op: "signature_change",
+          lines: [1, 4],
+        },
+      ],
+    });
+    // Earlier, the judge read joshua's plan against noah's change: a warning, stored as the catch between the goals.
+    await t.run((ctx) =>
+      ctx.db.insert("classifications", {
+        nodeId: goal,
+        againstNodeId: change,
+        type: "conflict",
+        relation: "ordering_dependency",
+        direction: "new_needs_other",
+        action: "warn",
+        agentIds: [joshua, noah],
+        reason: "plan touches billing",
+        evidence: [],
+        confidence: 0.6,
+        retrievalScore: 1,
+        source: "llm",
+        status: "open",
+        latencyMs: 1,
+        catchKey: catchKey({ _id: goal, kind: "intent" }, { _id: change, kind: "action" }),
+        at: Date.now(),
+      }),
+    );
+    const firstEdit = await callerEdit();
+    const first = await t.run((ctx) => runSyncChecks(ctx, firstEdit));
+    expect(first.judgments[0]?.action).toBe("serialize");
+    expect(first.rowIds).toHaveLength(1);
+    const secondEdit = await callerEdit();
+    const second = await t.run((ctx) => runSyncChecks(ctx, secondEdit));
+    expect(second.rowIds).toEqual([]);
   });
 
   test("unrelated files → nothing", async () => {

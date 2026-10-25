@@ -157,7 +157,9 @@ export async function persistJudgments(
     let classificationId: Id<"classifications">;
     if (decision.kind === "raise") {
       classificationId = decision.id as Id<"classifications">;
-      await ctx.db.patch(classificationId, row);
+      // The raised row now describes this step: the hook enforces it as this step's own verdict, not as a
+      // repeat of the milder notice the two goals had before (which made deny-once let the first real clash by).
+      await ctx.db.patch(classificationId, { ...row, nodeId: next._id, againstNodeId: other._id });
     } else {
       classificationId = await ctx.db.insert("classifications", {
         ...row,
