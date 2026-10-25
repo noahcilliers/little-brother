@@ -10,7 +10,7 @@ try {
   // older Node: run without the cache
 }
 
-const program = new Command("lb").description("Little Brother connector").version("0.2.1");
+const program = new Command("lb").description("Little Brother connector").version("0.3.1");
 
 program
   .command("join")
