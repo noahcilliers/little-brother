@@ -1,5 +1,5 @@
 import type { BoardCatch } from "@/lib/api";
-import { anchor, type CatchKind, catchOpacity, isOpen, type Lookup } from "@/lib/board-time";
+import { anchor, type CatchFocus, catchOpacity, isOpen, type Lookup } from "@/lib/board-time";
 import { CATCH_STYLE, chipText } from "@/lib/catch-style";
 import { CATCH_ICON, Icon } from "./icons";
 
@@ -7,32 +7,27 @@ type Props = {
   catches: BoardCatch[];
   lookup: Lookup;
   t: number;
-  selected: string | null;
-  highlight: CatchKind | null;
+  /** Which settled catches to redraw: the selected or hovered task's, or the highlighted kind. */
+  focus: CatchFocus;
   /** A chip opens the caught task. */
   onSelect?: (id: string) => void;
 };
 
+type Box = { left: number; top: number; w: number };
+const CHIP_H = 20;
+
 /** A labelled chip at the middle of a catch edge: icon plus "conflict · auth.mechanism". */
 function EdgeChip({
   c,
-  x,
-  y,
+  box,
   color,
-  width,
   onSelect,
 }: {
   c: BoardCatch;
-  x: number;
-  y: number;
+  box: Box;
   color: string;
-  width: number;
   onSelect?: (id: string) => void;
 }) {
-  const text = chipText(c);
-  const w = 30 + text.length * 6.1;
-  // Kept inside the graph so a catch near either end never loses half its chip.
-  const left = Math.max(4, Math.min(x - w / 2, width - w - 4));
   const pick = (e: { stopPropagation: () => void }) => {
     e.stopPropagation();
     onSelect?.(c.from);
@@ -43,55 +38,67 @@ function EdgeChip({
       className="task"
       role="button"
       tabIndex={0}
-      transform={`translate(${left} ${y - 10})`}
+      transform={`translate(${box.left} ${box.top})`}
       onClick={pick}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " " ? pick(e) : undefined)}
     >
-      <rect width={w} height={20} rx={10} fill="var(--panel)" stroke={color} strokeWidth={1.3} />
+      <rect width={box.w} height={CHIP_H} rx={10} fill="var(--panel)" stroke={color} strokeWidth={1.3} />
       <Icon name={CATCH_ICON[c.kind]} x={13} y={10} size={11} color={color} />
       <text x={24} y={14} fontFamily="var(--mono)" fontSize={10.5} fill="var(--ink)">
-        {text}
+        {chipText(c)}
       </text>
     </g>
   );
 }
 
-/** Catches link the caught task to what it was caught against; drawn while open, fading after. */
-export function GraphCatches({ catches, lookup, t, selected, highlight, onSelect }: Props) {
+const overlaps = (a: Box, b: Box) =>
+  a.left < b.left + b.w + 4 && b.left < a.left + a.w + 4 && Math.abs(a.top - b.top) < CHIP_H + 2;
+
+/**
+ * Catches link the caught task to what it was caught against: drawn while open, fading once settled, and
+ * redrawn only for the hovered or selected task. One solid weight for every kind; colour tells them apart.
+ */
+export function GraphCatches({ catches, lookup, t, focus, onSelect }: Props) {
+  const width = lookup.layout.width;
+  const edges = catches.flatMap((c) => {
+    const opacity = catchOpacity(c, t, lookup.layout, focus);
+    const a = anchor(c.from, c.t, lookup);
+    const b = anchor(c.to, c.t, lookup);
+    if (opacity === null || !a || !b) return [];
+    const mx = (a.x + b.x) / 2 + 40;
+    const my = (a.y + b.y) / 2;
+    // The midpoint of the quadratic curve, where the chip sits; kept inside the graph at either end.
+    const w = 30 + chipText(c).length * 6.1;
+    const cx = (a.x + 2 * mx + b.x) / 4;
+    const box = {
+      left: Math.max(4, Math.min(cx - w / 2, width - w - 4)),
+      top: (a.y + 2 * my + b.y) / 4 - 10,
+      w,
+    };
+    return [{ c, a, b, mx, my, opacity, open: isOpen(c, t), box }];
+  });
+  // Chips never stack: open catches claim their spot first, and a chip that would cover another is left to
+  // the edge's tooltip and the task popup.
+  const placed: Box[] = [];
+  const chipped = new Set<string>();
+  for (const e of [...edges].sort((p, q) => Number(q.open) - Number(p.open))) {
+    if (e.opacity <= 0.5 || placed.some((b) => overlaps(b, e.box))) continue;
+    placed.push(e.box);
+    chipped.add(e.c.id);
+  }
   return (
     <g>
-      {catches.map((c) => {
-        const opacity = catchOpacity(c, t, lookup.layout, selected, highlight);
-        if (opacity === null) return null;
-        const a = anchor(c.from, c.t, lookup);
-        const b = anchor(c.to, c.t, lookup);
-        if (!a || !b) return null;
-        const open = isOpen(c, t);
-        const style = CATCH_STYLE[c.kind];
-        const mx = (a.x + b.x) / 2 + 40;
-        const my = (a.y + b.y) / 2;
-        // The midpoint of the quadratic curve, where the chip sits.
-        const cx = (a.x + 2 * mx + b.x) / 4;
-        const cy = (a.y + 2 * my + b.y) / 4;
+      {edges.map(({ c, a, b, mx, my, opacity, open, box }) => {
+        const color = CATCH_STYLE[c.kind].color;
         return (
           <g key={c.id} opacity={opacity}>
             <path
               d={`M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}`}
               fill="none"
-              stroke={style.color}
-              strokeWidth={2.4}
-              strokeDasharray={style.dash}
-            >
-              {open ? (
-                <animate
-                  attributeName="stroke-dashoffset"
-                  from="0"
-                  to="-24"
-                  dur="0.9s"
-                  repeatCount="indefinite"
-                />
-              ) : null}
-            </path>
+              stroke={color}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+            />
             {open
               ? [a, b].map((p) => (
                   <circle
@@ -100,7 +107,7 @@ export function GraphCatches({ catches, lookup, t, selected, highlight, onSelect
                     cy={p.y}
                     r={14}
                     fill="none"
-                    stroke={style.color}
+                    stroke={color}
                     strokeWidth={2}
                   >
                     <animate attributeName="r" values="12;26" dur="1.3s" repeatCount="indefinite" />
@@ -108,17 +115,7 @@ export function GraphCatches({ catches, lookup, t, selected, highlight, onSelect
                   </circle>
                 ))
               : null}
-            {/* A settled catch rests as a faint edge; its chip comes back when selected or highlighted. */}
-            {opacity > 0.5 ? (
-              <EdgeChip
-                c={c}
-                x={cx}
-                y={cy}
-                color={style.color}
-                width={lookup.layout.width}
-                onSelect={onSelect}
-              />
-            ) : null}
+            {chipped.has(c.id) ? <EdgeChip c={c} box={box} color={color} onSelect={onSelect} /> : null}
             <title>{c.text}</title>
           </g>
         );

@@ -137,6 +137,7 @@ export function TokenCount({
   x1,
   y,
   room,
+  onHoverOnly = false,
 }: {
   k: BoardTask;
   state: BarState;
@@ -144,6 +145,8 @@ export function TokenCount({
   y: number;
   /** Free space after the bar end, up to the next bar in the lane. */
   room: number;
+  /** A bar too short for its own label keeps its count for hover, so rows of short steps don't fill with numbers. */
+  onHoverOnly?: boolean;
 }) {
   if (k.tokens === undefined) return null;
   const text = kTokens(k.tokens);
@@ -155,6 +158,7 @@ export function TokenCount({
   const wasted = state === "abandoned" || state === "superseded";
   return (
     <text
+      className={onHoverOnly ? "hover-only" : undefined}
       x={x1 + gap}
       y={y + BAR_H / 2 + 3.5}
       fontFamily="var(--mono)"

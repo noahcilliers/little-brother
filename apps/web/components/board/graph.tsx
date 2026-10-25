@@ -2,15 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Board } from "@/lib/api";
+import { bandLabels } from "@/lib/band-labels";
 import { BAR_H, type Layout, laneY } from "@/lib/board-layout";
-import { bandOffsets, type CatchKind, type Lookup } from "@/lib/board-time";
+import { anchor, type CatchKind, type Lookup } from "@/lib/board-time";
+import { BandCard } from "./band-card";
 import { GraphGrid, NowLine } from "./graph-axis";
 import { GraphCatches } from "./graph-catches";
 import { GoalRegions } from "./graph-goals";
-import { GraphShared, VerifyBadges } from "./graph-shared";
+import { GraphShared } from "./graph-shared";
 import { RowLabels } from "./row-labels";
 import { TaskBar } from "./task-bar";
 import { ActionTicks } from "./task-marks";
+import { VerifyBadges } from "./verify-badges";
 
 type Props = {
   board: Board;
@@ -47,10 +50,14 @@ export function Graph({
       goals: new Map(board.goals.map((g) => [g.id, g])),
       shared: new Map(board.shared.map((s) => [s.id, s])),
       layout,
-      bandDy: bandOffsets(board.shared, layout),
     }),
     [board, layout],
   );
+  const labels = useMemo(() => bandLabels(board.shared, layout), [board.shared, layout]);
+  const [hovered, setHovered] = useState<string | null>(null);
+  // The lesson or decision whose full text floats above it: the hovered one, else the selected one.
+  const card = [hovered, selected].map((id) => (id ? lookup.shared.get(id) : undefined)).find(Boolean);
+  const cardAt = card ? anchor(card.id, card.t, lookup) : undefined;
   // The next bar's start in the same lane bounds how long a label under a short bar may run.
   const nextX = useMemo(() => {
     const out = new Map<string, number>();
@@ -137,6 +144,7 @@ export function Graph({
               selected={selected === k.id}
               dim={focus !== null && focus !== k.agentId}
               onSelect={toggle}
+              onHover={setHovered}
               viewLeft={viewLeft}
             />
           ))}
@@ -145,19 +153,23 @@ export function Graph({
             lookup={lookup}
             t={t}
             colorOf={colorOf}
+            labels={labels}
+            active={card?.id ?? null}
             onSelect={toggle}
-            viewLeft={viewLeft}
+            onHover={setHovered}
           />
           <GraphCatches
             catches={board.catches}
             lookup={lookup}
             t={t}
-            selected={selected}
-            highlight={highlight}
+            focus={{ selected, hovered, highlight }}
             onSelect={toggle}
           />
           <NowLine x={nowX} height={layout.height} />
           <VerifyBadges verifies={board.verifies} lookup={lookup} t={t} />
+          {card && cardAt && t >= card.t ? (
+            <BandCard n={card} x={cardAt.x} y={cardAt.y} width={layout.width} viewLeft={viewLeft} />
+          ) : null}
         </svg>
       </div>
     </div>

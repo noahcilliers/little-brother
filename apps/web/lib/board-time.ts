@@ -1,6 +1,5 @@
 import type { BoardCatch, BoardGoal, BoardShared, BoardTask } from "./api";
 import { BAR_H, goalLineY, type Layout, laneY } from "./board-layout";
-import { CHAR_W, fitText } from "./label-fit";
 
 // Everything on the board is drawn as of time t (live: now; paused or replay: the scrubber).
 
@@ -8,8 +7,6 @@ export type BarState = "running" | "done" | "abandoned" | "stopped" | "supersede
 export type CatchKind = BoardCatch["kind"];
 // A settled catch fades out over this much compressed time.
 const FADE_MS = 3000;
-// Opacity a settled catch rests at.
-const RESTING = 0.32;
 
 export function isRunning(k: BoardTask, t: number): boolean {
   return k.t1 === null || t < k.t1;
@@ -50,49 +47,7 @@ export type Lookup = {
   goals: Map<string, BoardGoal>;
   shared: Map<string, BoardShared>;
   layout: Layout;
-  /** Vertical nudge for lessons and decisions whose labels would overlap a neighbour in the band. */
-  bandDy: Map<string, number>;
 };
-
-const NUDGE = [0, -11, 11];
-const BAND_LABEL_MAX = 44;
-
-/**
- * A lesson's or decision's label: right of its marker, or flipped to the left when it would run past the graph's
- * right edge. `left`/`right` are the pixels it covers, for staggering neighbours.
- */
-export function bandLabel(x: number, label: string, width: number) {
-  const short = fitText(label, BAND_LABEL_MAX * CHAR_W.band, CHAR_W.band);
-  const w = short.length * CHAR_W.band;
-  if (x + 15 + w <= width - 6)
-    return { text: short, x: x + 15, anchor: "start" as const, left: x, right: x + 15 + w };
-  const text = fitText(short, Math.max(x - 21, width - x - 21), CHAR_W.band);
-  const flip = x - 21 > width - x - 21;
-  const tw = text.length * CHAR_W.band;
-  return flip
-    ? { text, x: x - 15, anchor: "end" as const, left: x - 15 - tw, right: x }
-    : { text, x: x + 15, anchor: "start" as const, left: x, right: x + 15 + tw };
-}
-
-/** Staggers lessons and decisions that sit too close in time for their labels to fit side by side. */
-export function bandOffsets(shared: BoardShared[], layout: Layout): Map<string, number> {
-  const out = new Map<string, number>();
-  const right = new Map<string, number[]>();
-  for (const s of [...shared].sort((a, b) => a.t - b.t)) {
-    const row = layout.bandRow.get(s.id);
-    if (!row) continue;
-    const ends = right.get(row.agentId) ?? NUDGE.map(() => Number.NEGATIVE_INFINITY);
-    const label = bandLabel(layout.xAt(s.t), s.label, layout.width);
-    const lane = Math.max(
-      0,
-      ends.findIndex((r) => r < label.left - 14),
-    );
-    ends[lane] = label.right + 3;
-    right.set(row.agentId, ends);
-    out.set(s.id, NUDGE[lane] ?? 0);
-  }
-  return out;
-}
 
 /** Where a task's bar sits: its lane's top edge. */
 export function barTop(k: BoardTask, layout: Layout): number | undefined {
@@ -106,7 +61,7 @@ export function anchor(id: string, t: number, l: Lookup): { x: number; y: number
   if (s) {
     const band = l.layout.bandRow.get(s.id)?.band;
     if (band === null || band === undefined) return undefined;
-    return { x: l.layout.xAt(s.t), y: band + (l.bandDy.get(s.id) ?? 0) };
+    return { x: l.layout.xAt(s.t), y: band };
   }
   const g = l.goals.get(id);
   if (g) {
@@ -124,24 +79,20 @@ export function isOpen(c: BoardCatch, t: number): boolean {
   return t >= c.t && (c.until === null || t < c.until);
 }
 
+export type CatchFocus = { selected: string | null; hovered: string | null; highlight: CatchKind | null };
+
 /**
- * Catch edges are bright while open, fade after they settle, then rest as a faint link so the board keeps
- * showing what was caught; selecting an end or highlighting the kind brings one back up.
+ * Only catches that still need attention get an edge: open ones, and settled ones briefly while they fade. A
+ * settled catch comes back for the task or lesson that is hovered or selected, or for its highlighted kind; the
+ * rest live on the task's badge and in its popup, so a busy session doesn't turn into a web of links.
  */
-export function catchOpacity(
-  c: BoardCatch,
-  t: number,
-  layout: Layout,
-  selected: string | null,
-  highlight: CatchKind | null,
-): number | null {
+export function catchOpacity(c: BoardCatch, t: number, layout: Layout, focus: CatchFocus): number | null {
   if (t < c.t) return null;
-  const fade =
-    isOpen(c, t) || c.until === null
-      ? 1
-      : Math.max(0, 1 - (layout.axis.toC(t) - layout.axis.toC(c.until)) / FADE_MS);
-  const pinned = selected === c.from || selected === c.to || highlight === c.kind;
-  return pinned ? Math.max(fade, 0.8) : Math.max(fade, RESTING);
+  if (isOpen(c, t) || c.until === null) return 1;
+  const touches = (id: string | null) => id !== null && (id === c.from || id === c.to);
+  if (touches(focus.selected) || touches(focus.hovered) || focus.highlight === c.kind) return 0.85;
+  const fade = 1 - (layout.axis.toC(t) - layout.axis.toC(c.until)) / FADE_MS;
+  return fade > 0 ? fade : null;
 }
 
 export function lastBefore<T extends { t: number }>(list: T[], t: number): T | undefined {
