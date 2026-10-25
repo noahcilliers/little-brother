@@ -1,6 +1,14 @@
 # Little Brother
 
 Little Brother is a coordination layer for teammates who each run their own Claude Code session on the same repo. It watches every session's prompts, edits and commands. When two agents start the same work, or one of them breaks a contract another relies on, it warns them early. It also warns before an agent retries an approach a teammate already saw fail.
+
+## How we use Convex
+
+- Every hook event reaches Convex HTTP actions (`/hook/`, `/mcp/`, `/join`) in `packages/backend/convex/http.ts`.
+- The classifier runs as actions queued on the Workpool component, capped by the Rate Limiter component, with vector search for similar work.
+- The board, decisions, logs and /benchmarks are live `useQuery` subscriptions, so they update without a refresh.
+- Sign-in is Convex Auth with GitHub, and a cron sweeps stale agents every minute.
+- Full details and the build log: [hackathon.md](hackathon.md).
 - **Deploy it** (once per team): see [DEPLOY.md](DEPLOY.md#part-a-deploy-once-one-person).
 - **Connect a laptop:** see [DEPLOY.md](DEPLOY.md#part-b-connect-a-laptop-each-teammate). In short:
 
