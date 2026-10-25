@@ -1,6 +1,6 @@
 import { needsPerson } from "@lb/core";
 import type { Id } from "../_generated/dataModel";
-import { clip, lbSentence, subjectThing } from "./labels";
+import { clip, lbSentence, planGist, subjectThing } from "./labels";
 import type { Source } from "./source";
 import type { BoardTask } from "./tasks";
 
@@ -51,7 +51,11 @@ export function buildDecisions(
     if (!n) return undefined;
     const taskId = taskOfNode.get(nodeId);
     const subject =
-      (taskId && taskById.get(taskId)?.subject) || n.label || n.files[0] || n.verb.toLowerCase();
+      (taskId && taskById.get(taskId)?.subject) ||
+      n.label ||
+      (n.kind === "intent" ? planGist(n.text) : "") ||
+      n.files[0] ||
+      n.verb.toLowerCase();
     return {
       nodeId,
       agentId: n.agentId,
@@ -71,7 +75,9 @@ export function buildDecisions(
     const b = side(c.nodeId);
     if (!a || !b) continue;
     const topic =
-      src.nodeById.get(c.nodeId)?.topic ?? src.nodeById.get(c.againstNodeId)?.topic ?? "this change";
+      src.nodeById.get(c.nodeId)?.topic ??
+      src.nodeById.get(c.againstNodeId)?.topic ??
+      (src.nodeById.get(c.nodeId)?.kind === "intent" ? "these plans" : "this change");
     out.push({
       id: c._id,
       kind: c.relation === "ordering_dependency" ? "ordering" : c.type,

@@ -90,3 +90,13 @@ export function lbSentence(text: string): string {
     .map((l) => l.trim().replace(/^(conflict|stale|duplicate|normal)\s*·\s*/i, ""));
   return clip(lines.find(Boolean) ?? text, 220);
 }
+
+/** A plan's gist for labels: its request up to the first colon, without the PLAN verb or a leading topic. */
+export function planGist(text: string, max = 48): string {
+  const body =
+    text
+      .replace(/^PLAN\s+(?:[a-z]+(?:\.[a-z-]+)+\s+)?/, "")
+      .split(/[:\n]/)[0]
+      ?.trim() ?? "";
+  return body.length > max ? `${body.slice(0, max - 1).trimEnd()}…` : body;
+}
