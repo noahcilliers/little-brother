@@ -118,7 +118,7 @@ export function ClassifierChoice({ room }: { room: Room }) {
         locked={locked}
         onPick={(judge) => pick({ ...plan, judge })}
       />
-      <p className="clf-flow" aria-label="Current pipeline">
+      <p className="clf-flow" title="Current pipeline">
         {flow
           .filter((s) => s !== "nothing")
           .map((s, i) => (
