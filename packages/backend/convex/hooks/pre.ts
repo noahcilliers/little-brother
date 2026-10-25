@@ -4,7 +4,9 @@ import {
   DASHBOARD_DECIDES,
   deny,
   deriveVerb,
+  isInterfaceChange,
   type Judgment,
+  type Relation,
   signatureLine,
   TYPE_OF,
 } from "@lb/core";
@@ -100,8 +102,12 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
     )
     .map((c) => c.reason.replace(/^\[little-brother\]\s*/, ""));
   // A wait with no claim given to either side is a decision for a person, made on the dashboard.
+  // Interface clashes carry their own fix in the text; telling the agent to wait for the dashboard made it stop.
   const waitsOnPerson = stored.some(
-    (c) => (c.action === "serialize" || c.action === "block") && !c.winnerAgentId,
+    (c) =>
+      (c.action === "serialize" || c.action === "block") &&
+      !c.winnerAgentId &&
+      !isInterfaceChange({ relation: c.relation as Relation, evidence: c.evidence }),
   );
   const reason = urgentReasons.length
     ? `[little-brother] ${urgentReasons.slice(0, 3).join("\n")}${waitsOnPerson ? `\n${DASHBOARD_DECIDES}` : ""}`
