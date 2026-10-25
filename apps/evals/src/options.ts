@@ -1,5 +1,4 @@
 import { parseArgs } from "node:util";
-import { type AgentSpec, parseAgentSpec } from "./agent-spec";
 import { ARMS, type Arm } from "./arm";
 import type { Variant } from "./case";
 
@@ -14,8 +13,6 @@ export type Options = {
   /** Number of the first repetition, so a later invocation can add repetitions 3, 4… to earlier ones. */
   firstRun: number;
   model: string;
-  /** Claude Code, or `lb agent` with a Gemini or OpenAI-compatible model (agent-spec.ts). */
-  agent: AgentSpec;
   maxTurns: number;
   maxBudgetUsd: number;
   timeoutMin: number;
@@ -52,7 +49,6 @@ export const USAGE = `pnpm --filter @lb/evals eval [options]
   --runs n           repetitions per case, variant and arm (default: 3)
   --first-run n      number the repetitions from n (default: 1), to add repetitions to an earlier set
   --model m          agent model (default: sonnet)
-  --agent a          claude | lb:gemini:<model> | lb:openai:<model>@<baseUrl>: Claude Code or lb agent (default: claude)
   --max-turns n      per agent (default: 30)
   --max-budget usd   per agent (default: 1.5)
   --timeout-min n    per agent wall clock (default: 12)
@@ -90,7 +86,6 @@ export function parseOptions(argv: string[]): Options {
       runs: { type: "string" },
       "first-run": { type: "string" },
       model: { type: "string" },
-      agent: { type: "string" },
       "max-turns": { type: "string" },
       "max-budget": { type: "string" },
       "timeout-min": { type: "string" },
@@ -138,7 +133,6 @@ export function parseOptions(argv: string[]): Options {
     runs: Math.round(num(values.runs, 3, "runs")),
     firstRun: Math.round(num(values["first-run"], 1, "first-run")),
     model: values.model ?? "sonnet",
-    agent: parseAgentSpec(values.agent ?? "claude"),
     maxTurns: Math.round(num(values["max-turns"], 30, "max-turns")),
     maxBudgetUsd: num(values["max-budget"], 1.5, "max-budget"),
     timeoutMin: num(values["timeout-min"], 12, "timeout-min"),

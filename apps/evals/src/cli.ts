@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { newTokens } from "@lb/core";
 import { CASES } from "../cases";
-import { agentLabel, runnerFor } from "./agent-spec";
 import { type RunRecord, type Summary, summarize } from "./aggregate";
 import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
@@ -85,7 +84,6 @@ async function main(): Promise<void> {
       maxTurns: opts.maxTurns,
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
-      ...runnerFor(opts.agent, h.cliPath),
     },
     tag: h.tag,
     settleSec: opts.settleSec,
@@ -108,7 +106,7 @@ async function main(): Promise<void> {
     `${jobs.length} run(s) · ${h.backendInfo}${opts.fixup ? " · fix-up on" : ""}${opts.paired ? ` · paired, seed ${opts.seed}` : ""}\n` +
       `results → ${h.outDir}\nworktrees → ${h.workDir}\nspent so far: ${h.budget.line()}`,
   );
-  const model = opts.agent.kind === "lb" ? agentLabel(opts.agent) : opts.model;
+  const model = opts.model;
   const live = livePublisher(h.outDir, {
     suite: "planted",
     model,

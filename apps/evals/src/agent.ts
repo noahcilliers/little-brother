@@ -2,19 +2,10 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { createInterface } from "node:readline";
-import type { LbRunner } from "./agent-spec";
 import { claudeBin } from "./claude-bin";
-import { startLbAgent } from "./lb-agent";
 import { type AgentLog, applyLine, emptyLog } from "./stream";
 
-export type Limits = {
-  model: string;
-  maxTurns: number;
-  maxBudgetUsd: number;
-  timeoutMin: number;
-  /** `--agent lb:…`: run `lb agent` (lb-agent.ts) instead of Claude Code. */
-  runner?: LbRunner;
-};
+export type Limits = { model: string; maxTurns: number; maxBudgetUsd: number; timeoutMin: number };
 
 export type AgentLaunch = {
   handle: string;
@@ -83,7 +74,7 @@ export const MAILBOX_NOTE =
   "Your teammates work on the same repo at the same time, each on their own branch, and the branches will be merged. You can talk to them: mcp__mailbox__send posts a message and mcp__mailbox__read returns new ones. Tell them early about changes that could affect their work (files, function names, signatures), read messages before editing shared code, and adapt to what they tell you.";
 
 /** Only what Claude Code and the connector need: the parent's Claude Code variables would leak into the child. */
-export function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
+function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
   const keep = ["HOME", "PATH", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "TERM", "ANTHROPIC_API_KEY"];
   const env: NodeJS.ProcessEnv = {};
   for (const k of keep) if (process.env[k] !== undefined) env[k] = process.env[k];
@@ -116,8 +107,6 @@ export function endSession(a: AgentLaunch, sessionId: string, cliPath: string): 
 }
 
 export function startAgent(a: AgentLaunch): RunningAgent {
-  if (a.limits.runner)
-    return startLbAgent({ ...a, systemNote: a.systemNote ?? SYSTEM_NOTE }, a.limits.runner, agentEnv(a));
   const sessionId = randomUUID();
   const args = [
     "-p",

@@ -63,7 +63,10 @@ function main(): void {
     const name = (a: Arm) => (a === "on" ? "lb" : a);
     const pairs = (["off", "msg", "oracle"] as Arm[]).filter((b) => b !== "on" && arms.includes(b));
     const diffs = Object.fromEntries(
-      pairs.map((b) => [`lb-${b}`, Object.fromEntries(METRICS.map((m) => [m, pairedDiff(s.runs, "on", b, m)]))]),
+      pairs.map((b) => [
+        `lb-${b}`,
+        Object.fromEntries(METRICS.map((m) => [m, pairedDiff(s.runs, "on", b, m)])),
+      ]),
     );
     json[s.name] = { arms: Object.fromEntries(stats.map((x) => [name(x.arm), x])), diffs };
     md.push(

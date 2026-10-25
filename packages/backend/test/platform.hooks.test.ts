@@ -123,7 +123,7 @@ describe("hook ingest", () => {
     expect(action?.verb).toBe("TEST");
     expect(action?.parentId).toBe(agent.intentId);
     if (!action) throw new Error("no action");
-    const itemId = await queueItem(t, agent._id, action._id, "warn");
+    await queueItem(t, agent._id, action._id, "warn");
     const post = await hook(
       t,
       tok,
