@@ -54,7 +54,7 @@ function line(j: Judgment, who: Counterpart): string {
       : isInterfaceChange(j)
         ? j.direction === "other_needs_new"
           ? `${who.name}'s code still uses the old interface; they've been told the new one. Keep going, and keep the old call working if it's cheap.`
-          : "Their version is the new interface (shown above): update your calls to match it and keep going; don't wait or stop."
+          : "Their version is the new interface (shown above): rewrite this against it and continue; you won't be stopped again for it."
         : NEXT_STEP[j.relation];
   return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
 }

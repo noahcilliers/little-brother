@@ -29,6 +29,9 @@ export type InterventionInput = {
   action: Action;
   confidence: number;
   evidence?: string[];
+  direction?: "new_needs_other" | "other_needs_new" | "none";
+  /** The same catch was already raised (and its denial shown) for an earlier step of this work. */
+  repeat?: boolean;
   /** Tokens the catch would spare (the duplicated task, or the failed attempt behind a lesson); unknown → undefined. */
   avoidedTokens?: number;
 };
@@ -39,10 +42,12 @@ export type InterventionInput = {
  * apply; never raises one.
  */
 export function interventionAction(i: InterventionInput): Action {
-  // An interface change (rename, signature change, an imported symbol changing) has a mechanical fix: use
-  // the new interface. Stopping the agent made it abandon its own task in the STALE-bench runs; telling it
-  // the new shape lets it finish against it.
-  if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize")) return "warn";
+  // An interface change (rename, signature change, an imported symbol changing) has a mechanical fix: use the
+  // new interface. A block made agents wait for a human; a mere warning was ignored (STALE-bench interference
+  // went back to 100%). So the first edit against it is denied with the new shape; `repeat` lets later ones by.
+  // Only the side that uses the old interface is denied; the side that changed it is told who still uses it.
+  if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize"))
+    return i.repeat || i.direction !== "new_needs_other" ? "warn" : "serialize";
   if (i.action !== "serialize" || NEVER_DOWNGRADE.has(i.relation)) return i.action;
   if (i.avoidedTokens === undefined) return i.action;
   const expected = i.confidence * i.avoidedTokens;

@@ -177,7 +177,7 @@ describe("runSyncChecks", () => {
     expect(inbox.map((i) => [i.agentId, i.action])).toEqual([[ash, "warn"]]);
   });
 
-  test("signature change of a function another agent calls → semantic_conflict; the caller is told how to adapt, nobody is stopped", async () => {
+  test("signature change of a function another agent calls → semantic_conflict; the caller's next edit is denied once with the new shape, the changer is only told", async () => {
     await insert(t, {
       agentId: joshua,
       text: "EDIT checkout src/checkout/pay-flow.ts",
@@ -206,8 +206,21 @@ describe("runSyncChecks", () => {
     });
     const { inbox } = await rows(t);
     const told = new Map(inbox.map((i) => [i.agentId, i.text]));
-    expect(told.get(joshua)).toContain("update your calls to match it");
+    expect(told.get(joshua)).toContain("rewrite this against it");
     expect(told.get(noah)).toContain("still uses the old interface");
+    // The caller's next edit against the old interface is denied once, with the new shape; then it may go on.
+    const goal = await insert(t, { agentId: joshua, kind: "intent", verb: "PLAN", text: "PLAN checkout pay flow" });
+    const callerEdit = () =>
+      insert(t, {
+        parentId: goal,
+        agentId: joshua,
+        text: "EDIT checkout src/checkout/pay-flow.ts",
+        files: ["src/checkout/pay-flow.ts"],
+        touches: [{ path: "src/checkout/pay-flow.ts", op: "write", lines: [5, 9] }],
+        references: ["src/billing/pay.ts::pay"],
+      });
+    expect((await sync(t, await callerEdit()))[0]?.action).toBe("serialize");
+    expect((await sync(t, await callerEdit()))[0]?.action).toBe("warn");
   });
 
   test("unrelated files → nothing", async () => {
