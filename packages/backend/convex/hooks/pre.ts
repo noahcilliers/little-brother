@@ -1,4 +1,13 @@
-import { ACTION_RANK, actionLabel, deny, deriveVerb, type Judgment, signatureLine, TYPE_OF } from "@lb/core";
+import {
+  ACTION_RANK,
+  actionLabel,
+  DASHBOARD_DECIDES,
+  deny,
+  deriveVerb,
+  type Judgment,
+  signatureLine,
+  TYPE_OF,
+} from "@lb/core";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { runSyncChecks } from "../classify/sync";
@@ -76,7 +85,9 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
     .withIndex("by_node", (q) => q.eq("nodeId", nodeId))
     .collect();
   const matched = (await Promise.all(rowIds.map((id) => ctx.db.get(id)))).filter((c) => c !== null);
-  const stored = [...new Map([...byNode, ...matched].map((c) => [c._id, c])).values()];
+  const stored = [...new Map([...byNode, ...matched].map((c) => [c._id, c])).values()].filter(
+    (c) => c.status === "open",
+  );
   // Equal severity: a known failure is the most actionable explanation, then duplicates, then conflicts.
   const explains = { stale: 0, duplicate: 1, conflict: 2, normal: 3 } as const;
   const urgentReasons = stored
@@ -88,8 +99,12 @@ export const onPreToolUse: HookHandler = async ({ ctx, agent, env, eventId }) =>
         b.confidence - a.confidence,
     )
     .map((c) => c.reason.replace(/^\[little-brother\]\s*/, ""));
+  // A wait with no claim given to either side is a decision for a person, made on the dashboard.
+  const waitsOnPerson = stored.some(
+    (c) => (c.action === "serialize" || c.action === "block") && !c.winnerAgentId,
+  );
   const reason = urgentReasons.length
-    ? `[little-brother] ${urgentReasons.slice(0, 3).join("\n")}`
+    ? `[little-brother] ${urgentReasons.slice(0, 3).join("\n")}${waitsOnPerson ? `\n${DASHBOARD_DECIDES}` : ""}`
     : renderDenial(judgments);
   if (!reason) return { output: null, summary: `${tool} ${target}`, nodeId };
   // Warnings still queued for this agent (often the same lesson, found async from its prompt) ride along

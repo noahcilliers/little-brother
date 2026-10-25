@@ -178,6 +178,9 @@ export default defineSchema({
     source: v.union(v.literal("rule"), v.literal("pair_model"), v.literal("llm"), v.literal("fallback")),
     status: v.union(v.literal("open"), v.literal("resolved"), v.literal("dismissed")),
     resolution: v.optional(v.string()),
+    // Who settled it and when, for the board: "ash on the dashboard", "@noah (owner)", "noah's push".
+    resolvedBy: v.optional(v.string()),
+    resolvedAt: v.optional(v.number()),
     feedback: v.optional(v.union(v.literal("confirmed"), v.literal("false_positive"), v.literal("ignored"))),
     outcome: v.optional(v.string()),
     winnerAgentId: v.optional(v.id("agents")), // collisions: whose claim held under the priority policy

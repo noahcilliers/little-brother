@@ -16,6 +16,9 @@ export type BoardCatch = {
   /** When it settled; null while still open. */
   until: number | null;
   status: Klass["status"];
+  /** How it was settled and by whom: "kept JWT tokens", "ash on the dashboard". */
+  resolution?: string;
+  resolvedBy?: string;
   topic?: string;
   /** Short label for the chip on the edge: "conflict · auth.mechanism", "needs JWT tokens first". */
   chip: string;
@@ -82,11 +85,16 @@ export function buildCatches(
     const to = anchor(c.againstNodeId);
     if (!kind || !from || !to || from === to) continue;
     const fromTask = taskById.get(from);
-    // Only a conflict nobody has a claim on waits for a person; everything else settles when the step ends.
-    const waits = kind === "conflict" && c.status === "open" && !c.winnerAgentId;
+    // A denial nobody holds a claim on waits for a person (the dashboard decides); the rest settle when the step ends.
+    const waits =
+      kind !== "ordering" &&
+      c.status === "open" &&
+      (c.action === "block" || c.action === "serialize") &&
+      !c.winnerAgentId;
     // An ordering wait lasts as long as the waiting step does.
     const ordering = kind === "ordering" && c.status === "open";
     const settled =
+      c.resolvedAt ??
       resolvedAt.get(c._id) ??
       (waits ? null : ordering ? (fromTask?.t1 ?? null) : Math.max(fromTask?.t1 ?? 0, c.at + SETTLE_MS));
     const key = `${kind}:${from}:${to}`;
@@ -95,6 +103,8 @@ export function buildCatches(
       // Repeated verdicts on one pair are one catch: it stays open while any of them is.
       if (prev.until !== null) prev.until = settled === null ? null : Math.max(prev.until, settled);
       if (c.status === "open") Object.assign(prev, { classificationId: c._id, status: c.status });
+      else if (c.resolvedBy && prev.status === "open" && prev.until !== null)
+        Object.assign(prev, { status: c.status, resolution: c.resolution, resolvedBy: c.resolvedBy });
       continue;
     }
     const topic =
@@ -108,6 +118,7 @@ export function buildCatches(
       t: c.at,
       until: settled,
       status: c.status,
+      ...(c.resolvedBy ? { resolution: c.resolution, resolvedBy: c.resolvedBy } : {}),
       topic: topic || undefined,
       chip: chipOf(kind, topic || undefined, taskById.get(to)),
       text: lbSentence(c.reason),

@@ -1,11 +1,12 @@
 import { primarySymbol } from "@lb/core";
 import { ConvexError, v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
-import { assertAgentVisible } from "./access";
+import { assertAgentVisible, viewerMember } from "./access";
 import { subjectThing } from "./dashboardQueries/labels";
 import { insertNode, topicFor } from "./nodes";
 import { refreshSavingsFor } from "./savings";
+import { notify, settleCatch } from "./settle";
 import { supersedeTaskOf } from "./tasks";
 
 // Human decisions from the dashboard resolve panel: team members only, except in local open mode.
@@ -51,13 +52,29 @@ export async function supersede(ctx: MutationCtx, lose: Doc<"nodes">, note = "Su
   }
 }
 
+/** The open catch a dashboard viewer may settle, and how the board names them. */
+async function openForViewer(ctx: MutationCtx, classificationId: Id<"classifications">) {
+  const c = await ctx.db.get(classificationId);
+  if (!c) throw new ConvexError("classification not found");
+  await assertAgentVisible(ctx, c.agentIds[0]);
+  if (c.status !== "open")
+    throw new ConvexError(`already ${c.status}${c.resolvedBy ? ` by ${c.resolvedBy}` : ""}`);
+  const handle = (await viewerMember(ctx))?.handle;
+  return { c, by: handle ? `${handle} on the dashboard` : "the dashboard" };
+}
+
+async function topicOf(ctx: MutationCtx, c: Doc<"classifications">): Promise<string> {
+  const [a, b] = await Promise.all([
+    ctx.db.get(c.nodeId),
+    c.againstNodeId ? ctx.db.get(c.againstNodeId) : null,
+  ]);
+  return a?.topic ?? b?.topic ?? topicFromPath(a?.files[0] ?? b?.files[0]);
+}
+
 export const approve = mutation({
   args: { classificationId: v.id("classifications"), keepNodeId: v.id("nodes") },
   handler: async (ctx, { classificationId, keepNodeId }) => {
-    const c = await ctx.db.get(classificationId);
-    if (!c) throw new ConvexError("classification not found");
-    await assertAgentVisible(ctx, c.agentIds[0]);
-    if (c.status !== "open") throw new ConvexError(`classification already ${c.status}`);
+    const { c, by } = await openForViewer(ctx, classificationId);
     const loseId =
       keepNodeId === c.nodeId ? c.againstNodeId : keepNodeId === c.againstNodeId ? c.nodeId : undefined;
     if (!loseId) throw new ConvexError("keepNodeId is not a side of this classification");
@@ -74,14 +91,6 @@ export const approve = mutation({
     const winner = await decisionValue(ctx, keep);
     const decisionText = `DECIDE ${topic} = ${winner}`;
 
-    await ctx.db.patch(c._id, {
-      status: "resolved",
-      feedback: "confirmed",
-      resolution: `approved ${keep._id}`,
-      outcome: "human_override",
-    });
-    await supersede(ctx, lose, `Superseded: owner chose ${topic} = ${winner}.`);
-    await refreshSavingsFor(ctx, [lose._id]);
     const decisionId = await insertNode(ctx, {
       agentId: keep.agentId,
       kind: "knowledge",
@@ -94,44 +103,85 @@ export const approve = mutation({
       outcome: "succeeded",
       at: now,
     });
-    await ctx.db.insert("events", {
+    await settleCatch(ctx, c, {
+      status: "resolved",
+      resolution: `kept ${winner}`,
+      by,
+      outcome: "human_override",
+      feedback: "confirmed",
       agentId: keep.agentId,
-      eventKey: `resolve:${c._id}`,
-      source: "human",
-      hook: "Resolve",
-      files: keep.files,
       summary: decisionText,
-      payload: { classificationId: c._id, keepNodeId: keep._id, loseNodeId: lose._id },
+      files: keep.files,
       nodeId: decisionId,
-      at: now,
     });
+
+    // Settled first: the savings estimate counts only catches that are closed.
+    await supersede(ctx, lose, `Superseded: ${by} chose ${topic} = ${winner}.`);
+    await refreshSavingsFor(ctx, [lose._id]);
 
     const affected = new Set([...c.agentIds, keep.agentId, lose.agentId]);
     for (const agentId of affected) {
       const losing = agentId === lose.agentId;
       const text = losing
-        ? `Owner resolved ${topic}: ${decisionText}. Your steps on "${lose.text}" are superseded; rebuild on ${winner} before continuing.`
-        : `Owner resolved ${topic}: ${decisionText}. Your approach stands; the other side is switching to it.`;
-      await ctx.db.insert("inbox", {
-        agentId,
-        classificationId: c._id,
-        text,
-        action: losing ? "block" : "warn",
-        state: "queued",
-        attempts: 0,
-        at: now,
-      });
+        ? `decided · ${by} kept ${winner} for ${topic}. Your steps on "${lose.text}" are superseded; rebuild on ${winner} before continuing.`
+        : `decided · ${by} kept your ${winner} for ${topic}. Carry on; the other side is switching to it.`;
+      await notify(ctx, agentId, c._id, text, losing ? "block" : "warn");
     }
     return { decisionNodeId: decisionId };
   },
 });
 
+/** Not a real clash: both sides carry on, and the catch counts as a false positive. */
 export const dismiss = mutation({
   args: { classificationId: v.id("classifications") },
   handler: async (ctx, { classificationId }) => {
-    const c = await ctx.db.get(classificationId);
-    if (!c) throw new ConvexError("classification not found");
-    await assertAgentVisible(ctx, c.agentIds[0]);
-    await ctx.db.patch(c._id, { status: "dismissed", feedback: "false_positive", resolution: "dismissed" });
+    const { c, by } = await openForViewer(ctx, classificationId);
+    const topic = await topicOf(ctx, c);
+    await settleCatch(ctx, c, {
+      status: "dismissed",
+      resolution: "dismissed as compatible",
+      by,
+      feedback: "false_positive",
+      agentId: c.agentIds[0] ?? (await requireNodeAgent(ctx, c)),
+      summary: `dismissed ${c.type} on ${topic}`,
+    });
+    for (const agentId of c.agentIds)
+      await notify(
+        ctx,
+        agentId,
+        c._id,
+        `cleared · ${by} marked the ${c.type} on ${topic} as compatible. Go ahead with your step; you won't be stopped for it again.`,
+      );
   },
 });
+
+/** A real clash, but a person lets it go ahead: an ordering wait lifted, or both versions kept on purpose. */
+export const release = mutation({
+  args: { classificationId: v.id("classifications") },
+  handler: async (ctx, { classificationId }) => {
+    const { c, by } = await openForViewer(ctx, classificationId);
+    const topic = await topicOf(ctx, c);
+    await settleCatch(ctx, c, {
+      status: "resolved",
+      resolution: "let both continue",
+      by,
+      outcome: "human_release",
+      feedback: "confirmed",
+      agentId: c.agentIds[0] ?? (await requireNodeAgent(ctx, c)),
+      summary: `released ${c.type} on ${topic}`,
+    });
+    for (const agentId of c.agentIds)
+      await notify(
+        ctx,
+        agentId,
+        c._id,
+        `released · ${by} let both sides continue on ${topic}. Retry your step; you won't be stopped for it again.`,
+      );
+  },
+});
+
+async function requireNodeAgent(ctx: MutationCtx, c: Doc<"classifications">): Promise<Id<"agents">> {
+  const n = await ctx.db.get(c.nodeId);
+  if (!n) throw new ConvexError("node missing");
+  return n.agentId;
+}

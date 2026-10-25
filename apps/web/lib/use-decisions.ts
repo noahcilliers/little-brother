@@ -4,10 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import type { BoardDecision } from "./api";
 
 /** What the modal shows for a moment after a decision: who the update goes to. */
-export type Decided = { decision: BoardDecision; loserHandle?: string; dismissed: boolean; at: number };
+export type Decided = {
+  decision: BoardDecision;
+  loserHandle?: string;
+  choice: "kept" | "dismissed" | "released";
+  at: number;
+};
 
 /**
- * The queue of conflicts waiting on a person. A new one opens the modal at once; closing it leaves the queue (the
+ * The queue of catches waiting on a person. A new one opens the modal at once; closing it leaves the queue (the
  * top bar pill reopens it). After a decision the modal shows where the update went, then moves on.
  */
 export function useDecisions(decisions: BoardDecision[] | undefined) {

@@ -84,6 +84,12 @@ export function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: Deta
                     {chipText(c)}
                   </b>
                   <small className="why">{c.text}</small>
+                  {c.resolvedBy ? (
+                    <small className="why">
+                      {c.status === "dismissed" ? "Dismissed" : "Resolved"}: {c.resolution} · by{" "}
+                      {c.resolvedBy}
+                    </small>
+                  ) : null}
                 </span>
               </li>
             );
@@ -93,7 +99,7 @@ export function TaskDetail({ board, k, t, start, colorOf, onOpenDecision }: Deta
       {decision ? (
         <button type="button" className="open-decision" onClick={() => onOpenDecision(decision.id)}>
           <InlineIcon name="bolt" color="var(--hot)" size={13} />
-          Open decision on {decision.topic}
+          Decide on {decision.topic}
         </button>
       ) : null}
     </>

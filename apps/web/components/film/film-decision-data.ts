@@ -31,6 +31,7 @@ const SESSION_DIFF = [
 
 export const DECISION: BoardDecision = {
   id: "d1",
+  kind: "conflict",
   classificationId: cid("k3"),
   topic: "auth.mechanism",
   owner: "noah",

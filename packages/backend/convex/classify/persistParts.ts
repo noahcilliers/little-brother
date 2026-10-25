@@ -33,3 +33,10 @@ export async function openCatch(ctx: QueryCtx, key: string): Promise<Doc<"classi
     .take(20);
   return rows.find((r) => r.status === "open" && r.type !== "normal");
 }
+
+/** Duplicate work and repeated failures say more than "order" or "same file" about one clash. */
+export function sharperType(existing: { type: string; relation: string }, type: string): boolean {
+  const vague =
+    existing.type === "conflict" && ["ordering_dependency", "textual_conflict"].includes(existing.relation);
+  return vague && (type === "duplicate" || type === "stale");
+}

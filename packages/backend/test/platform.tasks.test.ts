@@ -258,7 +258,7 @@ describe("evidenced endings", () => {
 
     const session = await bySubject(t, "j1", "Session handling");
     expect(session?.status).toBe("superseded");
-    expect(session?.note).toBe("Superseded: owner chose auth.mechanism = JWT tokens.");
+    expect(session?.note).toBe("Superseded: the dashboard chose auth.mechanism = JWT tokens.");
     expect((await bySubject(t, "n1", "Issue JWT tokens"))?.status).toBe("in_progress");
   });
 

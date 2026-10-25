@@ -1,4 +1,4 @@
-import { blockStop, renderDigest } from "@lb/core";
+import { blockStop, DASHBOARD_DECIDES, renderDigest } from "@lb/core";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
@@ -49,7 +49,7 @@ export const onStop: HookHandler = async ({ ctx, agent, env }) => {
       await ctx.db.patch(item._id, { attempts: item.attempts + 1, state: "delivered" });
     }
     const digest = renderDigest(urgent.map((i) => ({ id: i._id, text: i.text })));
-    const reason = `${digest}\nThe owner hasn't decided this yet. Avoid the contested change: finish other parts, or stop and tell the user what is waiting on the decision.`;
+    const reason = `${digest}\n${DASHBOARD_DECIDES} Avoid the contested change until then, or stop.`;
     return {
       output: blockStop(reason),
       summary: `stop blocked by ${urgent.length} item(s)`,

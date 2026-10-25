@@ -14,8 +14,9 @@ import {
 } from "@lb/core";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { settledCatch } from "../settle";
 import { stored } from "./load";
-import { avoidedTokens, counterpartOf, openCatch } from "./persistParts";
+import { avoidedTokens, counterpartOf, openCatch, sharperType } from "./persistParts";
 
 type Notified = "warn" | "serialize" | "block";
 
@@ -87,6 +88,11 @@ export async function persistJudgments(
     const key = catchKey(next, other);
     const them0 = await counterpartOf(ctx, other);
     const existing = j.action === "ignore" ? undefined : await openCatch(ctx, key);
+    const settled = j.action === "ignore" || existing ? undefined : await settledCatch(ctx, key);
+    if (settled) {
+      rows.set(j.otherNodeId, settled._id);
+      continue;
+    }
     if (existing) {
       rows.set(j.otherNodeId, existing._id);
       // Same catch, no more severe: the agents already know. Only a rise in severity is news. A clash first
@@ -182,13 +188,6 @@ export async function persistJudgments(
     }
   }
   return rows;
-}
-
-/** Duplicate work and repeated failures say more than "order" or "same file" about one clash. */
-function sharperType(existing: { type: string; relation: string }, type: string): boolean {
-  const vague =
-    existing.type === "conflict" && ["ordering_dependency", "textual_conflict"].includes(existing.relation);
-  return vague && (type === "duplicate" || type === "stale");
 }
 
 export const SYNC_SELF: ReadonlySet<Action> = new Set<Action>(["warn"]);

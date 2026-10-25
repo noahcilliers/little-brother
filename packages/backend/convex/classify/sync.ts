@@ -32,6 +32,8 @@ export async function runSyncChecks(ctx: MutationCtx, nodeId: Id<"nodes">): Prom
   for (const j of judgments) {
     const id = rows.get(j.otherNodeId);
     const row = id ? await ctx.db.get(id) : null;
+    // Settled on the dashboard, by the owner, or by a landed push: that decision stands for later steps too.
+    if (row && row.status !== "open") continue;
     const action =
       row && row.nodeId === nodeId
         ? row.action

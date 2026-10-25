@@ -3,6 +3,7 @@ export * from "./ask";
 export * from "./classify/index";
 export * from "./code/index";
 export * from "./command-outcome";
+export * from "./dashboard-note";
 export * from "./hook-timing";
 export * from "./hooks";
 export * from "./inbox";

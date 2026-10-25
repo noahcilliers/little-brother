@@ -18,6 +18,8 @@ export type DecisionSide = {
 };
 export type BoardDecision = {
   id: string;
+  /** What kind of wait: a conflict or a duplicate can keep one side; a stale path or an ordering wait can only be let through. */
+  kind: "conflict" | "duplicate" | "stale" | "ordering";
   classificationId: Id<"classifications">;
   topic: string;
   owner?: string;
@@ -32,8 +34,9 @@ export type BoardDecision = {
 const DECISION_LIMIT = 10;
 
 /**
- * Conflicts a person has to settle: open, enforcing (block or serialize), and with no claim already given to one
- * side by the priority policy (that is a takeover, which needs nobody).
+ * Catches a person has to settle: open, enforcing (block or serialize), and with no claim already given to one
+ * side by the priority policy (that is a takeover, which needs nobody). Settling them here, not in a terminal,
+ * keeps one place where the team sees and makes the call.
  */
 export function buildDecisions(
   src: Source,
@@ -63,12 +66,11 @@ export function buildDecisions(
   const out: BoardDecision[] = [];
   for (const c of src.verdicts) {
     const needed =
-      c.type === "conflict" &&
+      c.type !== "normal" &&
       c.status === "open" &&
       (c.action === "block" || c.action === "serialize") &&
-      !c.winnerAgentId &&
-      c.relation !== "ordering_dependency";
-    if (!needed || !c.againstNodeId) continue;
+      !c.winnerAgentId;
+    if (!needed || !c.againstNodeId || c.type === "normal") continue;
     const a = side(c.againstNodeId);
     const b = side(c.nodeId);
     if (!a || !b) continue;
@@ -76,6 +78,7 @@ export function buildDecisions(
       src.nodeById.get(c.nodeId)?.topic ?? src.nodeById.get(c.againstNodeId)?.topic ?? "this change";
     out.push({
       id: c._id,
+      kind: c.relation === "ordering_dependency" ? "ordering" : c.type,
       classificationId: c._id,
       topic,
       owner: src.topicOwners.get(topic),

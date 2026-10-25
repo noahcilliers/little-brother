@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { supersede } from "./resolve";
 import { refreshSavingsFor } from "./savings";
+import { settleCatch } from "./settle";
 
 async function ownsTopic(ctx: MutationCtx, agent: Doc<"agents">, topic: string): Promise<boolean> {
   const row = await ctx.db
@@ -39,11 +40,16 @@ export async function resolveByDecision(
     if (!a || !b || (a.topic !== topic && b.topic !== topic)) continue;
     const lose = a.agentId === agent._id ? b : b.agentId === agent._id ? a : null;
     if (!lose) continue;
-    await ctx.db.patch(c._id, {
+    await settleCatch(ctx, c, {
       status: "resolved",
-      feedback: "confirmed",
-      resolution: `decided: ${topic} = ${value} by @${handle} (${decisionId})`,
+      resolution: `decided ${topic} = ${value}`,
+      by: `@${handle} (owner)`,
       outcome: "owner_decision",
+      feedback: "confirmed",
+      agentId: agent._id,
+      summary: `DECIDE ${topic} = ${value}`,
+      nodeId: decisionId,
+      source: "mcp",
     });
     await supersede(ctx, lose, `Superseded: @${handle} (owner) set ${topic} = ${value}.`);
     await refreshSavingsFor(ctx, [lose._id]);

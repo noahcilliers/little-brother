@@ -1,6 +1,7 @@
 import type { GitOp } from "@lb/core";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import { settleCatch } from "./settle";
 
 type Landed = NonNullable<Doc<"nodes">["landed"]>;
 
@@ -109,9 +110,14 @@ async function release(
   let released = 0;
   for (const c of await heldBy(ctx, agent._id, [...byId.keys()] as Id<"nodes">[])) {
     const held = byId.get(c.againstNodeId ?? "") ?? byId.get(c.nodeId);
-    await ctx.db.patch(c._id, {
+    await settleCatch(ctx, c, {
       status: "resolved",
       resolution: `landed: ${git.op} ${(git.sha ?? "").slice(0, 7)}`.trim(),
+      by: `${handle}'s ${git.op}`,
+      agentId: agent._id,
+      summary: `released by ${git.op}`,
+      files: held?.files ?? [],
+      source: "hook",
     });
     released += 1;
     const text = releaseText(handle, git, level, held?.files ?? [], branch);
