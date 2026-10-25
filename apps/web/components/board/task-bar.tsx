@@ -18,11 +18,14 @@ type Props = {
   selected: boolean;
   dim: boolean;
   onSelect: (id: string) => void;
+  /** Hovering a bar brings up its settled catch links. */
+  onHover?: (id: string | null) => void;
   /** Left edge of the visible part of the graph: a bar that starts before it keeps its label in view. */
   viewLeft?: number;
 };
 
 const GREY_FILL = "color-mix(in srgb, var(--faint) 18%, transparent)";
+const MIN_BELOW = 7;
 
 /** One task: a bar over its real duration, action ticks, an end cap for its state, and badges for its catches. */
 export function TaskBar({
@@ -36,6 +39,7 @@ export function TaskBar({
   selected,
   dim,
   onSelect,
+  onHover,
   viewLeft = 0,
 }: Props) {
   const y = barTop(k, layout);
@@ -54,9 +58,13 @@ export function TaskBar({
   // way the label starts at the bar's visible left edge, so a bar scrolled half out of view still reads.
   const inside = Math.floor((w - 26) / CHAR_W.bar) >= k.subject.length;
   const labelX = stickyX(x0, viewLeft, inside ? 8 : 2);
+  const below = fitText(k.subject, nextX - labelX - 6, CHAR_W.below);
+  // A stub like "ed…" under a row of short steps is noise; the bar's tooltip and popup carry the subject.
   const text = inside
     ? fitText(k.subject, x0 + w - labelX - 18, CHAR_W.bar)
-    : fitText(k.subject, nextX - labelX - 6, CHAR_W.below);
+    : below.length >= Math.min(k.subject.length, MIN_BELOW)
+      ? below
+      : "";
   const strike = superseded ? "line-through" : undefined;
   const mine = catchesOf(catches, k.id, t);
   const outline = catchOutline(mine);
@@ -75,6 +83,8 @@ export function TaskBar({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onSelect(k.id);
       }}
+      onMouseEnter={() => onHover?.(k.id)}
+      onMouseLeave={() => onHover?.(null)}
     >
       {outline ? (
         <rect
@@ -141,7 +151,7 @@ export function TaskBar({
       )}
       <ActionTicks actions={k.actions} layout={layout} t={t} y={y + BAR_H} color={color} grey={grey} />
       <EndCap k={k} state={state} x1={x1} y={y} color={color} />
-      <TokenCount k={k} state={state} x1={x1} y={y} room={nextX - x1} />
+      <TokenCount k={k} state={state} x1={x1} y={y} room={nextX - x1} onHoverOnly={!inside} />
       {selected ? (
         <rect
           className="sel-ring"

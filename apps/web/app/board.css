@@ -138,6 +138,15 @@
   filter: brightness(1.05);
   stroke-width: 2.2;
 }
+.task .hover-only {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.task:hover .hover-only,
+.task:focus-visible .hover-only,
+.task:has(.sel-ring) .hover-only {
+  opacity: 1;
+}
 .side {
   display: grid;
   gap: 12px;

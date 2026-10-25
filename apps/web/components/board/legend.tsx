@@ -16,13 +16,7 @@ function Svg({ children }: { children: ReactNode }) {
 const icon = (name: IconName, color: string) => <InlineIcon name={name} color={color} size={14} />;
 const edge = (kind: keyof typeof CATCH_STYLE) => (
   <Svg>
-    <path
-      d="M2 10 Q14 0 26 10"
-      fill="none"
-      stroke={CATCH_STYLE[kind].color}
-      strokeWidth={2}
-      strokeDasharray={CATCH_STYLE[kind].dash}
-    />
+    <path d="M2 10 Q14 0 26 10" fill="none" stroke={CATCH_STYLE[kind].color} strokeWidth={2} />
   </Svg>
 );
 

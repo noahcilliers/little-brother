@@ -1,15 +1,17 @@
-import type { BoardShared, VerifyBadge } from "@/lib/api";
-import { anchor, bandLabel, type Lookup } from "@/lib/board-time";
-import { CHAR_W, fitText } from "@/lib/label-fit";
+import type { BoardShared } from "@/lib/api";
+import { anchor, type Lookup } from "@/lib/board-time";
 
 type Props = {
   shared: BoardShared[];
   lookup: Lookup;
   t: number;
   colorOf: (agentId: string) => string;
+  /** Inline text per marker, already cut so neighbours never overlap; empty leaves the marker alone. */
+  labels: Map<string, string>;
+  /** The marker whose full text is showing; it keeps its link to the task it came from lit. */
+  active: string | null;
   onSelect: (id: string) => void;
-  /** Left edge of the visible graph: a label flipped left of its marker is cut there rather than hidden. */
-  viewLeft?: number;
+  onHover: (id: string | null) => void;
 };
 
 function hexagon(x: number, y: number): string {
@@ -21,8 +23,11 @@ function hexagon(x: number, y: number): string {
     .join(" ");
 }
 
-/** Lessons (hexagons) and decisions (diamonds) in their bands, each tied back to the task it came from. */
-export function GraphShared({ shared, lookup, t, colorOf, onSelect, viewLeft = 0 }: Props) {
+/**
+ * Lessons (hexagons) and decisions (diamonds) in their bands, each tied back to the task it came from. A label
+ * only shows where it fits before the next marker; hovering or selecting a marker floats its full text.
+ */
+export function GraphShared({ shared, lookup, t, colorOf, labels, active, onSelect, onHover }: Props) {
   return (
     <g>
       {shared.map((n) => {
@@ -30,24 +35,21 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect, viewLeft = 0
         const at = anchor(n.id, n.t, lookup);
         if (!at) return null;
         const { x, y } = at;
-        const placed = bandLabel(x, n.label, lookup.layout.width);
-        const label =
-          placed.anchor === "end" && placed.left < viewLeft + 4
-            ? { ...placed, text: fitText(placed.text, x - 15 - viewLeft - 4, CHAR_W.band) }
-            : placed;
+        const text = labels.get(n.id) ?? "";
         const from = n.fromTask ? anchor(n.fromTask, n.t, lookup) : undefined;
         const midY = from ? (from.y + y) / 2 : y;
         const select = (e: { stopPropagation: () => void }) => {
           e.stopPropagation();
           onSelect(n.id);
         };
+        const lesson = n.kind === "lesson";
         return (
           <g key={n.id}>
             {from ? (
               <path
                 d={`M${from.x} ${from.y} C${from.x} ${midY}, ${x} ${midY}, ${x} ${y}`}
                 fill="none"
-                stroke="var(--faint)"
+                stroke={active === n.id ? "var(--muted)" : "var(--faint)"}
                 strokeWidth={1.2}
               />
             ) : null}
@@ -56,10 +58,17 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect, viewLeft = 0
               className="task"
               role="button"
               tabIndex={0}
+              aria-label={`${n.kind}: ${n.label}`}
               onClick={select}
               onKeyDown={(e) => (e.key === "Enter" ? select(e) : undefined)}
+              onMouseEnter={() => onHover(n.id)}
+              onMouseLeave={() => onHover(null)}
+              onFocus={() => onHover(n.id)}
+              onBlur={() => onHover(null)}
             >
-              {n.kind === "lesson" ? (
+              {/* A wider hit area than the 18 px marker, so the card is easy to bring up. */}
+              <circle cx={x} cy={y} r={13} fill="transparent" />
+              {lesson ? (
                 <>
                   <polygon points={hexagon(x, y)} fill="var(--panel)" stroke="var(--ink)" strokeWidth={1.5} />
                   <path
@@ -67,84 +76,26 @@ export function GraphShared({ shared, lookup, t, colorOf, onSelect, viewLeft = 0
                     stroke="var(--ink)"
                     strokeWidth={1.3}
                   />
-                  <text
-                    x={label.x}
-                    y={y + 4}
-                    textAnchor={label.anchor}
-                    fontFamily="var(--mono)"
-                    fontSize={10.5}
-                    fill="var(--muted)"
-                  >
-                    {label.text}
-                  </text>
                 </>
               ) : (
-                <>
-                  <path
-                    d={`M${x} ${y - 10} L${x + 10} ${y} L${x} ${y + 10} L${x - 10} ${y} Z`}
-                    fill={colorOf(n.agentId)}
-                  />
-                  <text
-                    x={label.x}
-                    y={y + 4}
-                    textAnchor={label.anchor}
-                    fontFamily="var(--mono)"
-                    fontSize={11}
-                    fontWeight={500}
-                    fill="var(--ink)"
-                  >
-                    {label.text}
-                  </text>
-                </>
+                <path
+                  d={`M${x} ${y - 10} L${x + 10} ${y} L${x} ${y + 10} L${x - 10} ${y} Z`}
+                  fill={colorOf(n.agentId)}
+                />
               )}
-              <title>{n.label === label.text ? n.note : `${n.label}\n${n.note}`}</title>
+              {text ? (
+                <text
+                  x={x + 15}
+                  y={y + 4}
+                  fontFamily="var(--mono)"
+                  fontSize={lesson ? 10.5 : 11}
+                  fontWeight={lesson ? 400 : 500}
+                  fill={lesson ? "var(--muted)" : "var(--ink)"}
+                >
+                  {text}
+                </text>
+              ) : null}
             </g>
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-/** `lb verify` results: a pill in the lessons band once the branches were merged and tested. */
-export function VerifyBadges({
-  verifies,
-  lookup,
-  t,
-}: {
-  verifies: VerifyBadge[];
-  lookup: Lookup;
-  t: number;
-}) {
-  const y = lookup.layout.height - 22 - 34;
-  return (
-    <g>
-      {verifies.map((v) => {
-        if (t < v.t) return null;
-        const width = 44 + v.text.length * 6.6;
-        const x = Math.max(4, Math.min(lookup.layout.xAt(v.t) - 28, lookup.layout.width - width - 6));
-        return (
-          <g key={v.id}>
-            <rect x={x} y={y} width={width} height={30} rx={15} fill="var(--panel)" stroke="var(--line)" />
-            {v.ok ? (
-              <path
-                d={`M${x + 16} ${y + 15} l4 4 l8 -9`}
-                fill="none"
-                stroke="var(--ink)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            ) : (
-              <path
-                d={`M${x + 16} ${y + 10} l9 9 M${x + 25} ${y + 10} l-9 9`}
-                stroke="var(--hot)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-            )}
-            <text x={x + 34} y={y + 19} fontFamily="var(--mono)" fontSize={11} fill="var(--ink)">
-              {v.text}
-            </text>
           </g>
         );
       })}

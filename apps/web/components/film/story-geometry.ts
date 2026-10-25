@@ -1,5 +1,5 @@
 import { LABEL_W } from "@/components/board/row-labels";
-import { anchor, bandOffsets, type Lookup } from "@/lib/board-time";
+import { anchor, type Lookup } from "@/lib/board-time";
 import { FULL_BOARD } from "./film-board";
 import { at } from "./film-clock";
 import { BOARD_AT, BOARD_SCALE, DASH, FULL_LAYOUT } from "./story-dashboard";
@@ -25,7 +25,6 @@ const lookup: Lookup = {
   goals: new Map(FULL_BOARD.goals.map((g) => [g.id, g])),
   shared: new Map(FULL_BOARD.shared.map((x) => [x.id, x])),
   layout: FULL_LAYOUT,
-  bandDy: bandOffsets(FULL_BOARD.shared, FULL_LAYOUT),
 };
 
 /** A task bar or lesson on the dashboard at story second s, in stage pixels. */

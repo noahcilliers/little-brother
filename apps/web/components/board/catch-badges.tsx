@@ -10,34 +10,48 @@ export function catchesOf(catches: BoardCatch[], id: string, t: number) {
     .map((c) => ({ c, open: isOpen(c, t) }));
 }
 
-type Props = { items: { c: BoardCatch; open: boolean }[]; x: number; y: number; highlight: CatchKind | null };
+type Item = { c: BoardCatch; open: boolean };
+type Props = { items: Item[]; x: number; y: number; highlight: CatchKind | null };
 
-/** Chips on a bar's top-right corner, one per catch; open ones pulse once a second. */
+const describe = ({ c, open }: Item) => `${chipText(c)}${open ? "" : " (settled)"}`;
+
+/**
+ * One badge on a bar's top-right corner: the catch's icon when there is one, a count when there are several
+ * (a row of overlapping circles on a short bar read as noise). The tooltip and the task popup list them all.
+ */
 export function CatchBadges({ items, x, y, highlight }: Props) {
+  const first = items[0];
+  if (!first) return null;
+  // The badge takes the colour of what most needs attention: an open catch, then a highlighted kind.
+  const lead = items.find((i) => i.open) ?? items.find((i) => i.c.kind === highlight) ?? first;
+  const lit = lead.open || highlight === lead.c.kind;
+  const color = lit ? CATCH_STYLE[lead.c.kind].color : "var(--faint)";
+  const many = items.length > 1;
+  const r = many && items.length > 9 ? 10 : 8.5;
   return (
-    <g>
-      {items.map(({ c, open }, i) => {
-        const style = CATCH_STYLE[c.kind];
-        const lit = open || highlight === c.kind;
-        const color = lit ? style.color : "var(--faint)";
-        return (
-          <g
-            key={c.id}
-            className={open ? "badge pulse" : "badge"}
-            transform={`translate(${x - i * 19} ${y})`}
-          >
-            <circle r={8.5} fill="var(--panel)" stroke={color} strokeWidth={1.4} />
-            <Icon name={CATCH_ICON[c.kind]} x={0} y={0} size={11} color={color} />
-            <title>{`${chipText(c)}${open ? "" : " (settled)"}`}</title>
-          </g>
-        );
-      })}
+    <g className={lead.open ? "badge pulse" : "badge"} transform={`translate(${x} ${y})`}>
+      <circle r={r} fill="var(--panel)" stroke={color} strokeWidth={1.4} />
+      {many ? (
+        <text
+          y={3.5}
+          textAnchor="middle"
+          fontFamily="var(--mono)"
+          fontSize={10}
+          fontWeight={600}
+          fill={lit ? color : "var(--muted)"}
+        >
+          {items.length}
+        </text>
+      ) : (
+        <Icon name={CATCH_ICON[lead.c.kind]} x={0} y={0} size={11} color={color} />
+      )}
+      <title>{items.map(describe).join("\n")}</title>
     </g>
   );
 }
 
 /** A matching outline around a bar while one of its catches is open. */
-export function catchOutline(items: { c: BoardCatch; open: boolean }[]): string | undefined {
+export function catchOutline(items: Item[]): string | undefined {
   const open = items.find((x) => x.open);
   return open ? CATCH_STYLE[open.c.kind].color : undefined;
 }
