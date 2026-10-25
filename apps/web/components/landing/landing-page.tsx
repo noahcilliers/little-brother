@@ -5,6 +5,7 @@ import { Features } from "./features";
 import { Hero } from "./hero";
 import { HowStrip } from "./how-strip";
 import { LandingNav } from "./landing-nav";
+import { Results } from "./results";
 import { Stack } from "./stack";
 import { Why } from "./why";
 
@@ -15,6 +16,7 @@ export function LandingPage({ origin, signedIn }: { origin: string; signedIn: bo
       <main className="wrap" id="top">
         <Hero origin={origin} />
         <Film />
+        <Results />
         <Features />
         <HowStrip />
         <Why />
@@ -22,7 +24,9 @@ export function LandingPage({ origin, signedIn }: { origin: string; signedIn: bo
         <Connect origin={origin} />
         <footer>
           <span>little brother · Cal Hacks 13.0 · Ash, Noah, Joshua</span>
-          <span>Claude Code hooks · MCP · Convex · Gemini · Claude</span>
+          <span>
+            <a href="/report">Technical report</a> · Claude Code hooks · MCP · Convex · Gemini · Claude
+          </span>
         </footer>
       </main>
     </div>

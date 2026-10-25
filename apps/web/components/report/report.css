@@ -1,0 +1,196 @@
+/* /report: a long-form page in the landing's type and tokens. */
+.lp .rp {
+  max-width: 860px;
+}
+.lp .rp-head {
+  display: grid;
+  gap: 14px;
+  padding: 56px 0 28px;
+}
+.lp .rp-head h1 {
+  font-size: clamp(28px, 4.4vw, 44px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.lp .rp-head p {
+  color: var(--muted);
+}
+.lp .rp-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 14px 0;
+  border-block: 1px solid var(--line);
+  font: 400 13px var(--mono);
+}
+.lp .rp-toc a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.lp .rp-toc a:hover {
+  color: var(--fg);
+}
+.lp .rp section.rp-sec {
+  margin-top: 64px;
+  display: grid;
+  gap: 16px;
+}
+.lp .rp-sec h2 a {
+  color: inherit;
+  text-decoration: none;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.lp .rp-n {
+  font: 500 0.7em var(--mono);
+  color: var(--faint);
+}
+.lp .rp-sec h3 {
+  margin-top: 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.lp .rp-sample {
+  margin-left: 8px;
+  font: 400 12px var(--mono);
+  color: var(--faint);
+}
+.lp .rp-sec p,
+.lp .rp-list {
+  color: var(--muted);
+}
+.lp .rp-sec b {
+  color: var(--fg);
+  font-weight: 600;
+}
+.lp .rp-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+.lp .rp-src {
+  font: 400 12px var(--mono);
+  color: var(--faint);
+  overflow-wrap: anywhere;
+}
+.lp .rp-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.lp .rp-stats > div {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  background: var(--bg);
+}
+.lp .rp-stats b {
+  font: 500 30px var(--mono);
+  letter-spacing: -0.05em;
+}
+.lp .rp-stats span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.lp .rp-stats small {
+  font: 400 11px var(--mono);
+  color: var(--faint);
+}
+.lp .rp-flow {
+  counter-reset: step;
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.lp .rp-flow li {
+  counter-increment: step;
+  padding: 10px 14px;
+  background: var(--bg);
+  font-size: 14px;
+}
+.lp .rp-flow li::before {
+  content: counter(step) "  →  ";
+  font: 500 12px var(--mono);
+  color: var(--accent);
+}
+.lp .rp-table {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+.lp .rp-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.lp .rp-table th,
+.lp .rp-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.lp .rp-table th {
+  font: 500 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.lp .rp-table td + td {
+  font-family: var(--mono);
+}
+.lp .rp-suite {
+  display: grid;
+  gap: 10px;
+  scroll-margin-top: 72px;
+}
+.lp .rp-curve {
+  width: 100%;
+  height: auto;
+  font: 400 11px var(--mono);
+  fill: var(--muted);
+}
+.lp .rp-curve .grid {
+  stroke: var(--line);
+}
+.lp .rp-curve .line {
+  fill: none;
+  stroke-width: 2.5;
+}
+.lp .rp-curve .s1 {
+  --series: var(--accent);
+}
+.lp .rp-curve .s2 {
+  --series: var(--fg);
+}
+.lp .rp-curve .s3 {
+  --series: var(--line-2);
+}
+.lp .rp-curve g > .line {
+  stroke: var(--series);
+}
+.lp .rp-curve .s2 > .line {
+  stroke-dasharray: 5 4;
+}
+.lp .rp-curve g > circle {
+  fill: var(--series);
+}
+.lp .rp-curve .end {
+  fill: var(--fg);
+}
+.lp .rp footer a {
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .lp .rp-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

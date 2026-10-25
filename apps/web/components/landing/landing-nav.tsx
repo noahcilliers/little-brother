@@ -13,11 +13,13 @@ export function LandingNav({ signedIn, links = true }: Props) {
         {links ? (
           <div className="links">
             <a href="/#demo">demo</a>
+            <a href="/#results">results</a>
             <a href="/#features">features</a>
             <a href="/#how">how it works</a>
             <a href="/#why">why</a>
             <a href="/#stack">stack</a>
             <a href="/#connect">connect</a>
+            <a href="/report">report</a>
           </div>
         ) : (
           <span className="nav-spacer" />

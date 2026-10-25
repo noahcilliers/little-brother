@@ -50,6 +50,7 @@ async function normalizeFor(input: HookInput, root: string): Promise<Normalized 
     repoRoot: root,
     phase: n === "PreToolUse" ? "pre" : "post",
     toolResponse: "tool_response" in input ? input.tool_response : undefined,
+    snapshotKey: "tool_use_id" in input ? input.tool_use_id : undefined,
   });
 }
 

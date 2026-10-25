@@ -21,3 +21,14 @@ export function judgeWorthy(pair: Pick<CandidatePair, "reasons">, minSimilarity 
   const sims = pair.reasons.map((r) => Number(/\(([\d.]+)\)/.exec(r)?.[1] ?? 0));
   return Math.max(0, ...sims) >= minSimilarity;
 }
+
+/**
+ * The similarity a pair needs before it is worth a judge call when nothing structural links it. Failure memory
+ * is cheap to confirm; two plans are judged once per prompt and contradict each other on business rules
+ * ("sale prices are final" vs "the promo applies to every item") at only moderate wording similarity.
+ */
+export function judgeThreshold(pair: Pick<CandidatePair, "failedMemory" | "next" | "other">): number {
+  if (pair.failedMemory) return 0.5;
+  if (pair.next.kind === "intent" && pair.other.kind === "intent") return 0.55;
+  return 0.8;
+}

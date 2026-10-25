@@ -1,0 +1,129 @@
+/* The self-improving loop: one idea per frame, big type, one number or chart. */
+.lp .lb {
+  position: absolute;
+  inset: 0;
+}
+.lp .lb-title {
+  margin: 0;
+  font: 600 64px / 1.1 var(--sans);
+  letter-spacing: -0.045em;
+  text-align: center;
+}
+.lp .lb-note {
+  margin: 0;
+  max-width: 1000px;
+  font: 400 22px / 1.4 var(--sans);
+  color: var(--muted);
+  text-align: center;
+}
+.lp .lb-tree {
+  width: 900px;
+  height: 560px;
+}
+.lp .lb-tree .lt {
+  width: 100%;
+  height: 100%;
+}
+.lp .lb-big {
+  font: 800 230px / 0.9 var(--sans);
+  letter-spacing: -0.065em;
+  color: var(--film-accent);
+  font-variant-numeric: tabular-nums;
+}
+.lp .lb-chart {
+  width: 1000px;
+  height: 380px;
+}
+.lp .lb-grid {
+  stroke: var(--line);
+}
+.lp .lb-tick {
+  font: 400 16px var(--mono);
+  fill: var(--muted);
+}
+.lp .lb-line {
+  fill: none;
+  stroke: var(--film-accent);
+  stroke-width: 5;
+  stroke-dasharray: 1;
+}
+.lp .lb-line.dashed {
+  stroke: var(--muted);
+  stroke-width: 3;
+  opacity: 0.6;
+}
+.lp .lb-dot {
+  fill: var(--film-accent);
+}
+.lp .lb-end {
+  font: 600 20px var(--sans);
+  fill: var(--ink);
+}
+.lp .lb-end.muted {
+  fill: var(--muted);
+}
+.lp .lb-vs {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  font: 800 150px / 1 var(--sans);
+  letter-spacing: -0.06em;
+}
+.lp .lb-vs span {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.lp .lb-vs span.accent {
+  color: var(--film-accent);
+}
+.lp .lb-vs small {
+  font: 500 20px var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.lp .lb-vs i {
+  font-style: normal;
+  font-size: 80px;
+  color: var(--faint);
+}
+.lp .lb-loop {
+  display: flex;
+  gap: 18px;
+  font: 700 56px var(--sans);
+  letter-spacing: -0.035em;
+}
+.lp .lb-loop i {
+  margin-left: 18px;
+  font-style: normal;
+  color: var(--film-accent);
+}
+.lp .lb-loop i.back {
+  font-size: 0.9em;
+}
+
+/* impact: the measured off-vs-on change */
+.lp .im-stats {
+  display: flex;
+  gap: 60px;
+  margin-top: 34px;
+}
+.lp .im-stats span {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font: 400 20px var(--sans);
+  color: var(--muted);
+}
+.lp .im-stats b {
+  font: 800 96px / 1 var(--sans);
+  letter-spacing: -0.05em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.lp .im-sample {
+  margin-top: 12px;
+  font: 400 15px var(--mono);
+  color: var(--faint);
+}

@@ -71,12 +71,28 @@ export const onPostToolUse: HookHandler = async ({ ctx, hook, agent, env }) => {
     const label = existing.label ?? labelFor(verb);
     const taskId =
       existing.taskId ?? (await taskForAction(ctx, agent, { verb, topic: existing.topic, label, at: now }));
+    // A Bash command's real writes are only known afterwards (the connector diffs the working tree), so the
+    // node takes them now; the classify below then sees what the command actually changed.
+    const wrote = tool === "Bash" && env.touches.length > 0;
+    const learned = wrote
+      ? {
+          files: [...new Set([...existing.files, ...env.files])],
+          // What PreToolUse already knew (create vs write, symbols) beats a post-run bare write of the same file.
+          touches: [
+            ...existing.touches,
+            ...env.touches.filter((t) => !existing.touches.some((e) => e.path === t.path)),
+          ],
+          references: [...new Set([...existing.references, ...env.references])],
+          ...(env.preview ? { preview: env.preview.slice(0, 1500) } : {}),
+        }
+      : {};
     await ctx.db.patch(nodeId, {
-      verb,
+      verb: wrote && verb === "RUN" ? "EDIT" : verb,
       outcome,
       text: signatureLine({ verb, topic: existing.topic, target, outcome }),
       label,
       taskId,
+      ...learned,
     });
   } else {
     const topic = await topicFor(ctx, agent.repo, env.files);

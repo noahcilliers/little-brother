@@ -37,6 +37,8 @@ export default defineSchema({
     teamId: v.optional(v.id("teams")),
     sessionId: v.optional(v.id("sessions")),
     machine: v.string(),
+    // Working folder, to notice two Claude sessions sharing one checkout on one machine.
+    cwd: v.optional(v.string()),
     repo: v.string(),
     branch: v.string(),
     status: v.union(v.literal("active"), v.literal("idle"), v.literal("offline")),

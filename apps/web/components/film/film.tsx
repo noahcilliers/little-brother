@@ -12,6 +12,7 @@ import "./film-why.css";
 import "./film-measure.css";
 import "./film-close.css";
 import "./film-callouts.css";
+import "./film-learn.css";
 import { type ReactNode, useRef } from "react";
 import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";

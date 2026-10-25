@@ -23,6 +23,9 @@ export const onUserPromptSubmit: HookHandler = async ({ ctx, agent, env }) => {
     kind: "intent",
     verb: "PLAN",
     text: signatureLine({ verb: "PLAN", topic, target: oneLine(prompt) }),
+    // The signature clips the prompt; the judge needs the whole request, where business rules usually sit
+    // ("sale prices are final") past the first sentence.
+    preview: prompt.slice(0, 1500),
     topic,
     files: env.files,
     touches: env.touches,

@@ -1,0 +1,154 @@
+/* Results: measured headline cards, the off-vs-on chart, and the compact "Measured" strip. */
+.lp .rs-cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.lp .rs-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 22px 18px 18px;
+  background: var(--bg);
+  min-width: 0;
+}
+.lp .rs-card b {
+  font: 500 34px / 1.05 var(--mono);
+  letter-spacing: -0.05em;
+}
+.lp .rs-card span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.lp .rs-card small,
+.lp .ms-strip small {
+  font: 400 11px var(--mono);
+  color: var(--faint);
+}
+.lp .rs-chart {
+  margin: 28px 0 0;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 14px;
+}
+.lp .rs-chart figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--muted);
+}
+.lp .rs-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 12px var(--mono);
+}
+.lp .rs-key i {
+  width: 10px;
+  height: 10px;
+  margin-left: 8px;
+}
+.lp .rs-key .off,
+.lp .rs-bar.off {
+  background: var(--line-2);
+}
+.lp .rs-key .on,
+.lp .rs-bar.on {
+  background: var(--accent);
+}
+.lp .rs-row {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+.lp .rs-name {
+  display: grid;
+  font-size: 14px;
+}
+.lp .rs-name small {
+  font: 400 11px var(--mono);
+  color: var(--faint);
+}
+.lp .rs-bars {
+  display: grid;
+  gap: 4px;
+  padding-right: 48px;
+}
+.lp .rs-bar {
+  position: relative;
+  height: 16px;
+  transform-origin: 0 50%;
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lp [data-play="off"] .rs-bar {
+  transform: scaleX(0);
+}
+.lp .rs-bar b {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: -1px;
+  font: 500 12px var(--mono);
+  white-space: nowrap;
+}
+.lp .rs-foot {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.lp .rs-foot a {
+  color: var(--fg);
+}
+
+/* compact strip in the "why" section */
+.lp .ms-strip {
+  display: grid;
+  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 14px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.lp .ms-strip > * {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--bg);
+  min-width: 0;
+}
+.lp .ms-strip b {
+  font: 500 22px var(--mono);
+  letter-spacing: -0.04em;
+}
+.lp .ms-strip span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.lp .ms-strip a {
+  font: 500 12px var(--mono);
+  color: var(--fg);
+}
+@media (max-width: 960px) {
+  .lp .rs-cards,
+  .lp .ms-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp .rs-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .rs-bar {
+    transition: none;
+  }
+  .lp [data-play="off"] .rs-bar {
+    transform: none;
+  }
+}

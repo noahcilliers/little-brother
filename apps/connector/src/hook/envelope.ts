@@ -67,7 +67,7 @@ export function buildEnvelope(input: HookInput, ctx: EnvelopeContext): IngestEnv
 
   switch (input.hook_event_name) {
     case "UserPromptSubmit":
-      env.prompt = input.prompt.slice(0, 500);
+      env.prompt = input.prompt.slice(0, 2000);
       break;
     case "PreToolUse":
     case "PostToolUse":

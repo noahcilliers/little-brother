@@ -8,7 +8,7 @@ export function ResultBeat({ t, r }: { t: number; r: Result }) {
   return (
     <>
       <h3 className="ms-label">{r.label}</h3>
-      <BigNumber t={t} value={r.value} unit={r.unit} />
+      <BigNumber t={t} pre={r.pre} value={r.value} unit={r.unit} />
       {bars.length > 0 ? (
         <div className="ms-bars">
           {bars.map((b, i) => (

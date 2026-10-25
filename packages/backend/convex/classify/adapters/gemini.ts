@@ -23,7 +23,8 @@ const JUDGE_MODELS = (
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
-const TIMEOUT_MS = 8000;
+// The judge runs async, off the edit path; prod averaged ~7 s, and full plan text runs longer.
+const TIMEOUT_MS = 20_000;
 
 function client(apiKey: string): GoogleGenAI {
   return new GoogleGenAI({ apiKey });

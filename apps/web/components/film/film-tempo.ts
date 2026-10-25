@@ -17,10 +17,10 @@ const TEMPO: [clock: number, rate: number][] = [
   [ST + 38.6, 1],   // back out to the wide shot
   [44.8, 0.7],      // why not git
   [53.2, 0.65],     // how it works
-  [59.6, 0.65],     // learning
-  [66, 0.75],       // results
-  [81, 0.7],        // impact
-  [84.4, 0.8],      // close
+  [59.6, 0.85],     // learning: six short beats, one idea each
+  [75.6, 0.75],     // results
+  [90.6, 0.7],      // impact
+  [94, 0.8],        // close
 ];
 
 /** Playback second at which each stretch starts. */

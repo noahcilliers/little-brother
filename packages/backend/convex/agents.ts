@@ -19,6 +19,7 @@ export async function upsertAgent(
     teamId: scope.teamId,
     sessionId: scope._id,
     machine: session.machine,
+    cwd: session.cwd,
     repo: session.repo,
     branch: session.branch,
     status: "active" as const,

@@ -40,7 +40,10 @@ Relations (pick exactly one):
 - duplicate: the same task or change done twice. e.g. both "add retry to the HTTP client".
 - textual_conflict: git cannot merge them. e.g. both create db/schema/users.ts.
 - semantic_conflict: merges cleanly but breaks behavior. e.g. A changes pay(amount) to pay(amount, currency); B adds pay(amount) callers.
-- intent_contradiction: goals pull in opposite directions. e.g. A removes legacy auth; B extends it.
+- intent_contradiction: goals pull in opposite directions, or set incompatible rules for the same thing, even
+  in different files. e.g. A removes legacy auth; B extends it. e.g. A: "sale prices are final, no further
+  discounts"; B: "promo code takes 10% off every item" (do discounts stack?). Compare the business rules the
+  two plans state, not only the files they name.
 - ordering_dependency: one must land before the other, and nothing is broken once it does. e.g. B uses User.role, which A is creating. NOT when A changes or replaces something B already relies on: that is semantic_conflict.
 - repeats_failure: NEW follows a path already recorded as failed in OTHER. e.g. NEW plans CORS middleware that OTHER proved fails.
 
@@ -67,7 +70,11 @@ function describe(n: ClassifiedNode): string {
   return [
     `kind=${n.kind} verb=${n.verb} outcome=${n.outcome}${n.topic ? ` topic=${n.topic}` : ""}`,
     `signature: ${n.text}`,
-    n.preview ? `code:\n${n.preview.split("\n").slice(0, 25).join("\n")}` : "",
+    n.preview
+      ? n.kind === "intent"
+        ? `full request:\n${n.preview.slice(0, 1200)}`
+        : `code:\n${n.preview.split("\n").slice(0, 25).join("\n")}`
+      : "",
     touches.length ? `touches: ${touches.join("; ")}` : "",
     n.references.length ? `references: ${n.references.slice(0, 10).join(", ")}` : "",
   ]

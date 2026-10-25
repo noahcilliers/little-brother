@@ -64,14 +64,36 @@ async function failureLines(ctx: QueryCtx, me: Doc<"agents">): Promise<string[]>
   return relevant.slice(0, 3).map((n) => `- failed before: ${clip(n.text)}`);
 }
 
+const within = (a: string, b: string) => a === b || a.startsWith(`${b}/`) || b.startsWith(`${a}/`);
+
+/**
+ * Teammates' Claude sessions working in the same folder on the same machine. They read each other's files off
+ * disk mid-task, so neither agent's work is its own and duplicates vanish before anyone could flag them.
+ */
+async function sharedFolderLines(ctx: QueryCtx, me: Doc<"agents">): Promise<string[]> {
+  if (!me.sessionId || !me.cwd) return [];
+  const lines: string[] = [];
+  for (const a of await sessionAgents(ctx, me.sessionId)) {
+    if (a._id === me._id || a.status === "offline" || a.machine !== me.machine || !a.cwd) continue;
+    if (within(a.cwd, me.cwd))
+      lines.push(
+        `- ${await handleOf(ctx, a)} is working in this same folder (${a.cwd}). Tell the user to give each Claude session its own copy, e.g. \`git worktree add ../${me.repo}-2 -b <branch>\`, before editing.`,
+      );
+  }
+  return lines;
+}
+
 /** Who's doing what, what blocks me, what already failed; capped so it never floods the context. */
 export async function teamDigest(ctx: QueryCtx, me: Doc<"agents">, withProtocol: boolean): Promise<string> {
   const team = await teamLines(ctx, me);
   const conflicts = await conflictLines(ctx, me);
   const failures = await failureLines(ctx, me);
+  const shared = await sharedFolderLines(ctx, me);
   // Alone with nothing known: say nothing at all.
   if (withProtocol && team.length === 0 && conflicts.length === 0 && failures.length === 0) return "";
+  const warnings = shared.length ? ["Same folder:", ...shared] : [];
   const body = [
+    ...warnings,
     ...(team.length ? ["Team:", ...team] : ["Team: no other active agents"]),
     ...(conflicts.length ? ["Open conflicts involving you:", ...conflicts] : []),
     ...(failures.length ? ["Known failures:", ...failures] : []),

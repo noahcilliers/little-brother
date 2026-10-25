@@ -13,6 +13,7 @@ import {
   fallbackJudgment,
   isCrossCutting,
   type Judgment,
+  judgeThreshold,
   judgeWorthy,
   type StoredNode,
   type TrajectoryStep,
@@ -95,7 +96,7 @@ export const classifyNode = internalAction({
       .filter(({ pair }) => !seen.has(pair.other.id))
       // Test and build runs are evidence about code, not approaches; rules (R10/R11) already use them.
       .filter(({ pair }) => !/^(TEST|RUN)$/.test(pair.other.verb))
-      .filter(({ pair }) => judgeWorthy(pair, pair.failedMemory ? 0.5 : 0.8))
+      .filter(({ pair }) => judgeWorthy(pair, judgeThreshold(pair)))
       // Cross-cutting links first (they can actually break each other), then score, then older work: the change
       // that was there first is what the new one has to fit.
       .sort(

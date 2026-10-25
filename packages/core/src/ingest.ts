@@ -69,7 +69,7 @@ export const IngestEnvelope = z.object({
   files: z.array(z.string()),
   touches: z.array(Touch),
   references: z.array(z.string()),
-  prompt: z.string().max(500).optional(),
+  prompt: z.string().max(2000).optional(), // business rules often sit past the first sentence
   preview: z.string().max(4000).optional(), // ≤40 lines: diff hunk, command, or last message
   command: z.string().optional(),
   exitCode: z.number().optional(),

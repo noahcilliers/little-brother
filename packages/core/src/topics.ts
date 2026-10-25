@@ -11,3 +11,20 @@ export const TopicMap = z.object({
   verify: z.string().optional(),
 });
 export type TopicMap = z.infer<typeof TopicMap>;
+
+const norm = (s: string) => s.trim().toLowerCase().replace(/^@/, "");
+
+/**
+ * Whether a topic map's `owner` names this member. Teams write the names they use ("noah"), while members are
+ * GitHub handles ("noahcilliers"); exact-only matching meant no ownership rule ever fired. Accepts the exact
+ * handle, a leading @, the member's name or first name, or a handle prefix of 3+ letters.
+ */
+export function ownerMatches(owner: string, member: { handle: string; name?: string }): boolean {
+  const o = norm(owner);
+  const handle = norm(member.handle);
+  if (!o) return false;
+  if (o === handle) return true;
+  const name = norm(member.name ?? "");
+  if (name && (o === name || o === name.split(/\s+/)[0])) return true;
+  return o.length >= 3 && handle.startsWith(o);
+}

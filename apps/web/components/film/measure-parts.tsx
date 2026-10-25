@@ -25,10 +25,11 @@ export function Beat({ t, len, children }: { t: number; len: number; children: R
 }
 
 /** The headline number, counting up. */
-export function BigNumber({ t, value, unit }: { t: number; value: number; unit: string }) {
+export function BigNumber({ t, pre, value, unit }: { t: number; pre?: string; value: number; unit: string }) {
   return (
     <div className="ms-big">
       <b>
+        {pre}
         {countUp(value, prog(t, 0.2, 1))}
         <small>{unit}</small>
       </b>

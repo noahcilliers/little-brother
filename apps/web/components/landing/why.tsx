@@ -1,4 +1,5 @@
 import "./why.css";
+import { MeasuredStrip } from "./measured-strip";
 import { ScaleStats } from "./scale-stats";
 
 const COLS = [
@@ -53,6 +54,7 @@ export function Why() {
         ))}
       </div>
       <ScaleStats />
+      <MeasuredStrip />
     </section>
   );
 }

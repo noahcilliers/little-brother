@@ -1,4 +1,4 @@
-import { type Priority, TopicMap, topicOfPaths } from "@lb/core";
+import { ownerMatches, type Priority, TopicMap, topicOfPaths } from "@lb/core";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 
@@ -8,6 +8,7 @@ const DECISION_SCAN = 50;
 type AgentFacts = {
   memberId?: Id<"members">;
   handle?: string;
+  name?: string;
   repo?: string;
   intentTopic?: string;
   progress: number;
@@ -80,7 +81,7 @@ export function priorityLoader(ctx: QueryCtx): PriorityLoader {
       const owner = map?.topics[topic]?.owner;
       const decider = await deciderOf(topic);
       return {
-        owner: !!owner && owner === facts.handle,
+        owner: !!owner && !!facts.handle && ownerMatches(owner, { handle: facts.handle, name: facts.name }),
         aligned: !!decider && decider === facts.memberId,
         scopeFit: facts.intentTopic === topic,
         progress: facts.progress,
@@ -104,7 +105,7 @@ async function loadFacts(ctx: QueryCtx, agentId: Id<"agents">): Promise<AgentFac
   if (!agent) return { progress: 0 };
   const member = await ctx.db.get(agent.memberId);
   const intent = agent.intentId ? await ctx.db.get(agent.intentId) : null;
-  const base = { memberId: agent.memberId, handle: member?.handle, repo: agent.repo };
+  const base = { memberId: agent.memberId, handle: member?.handle, name: member?.name, repo: agent.repo };
   if (!intent) return { ...base, progress: 0 };
   const trajectory = await ctx.db
     .query("nodes")

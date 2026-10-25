@@ -1,0 +1,132 @@
+{
+  "estimator": "gbdt",
+  "rows": 1709,
+  "goldRows": 1669,
+  "groups": 336,
+  "folds": 5,
+  "seeds": [0, 1, 2],
+  "blocking": ["intent_contradiction", "ordering_dependency", "semantic_conflict", "textual_conflict"],
+  "method": "grouped-by-repository CV as train.py; each fold's training rows subsampled per label; scored on the full held-out fold, gold labels only",
+  "points": [
+    {
+      "fraction": 0.1,
+      "trainRowsPerFold": 137,
+      "macroF1": {
+        "mean": 0.47,
+        "sd": 0.0587
+      },
+      "blockingPrecision": {
+        "mean": 0.6804,
+        "sd": 0.0241
+      },
+      "settledShare": {
+        "mean": 0.6155,
+        "sd": 0.3274
+      },
+      "settledAccuracy": {
+        "mean": 0.9809,
+        "sd": 0.0121
+      },
+      "ece": {
+        "mean": 0.0179,
+        "sd": 0.0052
+      }
+    },
+    {
+      "fraction": 0.25,
+      "trainRowsPerFold": 342,
+      "macroF1": {
+        "mean": 0.5092,
+        "sd": 0.0018
+      },
+      "blockingPrecision": {
+        "mean": 0.6798,
+        "sd": 0.0014
+      },
+      "settledShare": {
+        "mean": 0.9076,
+        "sd": 0.0183
+      },
+      "settledAccuracy": {
+        "mean": 0.9777,
+        "sd": 0.0041
+      },
+      "ece": {
+        "mean": 0.0164,
+        "sd": 0.0034
+      }
+    },
+    {
+      "fraction": 0.5,
+      "trainRowsPerFold": 684,
+      "macroF1": {
+        "mean": 0.5633,
+        "sd": 0.0748
+      },
+      "blockingPrecision": {
+        "mean": 0.7928,
+        "sd": 0.0058
+      },
+      "settledShare": {
+        "mean": 0.91,
+        "sd": 0.0061
+      },
+      "settledAccuracy": {
+        "mean": 0.9818,
+        "sd": 0.0057
+      },
+      "ece": {
+        "mean": 0.0165,
+        "sd": 0.0055
+      }
+    },
+    {
+      "fraction": 0.75,
+      "trainRowsPerFold": 1025,
+      "macroF1": {
+        "mean": 0.5152,
+        "sd": 0.0027
+      },
+      "blockingPrecision": {
+        "mean": 0.7834,
+        "sd": 0.0046
+      },
+      "settledShare": {
+        "mean": 0.9205,
+        "sd": 0.003
+      },
+      "settledAccuracy": {
+        "mean": 0.9786,
+        "sd": 0.0035
+      },
+      "ece": {
+        "mean": 0.0189,
+        "sd": 0.0082
+      }
+    },
+    {
+      "fraction": 1.0,
+      "trainRowsPerFold": 1367,
+      "macroF1": {
+        "mean": 0.518,
+        "sd": 0.0
+      },
+      "blockingPrecision": {
+        "mean": 0.7869,
+        "sd": 0.0
+      },
+      "settledShare": {
+        "mean": 0.915,
+        "sd": 0.0
+      },
+      "settledAccuracy": {
+        "mean": 0.9798,
+        "sd": 0.0
+      },
+      "ece": {
+        "mean": 0.0175,
+        "sd": 0.0
+      }
+    }
+  ]
+}
