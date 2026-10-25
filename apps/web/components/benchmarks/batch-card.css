@@ -1,0 +1,133 @@
+/* One batch on /benchmarks: status, a progress bar that hatches voided runs, and the per-arm table. */
+.lp .bm-batch {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  min-width: 0;
+}
+.lp .bm-batch[data-status="running"] {
+  border-color: var(--line-2);
+}
+.lp .bm-batch-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+.lp .bm-batch-head h3 {
+  margin-top: 4px;
+  font: 500 18px var(--mono);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.lp .bm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  font: 500 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.lp [data-status="running"] .bm-status {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.lp .bm-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: bm-pulse 1.6s ease-in-out infinite;
+}
+.lp .bm-meta,
+.lp .bm-count {
+  font-size: 13px;
+  color: var(--muted);
+}
+.lp .bm-count b {
+  font: 500 13px var(--mono);
+  color: var(--fg);
+}
+.lp .bm-progress {
+  display: flex;
+  height: 8px;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.lp .bm-fill,
+.lp .bm-void {
+  display: block;
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lp .bm-fill {
+  background: var(--fg);
+}
+/* Voided runs were graded but don't count: hatched, so they never read as progress made. */
+.lp .bm-void {
+  background: repeating-linear-gradient(-45deg, var(--line-2) 0 3px, transparent 3px 6px);
+}
+.lp .bm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+.lp .bm-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font: 400 13px var(--mono);
+}
+.lp .bm-table th,
+.lp .bm-table td {
+  padding: 8px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.lp .bm-table thead th {
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.lp .bm-table th[scope="row"],
+.lp .bm-table thead th:first-child {
+  text-align: left;
+}
+.lp .bm-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.lp .bm-table tr[data-arm="on"] th[scope="row"] {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.lp .bm-table small {
+  color: var(--faint);
+}
+.lp .bm-id {
+  font: 400 11px var(--mono);
+  color: var(--faint);
+  overflow-wrap: anywhere;
+}
+@keyframes bm-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .bm-dot {
+    animation: none;
+  }
+  .lp .bm-fill,
+  .lp .bm-void {
+    transition: none;
+  }
+}

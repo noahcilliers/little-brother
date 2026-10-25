@@ -15,6 +15,7 @@ export function order<R>(jobs: Job<R>[], paired: boolean, seed: number): Job<R>[
 /**
  * Runs jobs `size` at a time, charging each finished run to the budget and printing a running total. Once
  * the cap is reached, jobs not yet started are skipped (reported as null); runs in flight finish.
+ * `onResult` sees each run as soon as it is graded (the live stream to Convex).
  */
 export async function runPool<R extends { costUsd: number }>(
   jobs: Job<R>[],
@@ -22,6 +23,7 @@ export async function runPool<R extends { costUsd: number }>(
   budget: Budget,
   suite: string,
   describe: (r: R) => string,
+  onResult: (r: R) => void = () => {},
 ): Promise<{ results: R[]; skipped: string[] }> {
   const results: R[] = [];
   const skipped: string[] = [];
@@ -39,6 +41,7 @@ export async function runPool<R extends { costUsd: number }>(
       budget.add(suite, job.key, r.costUsd);
       results.push(r);
       console.log(`[${++done}/${jobs.length}] ${describe(r)} · total ${budget.line()}`);
+      onResult(r);
     }
   };
   await Promise.all(Array.from({ length: Math.min(size, jobs.length) }, worker));

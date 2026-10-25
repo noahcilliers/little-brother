@@ -2,6 +2,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { newTokens } from "@lb/core";
 import { runnerFor } from "../agent-spec";
+import { livePublisher } from "../live-publish";
 import type { Options } from "../options";
 import type { RunContext } from "../run-case";
 import { type Job, order, runPool } from "../schedule";
@@ -74,13 +75,22 @@ export async function runSuite(opts: Options): Promise<void> {
     `${opts.suite}: ${jobs.length} run(s) over ${tasks.length} task(s) · ${h.backendInfo}\n` +
       `results → ${h.outDir}\nworktrees → ${h.workDir}\nspent so far: ${h.budget.line()}`,
   );
+  const live = livePublisher(h.outDir, {
+    suite: opts.suite,
+    model: opts.model,
+    arms: opts.arms,
+    planned: jobs.length,
+    startedAt: h.startedAt.getTime(),
+  });
   const { results, skipped } = await runPool(
     order(jobs, opts.paired, opts.seed),
     opts.concurrency,
     h.budget,
     opts.suite,
     line,
+    live.runDone,
   );
+  await live.finish(skipped.length);
   const summary = summarizeSuite(opts.suite, results);
   const meta = {
     startedAt: h.startedAt.toISOString(),

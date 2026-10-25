@@ -97,7 +97,23 @@ export const classifierBench = v.object({
   at: v.number(),
 });
 
+export const evalBatchConfig = v.object({
+  batch: v.string(),
+  suite: v.string(),
+  model: v.string(),
+  arms: v.array(v.string()),
+  planned: v.number(),
+  startedAt: v.number(),
+  finishedAt: nullableNum,
+  skipped: v.number(),
+});
+
 export const evalTables = {
+  // A live batch's plan, posted by the harness before its first run, so /benchmarks can show progress.
+  evalBatches: defineTable(evalBatchConfig.fields)
+    .index("by_batch", ["batch"])
+    .index("by_started", ["startedAt"]),
+
   evalRuns: defineTable(evalRunRow.fields).index("by_key", ["runKey"]).index("by_batch", ["batch"]),
 
   // Derived from evalRuns on every ingest, so the landing's query reads a handful of rows, not every run.

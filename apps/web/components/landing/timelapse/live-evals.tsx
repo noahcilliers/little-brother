@@ -1,10 +1,10 @@
 "use client";
 
 import type { LandingEvals } from "@lb/core";
-import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
-import { Component, type ReactNode, useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import type { ReactNode } from "react";
+import { PublicConvex } from "@/components/public-convex";
 import { api } from "@/lib/api";
-import { convexUrl } from "@/lib/convex-urls";
 import { SNAPSHOT } from "./snapshot";
 
 type Render = (data: LandingEvals, live: boolean) => ReactNode;
@@ -26,38 +26,11 @@ function Live({ render }: { render: Render }) {
   return <>{render(data ?? SNAPSHOT, data !== null)}</>;
 }
 
-// A deployment without the query yet (published before deploy) throws from useQuery; the landing must
-// still render, so the snapshot takes over.
-class Fallback extends Component<{ children: ReactNode; fallback: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
-}
-
-/**
- * Renders the snapshot on the server and first paint, then switches to the live Convex query. The landing
- * isn't inside the app's auth provider, so this section opens its own unauthenticated client.
- */
+/** Renders the snapshot on the server and first paint, then switches to the live Convex query. */
 export function LiveEvals({ render }: { render: Render }) {
-  const [client, setClient] = useState<ConvexReactClient | null>(null);
-  useEffect(() => {
-    const c = new ConvexReactClient(convexUrl());
-    setClient(c);
-    return () => {
-      void c.close();
-    };
-  }, []);
-  const still = render(SNAPSHOT, false);
-  if (!client) return <>{still}</>;
   return (
-    <Fallback fallback={still}>
-      <ConvexProvider client={client}>
-        <Live render={render} />
-      </ConvexProvider>
-    </Fallback>
+    <PublicConvex fallback={render(SNAPSHOT, false)}>
+      <Live render={render} />
+    </PublicConvex>
   );
 }

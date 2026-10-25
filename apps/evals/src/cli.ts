@@ -8,6 +8,7 @@ import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
 import { renderCompare } from "./compare";
 import { exportPairs } from "./export-pairs";
+import { livePublisher } from "./live-publish";
 import { parseOptions } from "./options";
 import { recheck } from "./recheck";
 import { renderReport } from "./report";
@@ -107,18 +108,28 @@ async function main(): Promise<void> {
     `${jobs.length} run(s) · ${h.backendInfo}${opts.fixup ? " · fix-up on" : ""}${opts.paired ? ` · paired, seed ${opts.seed}` : ""}\n` +
       `results → ${h.outDir}\nworktrees → ${h.workDir}\nspent so far: ${h.budget.line()}`,
   );
+  const model = opts.agent.kind === "lb" ? agentLabel(opts.agent) : opts.model;
+  const live = livePublisher(h.outDir, {
+    suite: "planted",
+    model,
+    arms: opts.arms,
+    planned: jobs.length,
+    startedAt: h.startedAt.getTime(),
+  });
   const { results: runs, skipped } = await runPool(
     order(jobs, opts.paired, opts.seed),
     opts.concurrency,
     h.budget,
     "planted",
     outcomeLine,
+    live.runDone,
   );
+  await live.finish(skipped.length);
 
   const summary = summarize(runs, spawnOverheadMs());
   const meta = {
     startedAt: h.startedAt.toISOString(),
-    model: opts.agent.kind === "lb" ? agentLabel(opts.agent) : opts.model,
+    model,
     variants: opts.variants,
     arms: opts.arms,
     runsPerCase: opts.runs,
