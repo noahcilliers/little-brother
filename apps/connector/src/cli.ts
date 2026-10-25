@@ -10,7 +10,7 @@ try {
   // older Node: run without the cache
 }
 
-const program = new Command("lb").description("Little Brother connector").version("0.2.0");
+const program = new Command("lb").description("Little Brother connector").version("0.2.1");
 
 program
   .command("join")
@@ -30,7 +30,7 @@ program
   .description("download the latest lb from the site you joined")
   .action(async () => {
     const { updateCommand } = await import("./commands/update");
-    updateCommand();
+    await updateCommand();
   });
 
 program
