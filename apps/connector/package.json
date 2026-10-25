@@ -13,7 +13,6 @@
     "bundle": "tsup --config tsup.bundle.config.ts"
   },
   "dependencies": {
-    "@google/genai": "^1.52.0",
     "@lb/backend": "workspace:*",
     "@lb/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.18.0",

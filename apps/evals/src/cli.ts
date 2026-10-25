@@ -93,7 +93,7 @@ async function main(): Promise<void> {
   };
   const jobs: Job<RunRecord>[] = cases.flatMap((c) =>
     opts.variants.flatMap((v) =>
-      Array.from({ length: opts.runs }, (_, i) => i + 1).flatMap((run) =>
+      Array.from({ length: opts.runs }, (_, i) => i + opts.firstRun).flatMap((run) =>
         opts.arms.map((arm) => ({
           key: `${c.id}-${v}-${arm}-${run}`,
           arm,

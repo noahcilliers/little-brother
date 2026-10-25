@@ -61,7 +61,7 @@ export async function runSuite(opts: Options): Promise<void> {
     keepWorkspaces: opts.keepWorkspaces,
   };
   const jobs: Job<PairRecord>[] = tasks.flatMap((t) =>
-    Array.from({ length: opts.runs }, (_, i) => i + 1).flatMap((run) =>
+    Array.from({ length: opts.runs }, (_, i) => i + opts.firstRun).flatMap((run) =>
       opts.arms.map((arm) => ({
         key: `${t.id}-${arm}-${run}`,
         arm,
