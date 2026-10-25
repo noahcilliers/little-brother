@@ -25,6 +25,8 @@ export type AgentSpec = {
    * until the case ends, as interactive sessions would be.
    */
   endsSession?: boolean;
+  /** Appended to the prompt in the `oracle` arm: what an informed teammate would have been told. */
+  oracleNote?: string;
 };
 
 /**

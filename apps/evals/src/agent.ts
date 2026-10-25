@@ -2,10 +2,19 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { createInterface } from "node:readline";
+import type { LbRunner } from "./agent-spec";
 import { claudeBin } from "./claude-bin";
+import { startLbAgent } from "./lb-agent";
 import { type AgentLog, applyLine, emptyLog } from "./stream";
 
-export type Limits = { model: string; maxTurns: number; maxBudgetUsd: number; timeoutMin: number };
+export type Limits = {
+  model: string;
+  maxTurns: number;
+  maxBudgetUsd: number;
+  timeoutMin: number;
+  /** `--agent lb:…`: run `lb agent` (lb-agent.ts) instead of Claude Code. */
+  runner?: LbRunner;
+};
 
 export type AgentLaunch = {
   handle: string;
@@ -29,6 +38,8 @@ export type AgentLaunch = {
   extraTools?: string[];
   /** Replaces the default note; the fix-up agent works alone on the merged tree. */
   systemNote?: string;
+  /** MCP config for the `msg` arm's shared mailbox (mailbox-server.ts); used only without Little Brother. */
+  mailboxConfig?: string;
 };
 
 export type RunningAgent = {
@@ -67,8 +78,12 @@ export const SYSTEM_NOTE = [
   "Don't start long-running servers (npm run dev, npm run web). Keep the change focused and stop when the task is done.",
 ].join(" ");
 
+/** The `msg` arm's note, close to CooperBench's cooperative-setting instructions. */
+export const MAILBOX_NOTE =
+  "Your teammates work on the same repo at the same time, each on their own branch, and the branches will be merged. You can talk to them: mcp__mailbox__send posts a message and mcp__mailbox__read returns new ones. Tell them early about changes that could affect their work (files, function names, signatures), read messages before editing shared code, and adapt to what they tell you.";
+
 /** Only what Claude Code and the connector need: the parent's Claude Code variables would leak into the child. */
-function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
+export function agentEnv(a: AgentLaunch): NodeJS.ProcessEnv {
   const keep = ["HOME", "PATH", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "TERM", "ANTHROPIC_API_KEY"];
   const env: NodeJS.ProcessEnv = {};
   for (const k of keep) if (process.env[k] !== undefined) env[k] = process.env[k];
@@ -101,6 +116,8 @@ export function endSession(a: AgentLaunch, sessionId: string, cliPath: string): 
 }
 
 export function startAgent(a: AgentLaunch): RunningAgent {
+  if (a.limits.runner)
+    return startLbAgent({ ...a, systemNote: a.systemNote ?? SYSTEM_NOTE }, a.limits.runner, agentEnv(a));
   const sessionId = randomUUID();
   const args = [
     "-p",
@@ -114,7 +131,11 @@ export function startAgent(a: AgentLaunch): RunningAgent {
     sessionId,
     // Strict with no config file leaves the off arm with no MCP servers at all, not the user's own.
     "--strict-mcp-config",
-    ...(a.lb ? ["--plugin-dir", a.pluginDir, "--mcp-config", a.mcpConfig] : []),
+    ...(a.lb
+      ? ["--plugin-dir", a.pluginDir, "--mcp-config", a.mcpConfig]
+      : a.mailboxConfig
+        ? ["--mcp-config", a.mailboxConfig]
+        : []),
     "--setting-sources",
     "project",
     "--permission-mode",
@@ -122,6 +143,7 @@ export function startAgent(a: AgentLaunch): RunningAgent {
     "--allowedTools",
     ...ALLOWED_TOOLS,
     ...(a.extraTools ?? []),
+    ...(a.mailboxConfig ? ["mcp__mailbox"] : []),
     "--max-turns",
     String(a.limits.maxTurns),
     "--max-budget-usd",

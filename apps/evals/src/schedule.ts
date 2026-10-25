@@ -1,7 +1,8 @@
+import type { Arm } from "./arm";
 import type { Budget } from "./budget";
 import { pairedSchedule } from "./paired";
 
-export type Job<R> = { key: string; arm: "on" | "off"; block: string; start: () => Promise<R> };
+export type Job<R> = { key: string; arm: Arm; block: string; start: () => Promise<R> };
 
 /** Jobs in queue order: grouped by block and seeded when paired, else as listed. */
 export function order<R>(jobs: Job<R>[], paired: boolean, seed: number): Job<R>[] {

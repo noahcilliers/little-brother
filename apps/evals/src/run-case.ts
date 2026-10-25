@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import type { Limits } from "./agent";
 import type { RunRecord } from "./aggregate";
-import type { Arm } from "./arm";
+import { type Arm, armTag } from "./arm";
 import { type Backend, closeRun, openRun, snapshot } from "./backend";
 import type { EvalCase, Variant } from "./case";
 import { distinctCatchSavings } from "./catches";
@@ -60,7 +60,7 @@ export async function runCase(
   run: number,
   ctx: RunContext,
 ): Promise<RunRecord> {
-  const name = arm === "on" ? `${c.id}-${variant}-${run}` : `${c.id}-${variant}-off-${run}`;
+  const name = `${c.id}-${variant}${armTag(arm)}-${run}`;
   const runDir = join(ctx.outDir, "runs", name);
   // Session codes are capped at 40 characters; a longer one is dropped and the hooks fail open silently.
   const code = `ev${ctx.tag}-${createHash("sha1").update(name).digest("hex").slice(0, 10)}`;

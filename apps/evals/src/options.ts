@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
-import type { Arm } from "./arm";
+import { type AgentSpec, parseAgentSpec } from "./agent-spec";
+import { ARMS, type Arm } from "./arm";
 import type { Variant } from "./case";
 
 export type Suite = "planted" | "stale" | "cooper";
@@ -11,6 +12,8 @@ export type Options = {
   arms: Arm[];
   runs: number;
   model: string;
+  /** Claude Code, or `lb agent` with a Gemini or OpenAI-compatible model (agent-spec.ts). */
+  agent: AgentSpec;
   maxTurns: number;
   maxBudgetUsd: number;
   timeoutMin: number;
@@ -42,9 +45,11 @@ export const USAGE = `pnpm --filter @lb/evals eval [options]
 
   --cases a,b        case ids or id prefixes (default: all)
   --variant v        pointed | natural | both (default: both)
-  --arm a            on | off | both: Little Brother on, off, or both to measure savings (default: on)
+  --arm a            on | off | both, or a list of off,on,msg,oracle: msg = shared mailbox, no Little
+                     Brother (CooperBench's cooperative baseline); oracle = STALE-bench's informed note (default: on)
   --runs n           repetitions per case, variant and arm (default: 3)
   --model m          agent model (default: sonnet)
+  --agent a          claude | lb:gemini:<model> | lb:openai:<model>@<baseUrl>: Claude Code or lb agent (default: claude)
   --max-turns n      per agent (default: 30)
   --max-budget usd   per agent (default: 1.5)
   --timeout-min n    per agent wall clock (default: 12)
@@ -81,6 +86,7 @@ export function parseOptions(argv: string[]): Options {
       arm: { type: "string" },
       runs: { type: "string" },
       model: { type: "string" },
+      agent: { type: "string" },
       "max-turns": { type: "string" },
       "max-budget": { type: "string" },
       "timeout-min": { type: "string" },
@@ -113,7 +119,9 @@ export function parseOptions(argv: string[]): Options {
   const suite = values.suite ?? "planted";
   if (!SUITES.includes(suite as Suite)) throw new Error(`--suite must be ${SUITES.join(", ")}`);
   const arm = values.arm ?? "on";
-  if (!["on", "off", "both"].includes(arm)) throw new Error("--arm must be on, off or both");
+  const arms: Arm[] = arm === "both" ? ["off", "on"] : (arm.split(",").map((a) => a.trim()) as Arm[]);
+  if (!arms.length || arms.some((a) => !ARMS.includes(a)))
+    throw new Error(`--arm must be both or a list of ${ARMS.join(", ")}`);
   return {
     cases: values.cases
       ? values.cases
@@ -122,9 +130,10 @@ export function parseOptions(argv: string[]): Options {
           .filter(Boolean)
       : [],
     variants: variant === "both" ? ["pointed", "natural"] : [variant as Variant],
-    arms: arm === "both" ? ["off", "on"] : [arm as Arm],
+    arms,
     runs: Math.round(num(values.runs, 3, "runs")),
     model: values.model ?? "sonnet",
+    agent: parseAgentSpec(values.agent ?? "claude"),
     maxTurns: Math.round(num(values["max-turns"], 30, "max-turns")),
     maxBudgetUsd: num(values["max-budget"], 1.5, "max-budget"),
     timeoutMin: num(values["timeout-min"], 12, "timeout-min"),

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { newTokens } from "@lb/core";
 import { CASES } from "../cases";
+import { agentLabel, runnerFor } from "./agent-spec";
 import { type RunRecord, type Summary, summarize } from "./aggregate";
 import { spawnOverheadMs } from "./calibrate";
 import { caseProblems, type EvalCase } from "./case";
@@ -27,11 +28,11 @@ function outcomeLine(r: RunRecord): string {
   // With Little Brother off there are no rows to score, only whether the clash happened.
   const outcomes =
     r.score.expectations
-      .map((e) => (r.arm === "off" ? (e.materialized ? "clash" : "no-clash") : e.outcome))
+      .map((e) => (r.arm !== "on" ? (e.materialized ? "clash" : "no-clash") : e.outcome))
       .join(",") || (r.score.control ? "control" : "-");
   const tokens = r.tokens ? ` · ${Math.round(newTokens(r.tokens) / 1000)}k tok` : "";
   const final = r.finalSuccess === undefined ? "" : ` · final ${r.finalSuccess ? "pass" : "FAIL"}`;
-  return `${r.caseId} ${r.variant} ${r.arm === "off" ? "LB-off " : ""}#${r.run}: ${r.error ? `ERROR ${r.error}` : outcomes}${final} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`;
+  return `${r.caseId} ${r.variant} ${r.arm === "off" ? "LB-off " : r.arm && r.arm !== "on" ? `${r.arm} ` : ""}#${r.run}: ${r.error ? `ERROR ${r.error}` : outcomes}${final} · FP ${r.score.falsePositives.length} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`;
 }
 
 /** Summary and report again for runs re-graded by --recheck, keeping the original meta. */
@@ -83,6 +84,7 @@ async function main(): Promise<void> {
       maxTurns: opts.maxTurns,
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
+      ...runnerFor(opts.agent, h.cliPath),
     },
     tag: h.tag,
     settleSec: opts.settleSec,
@@ -116,7 +118,7 @@ async function main(): Promise<void> {
   const summary = summarize(runs, spawnOverheadMs());
   const meta = {
     startedAt: h.startedAt.toISOString(),
-    model: opts.model,
+    model: opts.agent.kind === "lb" ? agentLabel(opts.agent) : opts.model,
     variants: opts.variants,
     arms: opts.arms,
     runsPerCase: opts.runs,

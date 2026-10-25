@@ -1,5 +1,14 @@
-import { join } from "node:path";
-import { type AgentLaunch, endSession, type RunningAgent, startAgent } from "./agent";
+import { writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  type AgentLaunch,
+  endSession,
+  MAILBOX_NOTE,
+  type RunningAgent,
+  SYSTEM_NOTE,
+  startAgent,
+} from "./agent";
 import type { Arm } from "./arm";
 import type { EvalCase, Variant } from "./case";
 import type { RunContext } from "./run-case";
@@ -8,6 +17,19 @@ import { type AgentState, dueAt } from "./triggers";
 const TICK_MS = 500;
 export const timingFile = (runDir: string, handle: string) => join(runDir, `${handle}.hooks.jsonl`);
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const MAILBOX_SERVER = join(dirname(fileURLToPath(import.meta.url)), "mailbox-server.ts");
+
+/** One MCP config per agent: the server learns its sender handle from its environment. */
+function mailboxConfig(runDir: string, handle: string): string {
+  const file = join(runDir, `${handle}.mailbox-mcp.json`);
+  const env = { MAILBOX_FILE: join(runDir, "mailbox.jsonl"), MAILBOX_HANDLE: handle };
+  writeFileSync(
+    file,
+    JSON.stringify({ mcpServers: { mailbox: { command: "node", args: [MAILBOX_SERVER], env } } }),
+  );
+  return file;
+}
 
 export type Started = {
   agent: RunningAgent;
@@ -42,7 +64,10 @@ export async function runAgents(
       state.startedAt = Date.now();
       const launch: AgentLaunch = {
         handle: spec.handle,
-        prompt: spec.prompt[variant],
+        prompt:
+          arm === "oracle" && spec.oracleNote
+            ? `${spec.prompt[variant]}\n\n${spec.oracleNote}`
+            : spec.prompt[variant],
         cwd,
         sessionCode: code,
         lbHome: ctx.lbHome,
@@ -55,6 +80,12 @@ export async function runAgents(
         limits: ctx.limits,
         ...(ctx.agentEnv ? { extraEnv: ctx.agentEnv(spec.handle, cwd) } : {}),
         ...(ctx.extraTools ? { extraTools: ctx.extraTools } : {}),
+        ...(arm === "msg"
+          ? {
+              mailboxConfig: mailboxConfig(runDir, spec.handle),
+              systemNote: `${SYSTEM_NOTE} ${MAILBOX_NOTE}`,
+            }
+          : {}),
         onFirstEdit: () => {
           state.firstEditAt = Date.now();
         },

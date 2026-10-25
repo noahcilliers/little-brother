@@ -131,6 +131,20 @@ export function taskB(h: HelperSpec, consumer: string): string {
   return `In \`${moduleFile(h)}\`: ${consumer} ${RUN(h.label)}`;
 }
 
+/**
+ * STALE-bench's "informed" condition: what a teammate would tell the consumer up front. Hand-written per
+ * mechanism, naming the new interface and that both branches will be merged.
+ */
+export function oracleNote(h: HelperSpec, m: Mechanism, teammate: string): string {
+  const what =
+    m === "rename"
+      ? `renaming \`${h.fn}\` in \`${moduleFile(h)}\` to \`${h.renameTo}\`, with no alias for the old name`
+      : m === "signature"
+        ? `giving \`${h.fn}\` in \`${moduleFile(h)}\` a new required keyword-only parameter \`strict\` (no default); strict=False keeps today's behaviour`
+        : `changing \`${h.fn}\` in \`${moduleFile(h)}\` to return a \`${h.resultClass}\` object whose \`.value\` holds today's result`;
+  return `Heads-up from ${teammate}, who is working on another branch at the same time: they are ${what}. Both branches will be merged, so your code has to work once their change lands.`;
+}
+
 /** Python that holds when task A's change is in place on a tree. */
 export function mechanismProbe(h: HelperSpec, m: Mechanism): string {
   if (m === "rename") return `assert hasattr(m, ${q(h.renameTo)}) and not hasattr(m, ${q(h.fn)})`;

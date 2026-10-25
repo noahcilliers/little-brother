@@ -6,7 +6,8 @@
     "eval": "tsx src/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc -p .",
-    "site-summary": "tsx src/site-summary-cli.ts"
+    "site-summary": "tsx src/site-summary-cli.ts",
+    "multi-arm": "tsx src/multi-arm-cli.ts"
   },
   "dependencies": {
     "@lb/core": "workspace:*",

@@ -5,7 +5,7 @@ import { sh } from "../exec";
 import { type PairTask, PYTHON_TOOLS } from "./pair-task";
 import { CACHE, ensureVenv, pythonEnv } from "./python-env";
 import { gradeConstructed, gradeRealPair } from "./stale-grade";
-import { HELPERS, type Mechanism, taskA, taskB } from "./stale-specs";
+import { HELPERS, type Mechanism, oracleNote, taskA, taskB } from "./stale-specs";
 import { prDescription } from "./trac";
 
 export const STALE_DIR = join(CACHE, "benchmarks", "STALE-bench");
@@ -124,7 +124,12 @@ function constructedTask(spec: z.infer<typeof RealStale>, base: string, venv: st
     expectClash: true,
     agents: [
       { handle: a, prompt: `${taskA(helper, mechanism)} ${NOTE}` },
-      { handle: b, prompt: `${taskB(helper, spec.task_B)} ${NOTE}`, afterFirstEditOf: a },
+      {
+        handle: b,
+        prompt: `${taskB(helper, spec.task_B)} ${NOTE}`,
+        afterFirstEditOf: a,
+        oracleNote: oracleNote(helper, mechanism, a),
+      },
     ],
     grade: (g) => gradeConstructed(g, venv, { helper, mechanism, oracle: spec.oracle_test }),
   };

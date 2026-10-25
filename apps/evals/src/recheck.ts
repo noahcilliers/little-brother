@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { CASES } from "../cases";
 import type { RunRecord } from "./aggregate";
-import { armOf } from "./arm";
+import { armOf, armTag } from "./arm";
 import { removeWorkspace, restoreTree } from "./cleanup";
 import { checkSuccess } from "./fixup";
 import { ROOT } from "./setup";
@@ -16,8 +16,7 @@ function fixupDir(runJson: string): string | null {
   return merged ? join(dirname(merged), "fixup") : null;
 }
 
-const runName = (r: RunRecord) =>
-  armOf(r) === "on" ? `${r.caseId}-${r.variant}-${r.run}` : `${r.caseId}-${r.variant}-off-${r.run}`;
+const runName = (r: RunRecord) => `${r.caseId}-${r.variant}${armTag(armOf(r))}-${r.run}`;
 
 /**
  * Re-grades the fix-up trees of an earlier results directory against the cases' current success criteria,

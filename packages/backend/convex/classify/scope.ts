@@ -27,8 +27,8 @@ export async function sessionWork(ctx: QueryCtx, me: Doc<"agents">, now: number)
       .order("desc")
       .take(SESSION_AGENTS_CAP)
   )
-  // Offline peers included: a teammate who finished still has unmerged work on their branch, and the windows
-  // below age it out. Dropping them missed every dependency on work that ended before the dependent began.
+    // Offline peers included: a teammate who finished still has unmerged work on their branch, and the windows
+    // below age it out. Dropping them missed every dependency on work that ended before the dependent began.
     .filter((a) => a._id !== me._id);
   const out: Doc<"nodes">[] = [];
   for (const peer of peers) {

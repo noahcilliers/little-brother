@@ -28,9 +28,9 @@ export function shuffle<T>(xs: T[], rand: () => number): T[] {
  * side by side under the same load and backend state; which arm goes first, and the block order, come
  * from the seed. Without pairing, all of one arm could run before the other and absorb any drift.
  */
-export function pairedSchedule<T extends { arm: "on" | "off" }>(blocks: T[][], seed: number): T[] {
+export function pairedSchedule<T>(blocks: T[][], seed: number): T[] {
   const rand = seeded(seed);
-  return shuffle(blocks, rand).flatMap((b) => (rand() < 0.5 ? b : [...b].reverse()));
+  return shuffle(blocks, rand).flatMap((b) => shuffle(b, rand));
 }
 
 export type PairedStat = { n: number; mean: number | null; se: number | null };

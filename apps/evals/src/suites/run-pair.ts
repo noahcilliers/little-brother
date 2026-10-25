@@ -27,6 +27,7 @@ export function asCase(t: PairTask): EvalCase {
     agents: t.agents.map((x) => ({
       handle: x.handle,
       prompt: { pointed: x.prompt, natural: x.prompt },
+      ...(x.oracleNote ? { oracleNote: x.oracleNote } : {}),
       ...(x.afterFirstEditOf
         ? { start: { after: { agent: x.afterFirstEditOf, event: "firstEdit" as const } } }
         : {}),

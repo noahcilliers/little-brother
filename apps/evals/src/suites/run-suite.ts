@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { newTokens } from "@lb/core";
+import { runnerFor } from "../agent-spec";
 import type { Options } from "../options";
 import type { RunContext } from "../run-case";
 import { type Job, order, runPool } from "../schedule";
@@ -23,7 +24,7 @@ function line(r: PairRecord): string {
   const outcome = r.error
     ? `ERROR ${r.error.slice(0, 200)}`
     : `${merge} · solved ${solved} · merged ${g?.success ? "pass" : "fail"}${r.arm === "on" ? ` · ${caught}` : ""}`;
-  return `${r.suite} ${r.caseId} ${r.arm === "off" ? "LB-off" : "LB-on"} #${r.run}: ${outcome} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`;
+  return `${r.suite} ${r.caseId} ${r.arm === "on" ? "LB-on" : r.arm === "off" ? "LB-off" : r.arm} #${r.run}: ${outcome} · $${r.costUsd.toFixed(2)}${tokens} · ${Math.round(r.wallSec)} s`;
 }
 
 /** STALE-bench or CooperBench: pairs of live agents on an external repo, graded by the benchmark's tests. */
@@ -52,6 +53,7 @@ export async function runSuite(opts: Options): Promise<void> {
       maxTurns: opts.maxTurns,
       maxBudgetUsd: opts.maxBudgetUsd,
       timeoutMin: opts.timeoutMin,
+      ...runnerFor(opts.agent, h.cliPath),
     },
     tag: h.tag,
     settleSec: opts.settleSec,

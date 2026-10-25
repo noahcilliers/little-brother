@@ -22,7 +22,13 @@ export type GradeInput = {
   dir: string;
 };
 
-export type PairAgent = { handle: string; prompt: string; afterFirstEditOf?: string };
+export type PairAgent = {
+  handle: string;
+  prompt: string;
+  afterFirstEditOf?: string;
+  /** STALE-bench's informed condition: appended to this agent's prompt in the `oracle` arm. */
+  oracleNote?: string;
+};
 
 /** One pair of agents on one external task, with everything needed to run and grade it. */
 export type PairTask = {
