@@ -60,30 +60,6 @@
   gap: 12px;
   margin-left: 8px;
 }
-.lp .fh-agents {
-  position: relative;
-  display: flex;
-}
-.lp .fh-agent {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--line-2);
-  border-radius: 10px;
-  background: var(--panel);
-  font: 500 16px var(--mono);
-}
-.lp .fh-agent i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--add);
-}
-.lp .fh-agent.alone {
-  border-style: dashed;
-}
-
 /* shared scene title */
 .lp .fx-title {
   position: absolute;
@@ -117,40 +93,42 @@
   inset: 0;
 }
 
-/* hook stats: one big sourced number per beat */
-.lp .hs {
-  position: absolute;
-  inset: 0;
+/* hook stats: a row of sourced numbers under the problem statement */
+.lp .hs-row {
+  position: relative;
   display: grid;
-  place-content: center;
+  grid-template-columns: repeat(3, 420px);
+  gap: 36px;
+}
+.lp .hs {
+  display: grid;
   justify-items: center;
-  gap: 14px;
+  align-content: start;
+  gap: 6px;
+  padding: 26px 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
   text-align: center;
 }
 .lp .hs-lead {
-  font: 500 30px var(--sans);
+  font: 500 20px var(--sans);
   color: var(--muted);
+  white-space: pre;
 }
 .lp .hs-num {
-  font: 700 200px / 0.95 var(--sans);
-  letter-spacing: -0.06em;
+  font: 700 96px / 1 var(--sans);
+  letter-spacing: -0.05em;
   color: var(--film-accent);
   font-variant-numeric: tabular-nums;
 }
 .lp .hs-text {
-  max-width: 1100px;
-  font: 600 44px / 1.15 var(--sans);
-  letter-spacing: -0.03em;
+  font: 600 24px / 1.2 var(--sans);
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
-.lp .hs-note {
-  padding: 6px 14px;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  font: 400 18px var(--sans);
-  color: var(--muted);
-}
 .lp .hs-src {
-  font: 400 14px var(--mono);
+  margin-top: 4px;
+  font: 400 13px var(--mono);
   color: var(--faint);
 }

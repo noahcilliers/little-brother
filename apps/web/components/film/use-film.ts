@@ -2,17 +2,19 @@
 
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { PLAYBACK_DURATION, playbackAt } from "./film-tempo";
+import { STORY_SHIFT } from "./film-timeline";
 
 // A poster frame on the wide story layout until the film scrolls into view.
-const START_AT = playbackAt(44.2);
+const START_AT = playbackAt(STORY_SHIFT + 38.6);
 const LOOP_HOLD = 2.5;
 
-/** Playback clock, in playback seconds (see film-tempo): autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
+/** Playback clock, in playback seconds (see film-tempo), at 1× or 2×: autoplays from 0 when the stage is in view, pauses when it leaves, loops after a hold. */
 export function useFilm(stage: RefObject<HTMLElement | null>) {
   const [t, setT] = useState(START_AT);
   const [playing, setPlaying] = useState(false);
   const [reduced, setReduced] = useState(false);
-  const s = useRef({ t: START_AT, playing: false, userPaused: false, started: false, hold: 0 });
+  const [fast, setFast] = useState(false);
+  const s = useRef({ t: START_AT, playing: false, userPaused: false, started: false, hold: 0, speed: 1 });
 
   const set = useCallback((next: number) => {
     s.current.t = Math.max(0, Math.min(PLAYBACK_DURATION, next));
@@ -31,7 +33,7 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
       last = now;
       const st = s.current;
       if (st.playing) {
-        if (st.t < PLAYBACK_DURATION) set(st.t + dt);
+        if (st.t < PLAYBACK_DURATION) set(st.t + dt * st.speed);
         else {
           st.hold += dt;
           if (st.hold > LOOP_HOLD) {
@@ -82,10 +84,14 @@ export function useFilm(stage: RefObject<HTMLElement | null>) {
     st.userPaused = st.playing;
     play(!st.playing);
   };
+  const toggleSpeed = () => {
+    s.current.speed = s.current.speed === 1 ? 2 : 1;
+    setFast(s.current.speed === 2);
+  };
   const restart = () => {
     s.current.userPaused = false;
     seek(0);
     play(true);
   };
-  return { t, playing, reduced, seek, toggle, restart };
+  return { t, playing, reduced, fast, seek, toggle, toggleSpeed, restart };
 }

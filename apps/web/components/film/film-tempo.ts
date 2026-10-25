@@ -8,19 +8,19 @@ import { STORY_SHIFT } from "./film-timeline";
 const ST = STORY_SHIFT;
 // biome-ignore format: one stretch per row
 const TEMPO: [clock: number, rate: number][] = [
-  [0, 0.85],        // hook
-  [ST + 5.6, 0.9],  // people join
+  [0, 1.4],          // the problem and its stats
+  [ST + 5.6, 0.9],   // people join
   [ST + 19.2, 0.45], // duplicate catch
   [ST + 23.2, 0.45], // stale catch
   [ST + 28.4, 0.55], // two auth approaches diverge
-  [ST + 32, 0.5],   // conflict, decided from the phone
-  [ST + 38.6, 1],   // back out to the wide shot
-  [44.8, 0.7],      // why not git
-  [53.2, 0.65],     // how it works
-  [59.6, 0.85],     // learning: six short beats, one idea each
-  [75.6, 0.75],     // results
-  [90.6, 0.7],      // impact
-  [94, 0.8],        // close
+  [ST + 32, 0.5],    // conflict, decided from the phone
+  [ST + 38.6, 1],    // back out to the wide shot
+  [42.8, 0.7],       // why not git
+  [51.2, 0.65],      // how it works
+  [57.6, 0.85],      // learning: six short beats, one idea each
+  [73.6, 0.95],      // results
+  [88.6, 1],         // impact
+  [92, 1],           // close
 ];
 
 /** Playback second at which each stretch starts. */
