@@ -18,9 +18,10 @@ const TEMPO: [clock: number, rate: number][] = [
   [42.8, 0.7],       // why not git
   [51.2, 0.65],      // how it works
   [57.6, 0.85],      // learning: six short beats, one idea each
-  [73.6, 0.95],      // results
-  [88.6, 1],         // impact
-  [92, 1],           // close
+  [73.6, 1],         // benchmark timelapse, then why we run it
+  [86.6, 0.95],      // results
+  [101.6, 1],        // impact
+  [105, 1],          // close
 ];
 
 /** Playback second at which each stretch starts. */

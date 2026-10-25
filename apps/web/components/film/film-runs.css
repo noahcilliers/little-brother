@@ -1,0 +1,141 @@
+/* "How we measure": a grid of benchmark runs racing, a Convex sidebar they land in, then the callouts. */
+.lp .rn,
+.lp .rn-stage {
+  position: absolute;
+  inset: 0;
+}
+.lp .rn-stage {
+  transform-origin: 50% 50%;
+}
+.lp .rn-tl {
+  position: absolute;
+  inset: 92px 56px 44px;
+  display: grid;
+  grid-template-columns: 1fr 330px;
+  grid-template-rows: auto 1fr;
+  gap: 16px 20px;
+}
+.lp .rn-top {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-end;
+  gap: 44px;
+}
+.lp .rn-counter {
+  display: grid;
+  gap: 2px;
+}
+.lp .rn-counter small,
+.lp .rn-side-head {
+  font: 500 13px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lp .rn-counter b {
+  font: 600 30px / 1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.lp .rn-badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  font: 500 13px var(--mono);
+  color: var(--muted);
+}
+
+.lp .rn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 0;
+}
+.lp .rn-tile {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 9px 11px 8px;
+  border: 1px solid color-mix(in srgb, var(--hot) calc(var(--rn-flash, 0) * 100%), var(--line-2));
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 0 0 calc(var(--rn-flash, 0) * 4px) color-mix(in srgb, var(--hot) 30%, transparent);
+  font: 400 11.5px / 1.45 var(--mono);
+  overflow: hidden;
+}
+.lp .rn-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+}
+.lp .rn-head b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.lp .rn-head span {
+  color: var(--muted);
+}
+.lp .rn-head small {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  color: var(--faint);
+}
+.lp .rn-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  padding: 4px 0;
+  overflow: hidden;
+}
+.lp .rn-line {
+  flex-shrink: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.lp .rn-line i {
+  font-style: normal;
+  color: var(--faint);
+}
+.lp .rn-line b {
+  font-weight: 600;
+  color: var(--ink);
+}
+.lp .rn-catch {
+  flex-shrink: 0;
+  margin: 2px 0;
+  padding: 3px 7px;
+  border: 1px solid var(--hot);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+.lp .rn-catch b {
+  color: var(--hot);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.lp .rn-foot {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.lp .rn-tile.done .rn-solved {
+  color: var(--ink);
+  font-weight: 600;
+}

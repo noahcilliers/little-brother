@@ -1,7 +1,7 @@
 // The film's script: when each scene plays, the chapters on the scrubber, the subtitle line, and the story beats
 // every pane keys off. Film times are seconds on the one clock; BEAT times are on the story's own clock.
 
-export type SceneId = "hook" | "story" | "why" | "how" | "learn" | "measure" | "impact" | "close";
+export type SceneId = "hook" | "story" | "why" | "how" | "learn" | "runs" | "measure" | "impact" | "close";
 export type Transition = "cut" | "zoom" | "wipe" | "iris";
 
 /** The story's clock runs this far behind the film's: story second x plays at film second x + STORY_SHIFT. */
@@ -16,16 +16,19 @@ export const SCENES: Record<SceneId, [start: number, end: number, enter: Transit
   how: [51, 58, "wipe"],
   // learn holds six one-idea beats (scene-learn.tsx LEARN_SPAN, 16.6 s); everything after it moves with it.
   learn: [57.4, 74, "iris"],
-  measure: [73.4, 89, "zoom"],
-  impact: [88.4, 92.4, "iris"],
-  close: [91.8, 96.6, "zoom"],
+  // runs is the benchmark timelapse and why we run it (scene-runs.tsx RUNS_SPAN, 13.6 s).
+  runs: [73.4, 87, "zoom"],
+  measure: [86.4, 102, "zoom"],
+  impact: [101.4, 105.4, "iris"],
+  close: [104.8, 109.6, "zoom"],
 };
 export const TRANSITION_S = 0.6;
 
 // biome-ignore format: tabular scenario data
 export const CHAPTERS: [s: number, name: string][] = [
   [0, "Hook"], [ST + 5.5, "Connect"], [ST + 18.8, "Duplicate"], [ST + 23.2, "Stale"], [ST + 28.4, "Conflict"],
-  [42.8, "Why not git"], [51.2, "How it works"], [57.6, "Learning"], [73.6, "Results"], [88.6, "Impact"], [92, "Close"],
+  [42.8, "Why not git"], [51.2, "How it works"], [57.6, "Learning"], [73.6, "Benchmarks"], [86.6, "Results"],
+  [101.6, "Impact"], [105, "Close"],
 ];
 
 // One short caption per beat: the picture carries the detail, so a caption only says what to watch. Scenes with
@@ -47,6 +50,9 @@ export const SUBS: [s: number, text: string][] = [
   [ST + 35, "He picks one from his phone."],
   [ST + 36.8, "Ash's agent switches over."],
   [42.8, ""],
+  [73.6, "Pairs of headless agents run public benchmark tasks. Sped up."],
+  [76, "Each finished run lands in Convex."],
+  [78.6, ""],
 ];
 
 /** Story beats shared by the dashboard, phones and terminals, on the story's clock. */

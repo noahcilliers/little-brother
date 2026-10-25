@@ -13,6 +13,9 @@ import "./film-measure.css";
 import "./film-close.css";
 import "./film-callouts.css";
 import "./film-learn.css";
+import "./film-runs.css";
+import "./film-runs-side.css";
+import "./film-runs-why.css";
 import { type ReactNode, useRef } from "react";
 import { lastBefore } from "./film-clock";
 import { FilmControls } from "./film-controls";
@@ -25,13 +28,14 @@ import { SceneHow } from "./scene-how";
 import { SceneImpact } from "./scene-impact";
 import { SceneLearn } from "./scene-learn";
 import { SceneMeasure } from "./scene-measure";
+import { SceneRuns } from "./scene-runs";
 import { SceneStory, W } from "./scene-story";
 import { SceneWhy } from "./scene-why";
 import { useFilm } from "./use-film";
 import { useFullscreen } from "./use-fullscreen";
 import { useWidth } from "./use-stage";
 
-/** The landing page's launch video: one clock, eight scenes, the real dashboard in the middle of it. */
+/** The landing page's launch video: one clock, nine scenes, the real dashboard in the middle of it. */
 export function Film() {
   const wrap = useRef<HTMLDivElement>(null);
   const shell = useRef<HTMLDivElement>(null);
@@ -71,6 +75,7 @@ export function Film() {
             {layer("why", <SceneWhy s={local("why")} />)}
             {layer("how", <SceneHow s={local("how")} />)}
             {layer("learn", <SceneLearn s={local("learn")} />)}
+            {layer("runs", <SceneRuns s={local("runs")} still={still} />)}
             {layer("measure", <SceneMeasure s={local("measure")} />)}
             {layer("impact", <SceneImpact s={local("impact")} />)}
             {layer("close", <SceneClose s={local("close")} />)}
