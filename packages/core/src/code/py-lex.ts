@@ -21,6 +21,49 @@ function stringEnd(src: string, i: number, quote: string, triple: boolean): numb
   return src.length;
 }
 
+/** Whether the string opening at `i` has an f prefix (f, rf, Fr …): its `{…}` parts are code. */
+function isFString(src: string, i: number): boolean {
+  let k = i - 1;
+  let prefix = "";
+  while (k >= 0 && /[rRbBfFuU]/.test(src[k] ?? "")) prefix = src[k--] + prefix;
+  return prefix.length > 0 && prefix.length <= 2 && !/\w/.test(src[k] ?? "") && /f/i.test(prefix);
+}
+
+/**
+ * Literal ranges of an f-string body [open, end): everything except the replacement fields' code, and except
+ * strings nested inside that code. `{{` is a literal brace.
+ */
+function fStringLiterals(src: string, open: number, end: number): [number, number][] {
+  const out: [number, number][] = [];
+  let from = open;
+  let depth = 0;
+  let j = open;
+  while (j < end) {
+    const c = src[j];
+    if (depth === 0) {
+      if (c === "{" && src[j + 1] === "{") j += 2;
+      else if (c === "{") {
+        out.push([from, j]);
+        depth = 1;
+        j++;
+      } else j++;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      const close = src.indexOf(c, j + 1);
+      const stop = close < 0 || close > end ? end : close;
+      out.push([j + 1, stop]);
+      j = stop + 1;
+      continue;
+    }
+    if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) from = j + 1;
+    j++;
+  }
+  out.push([depth === 0 ? from : end, end]);
+  return out;
+}
+
 /**
  * Same-length copy of the source with comments and string contents blanked, so offsets still map to the
  * original while brackets, `#` and quotes inside strings can no longer confuse the line and token scans.
@@ -48,7 +91,9 @@ export function maskPython(src: string): string {
       const triple = src.startsWith(quote.repeat(3), i);
       const open = i + (triple ? 3 : 1);
       const end = stringEnd(src, open, quote, triple);
-      blank(open, end);
+      // Calls inside f-string fields are real uses (`f"{slugify(name)}.txt"`); only the literal text is blanked.
+      if (isFString(src, i)) for (const [from, to] of fStringLiterals(src, open, end)) blank(from, to);
+      else blank(open, end);
       const closed = end < src.length && src.charCodeAt(end) !== NEWLINE;
       i = closed ? end + (triple ? 3 : 1) : end;
       continue;

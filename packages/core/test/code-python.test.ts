@@ -206,6 +206,16 @@ def other():
     expect(d.references.sort()).toEqual(["app.py::A.n", "helpers.py::format_name"]);
   });
 
+  it("sees calls inside f-string fields, not inside their literal text or nested strings", () => {
+    const after = `${HELPERS}\n\ndef label(a, b):\n    return f"{format_name(a, b)} other() {{other()}} {a['other()']}"\n`;
+    const d = diffPython("helpers.py", HELPERS, after, r);
+    expect(d.references).toEqual(["helpers.py::format_name"]);
+    const masked = maskPython(after);
+    expect(masked).toHaveLength(after.length);
+    expect(masked).toContain("{format_name(a, b)}");
+    expect(masked).not.toContain("{{other()}}");
+  });
+
   it("parses a 2k-line file pair quickly", () => {
     const body = Array.from(
       { length: 400 },
