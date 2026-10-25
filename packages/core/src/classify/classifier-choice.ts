@@ -30,3 +30,9 @@ export function classifierPlan(choice: ClassifierChoice | undefined): Classifier
       return { pairModel: false, judge: "none" };
   }
 }
+
+/** The stored choice for a first pass (our model or rules alone) and an escalation judge: the settings UI's two steps. */
+export function classifierChoiceOf(plan: ClassifierPlan): ClassifierChoice {
+  if (plan.judge === "none") return plan.pairModel ? "model" : "rules";
+  return plan.pairModel ? `model+${plan.judge}` : plan.judge;
+}
