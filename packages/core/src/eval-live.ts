@@ -94,6 +94,12 @@ export function benchRun(r: EvalRunRow, landedAt: number): BenchRun {
   };
 }
 
+/** Published batches carry no clock; their results folder is named for the run date (haiku-1025 = Oct 25). */
+function runDate(batch: string): number {
+  const m = /(\d{4})/.exec(batch.split("/")[0] ?? "");
+  return m?.[1] ? Number(m[1]) : 0;
+}
+
 /**
  * Every batch the board knows of, newest first: those the harness announced (with a plan and a clock) and
  * those only published after the fact (their summaries are all there is, so planned equals graded).
@@ -101,7 +107,7 @@ export function benchRun(r: EvalRunRow, landedAt: number): BenchRun {
 export function benchmarkBatches(
   configs: EvalBatchConfig[],
   summaries: EvalSummary[],
-  limit = 12,
+  limit = 30,
 ): BenchBatch[] {
   const byBatch = new Map<string, EvalSummary[]>();
   for (const s of summaries) byBatch.set(s.batch, [...(byBatch.get(s.batch) ?? []), s]);
@@ -135,7 +141,7 @@ export function benchmarkBatches(
           ? -1
           : b.startedAt !== null
             ? 1
-            : b.batch.localeCompare(a.batch),
+            : runDate(b.batch) - runDate(a.batch) || b.batch.localeCompare(a.batch),
     )
     .slice(0, limit);
 }

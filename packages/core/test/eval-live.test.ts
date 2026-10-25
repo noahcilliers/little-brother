@@ -85,6 +85,14 @@ describe("benchmarkBatches", () => {
     expect(out[2]).toMatchObject({ status: "published", suite: "large", planned: 4, startedAt: null });
   });
 
+  it("orders after-the-fact batches by the run date in their folder name, newest first", () => {
+    const out = benchmarkBatches(
+      [],
+      [summary({ batch: "pilot-1024b/large" }), summary({ batch: "haiku-1025/stale" })],
+    );
+    expect(out.map((b) => b.batch)).toEqual(["haiku-1025/stale", "pilot-1024b/large"]);
+  });
+
   it("never plans fewer runs than were graded, and honours the limit", () => {
     const [b] = benchmarkBatches([config({ planned: 2 })], [summary({})]);
     expect(b?.planned).toBe(4);
