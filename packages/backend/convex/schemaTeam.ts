@@ -45,6 +45,17 @@ export const teamTables = {
     createdAt: v.number(),
     // "approval" (the default when absent): an invite link or a join code only asks; the owner admits.
     admission: v.optional(v.union(v.literal("approval"), v.literal("open"))),
+    // Which classifier this room runs (core CLASSIFIER_CHOICES); absent = our model, then Gemini.
+    classifier: v.optional(
+      v.union(
+        v.literal("model+gemini"),
+        v.literal("model+claude"),
+        v.literal("gemini"),
+        v.literal("claude"),
+        v.literal("model"),
+        v.literal("rules"),
+      ),
+    ),
   }).index("by_invite", ["inviteCode"]),
 
   // The waiting room: someone opened the invite link, or ran /little-brother:join from Claude Code,

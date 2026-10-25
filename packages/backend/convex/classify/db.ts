@@ -31,7 +31,10 @@ export const context = internalQuery({
     const now = Date.now();
     const priority = priorityLoader(ctx);
     const nodes = await loadStructural(ctx, next, now);
+    const agent = await ctx.db.get(next.agentId);
+    const team = agent?.teamId ? await ctx.db.get(agent.teamId) : null;
     return {
+      classifier: team?.classifier,
       view: await classifiedView(next, priority),
       embedded: next.embedding !== undefined,
       structural: await toCandidates(ctx, next, nodes, now, new Map(), priority),

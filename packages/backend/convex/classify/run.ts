@@ -4,6 +4,7 @@ import {
   acceptComparison,
   acceptDistilled,
   type Candidate,
+  classifierPlan,
   classifyStructural,
   comparisonPrompt,
   type Distiller,
@@ -90,7 +91,9 @@ export const classifyNode = internalAction({
     if (view.kind === "knowledge") return;
     const semantic = await semanticCandidates(ctx, nodeId, vector);
     const structural = classifyStructural(view, [...semantic, ...c.structural], { thresholds: c.thresholds });
-    const judge = selectJudge();
+    // The room's choice: our model first or not, and which judge (if any) gets what it leaves open.
+    const plan = classifierPlan(c.classifier);
+    const judge = selectJudge({ ...process.env, CLASSIFIER_JUDGE: plan.judge });
     const seen = new Set<string>(await ctx.runQuery(internal.classify.db.classifiedWith, { nodeId }));
     const open = [...structural.unsettled]
       .filter(({ pair }) => !seen.has(pair.other.id))
@@ -105,9 +108,12 @@ export const classifyNode = internalAction({
           b.pair.retrievalScore - a.pair.retrievalScore ||
           a.pair.other.at - b.pair.other.at,
       );
-    // Step 4 (behind CLASSIFIER_PAIR_MODEL=1): the learned model settles confident pairs; the rest go to the judge.
+    // Step 4: our learned model settles confident pairs (unless the room turned it off); the rest go to the judge.
     const tier = { nodeId, nextKind: view.kind, thresholds: c.thresholds };
-    const unsettled = await pairModelTier(ctx, tier, open);
+    const unsettled = await pairModelTier(ctx, tier, open, {
+      ...process.env,
+      CLASSIFIER_PAIR_MODEL: plan.pairModel ? "1" : "0",
+    });
     // Commands (tests, builds) are re-run constantly; they are not approaches a model should weigh.
     const wanted = judge && !/^(TEST|RUN)$/.test(view.verb) ? unsettled.slice(0, MAX_CALLS_PER_RUN) : [];
     // Over the call limit the run behaves as if no judge were configured: those pairs stay unsettled.

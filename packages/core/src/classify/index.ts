@@ -1,6 +1,7 @@
 export * from "./calibrate";
 export * from "./candidates";
 export * from "./catch";
+export * from "./classifier-choice";
 export * from "./collision";
 export * from "./compare";
 export * from "./decide";

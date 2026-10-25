@@ -209,7 +209,12 @@ describe("runSyncChecks", () => {
     expect(told.get(joshua)).toContain("rewrite this against it");
     expect(told.get(noah)).toContain("still uses the old interface");
     // The caller's next edit against the old interface is denied once, with the new shape; then it may go on.
-    const goal = await insert(t, { agentId: joshua, kind: "intent", verb: "PLAN", text: "PLAN checkout pay flow" });
+    const goal = await insert(t, {
+      agentId: joshua,
+      kind: "intent",
+      verb: "PLAN",
+      text: "PLAN checkout pay flow",
+    });
     const callerEdit = () =>
       insert(t, {
         parentId: goal,

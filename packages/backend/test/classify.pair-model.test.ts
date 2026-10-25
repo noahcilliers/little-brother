@@ -44,9 +44,13 @@ function tinyModel(bias: number, featureVersion = FEATURE_VERSION) {
   };
 }
 
-async function setup() {
+/** `classifier` puts both agents in a room with that setting; without it there's no room (the default applies). */
+async function setup(classifier?: "gemini") {
   const t = makeT();
   const [noah, ash] = await t.run(async (ctx) => {
+    const teamId = classifier
+      ? await ctx.db.insert("teams", { name: "r", inviteCode: "i", createdAt: 0, classifier })
+      : undefined;
     const ids = [];
     for (const handle of ["noah", "ash"]) {
       const memberId = await ctx.db.insert("members", {
@@ -58,6 +62,7 @@ async function setup() {
       ids.push(
         await ctx.db.insert("agents", {
           memberId,
+          ...(teamId ? { teamId } : {}),
           claudeSessionId: handle,
           machine: "m",
           repo: "r",
@@ -121,11 +126,10 @@ test("an uncertain pair escalates to the judge as before", async () => {
   expect(judgeCalls).toHaveBeenCalledTimes(1);
 });
 
-test("with the flag off, or no model stored, the judge decides", async () => {
-  const off = await setup();
+test("a room set to Gemini only, or no model stored, the judge decides", async () => {
+  const off = await setup("gemini");
   await off.t.mutation(internal.classify.pairModel.upload, { model: tinyModel(6) });
   expect((await off.classify())[0]?.source).toBe("llm");
-  vi.stubEnv("CLASSIFIER_PAIR_MODEL", "1");
   const empty = await setup();
   expect((await empty.classify())[0]?.source).toBe("llm");
   expect(judgeCalls).toHaveBeenCalledTimes(2);

@@ -1,3 +1,4 @@
+import { PAIR_MODEL_KEY } from "@lb/core";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, type QueryCtx, query } from "./_generated/server";
@@ -113,5 +114,56 @@ export const myStatus = query({
       .order("desc")
       .first();
     return last?.status === "pending" || last?.status === "denied" ? last.status : null;
+  },
+});
+
+// Convex injects env vars at runtime; the convex tsconfig deliberately omits node types.
+declare const process: { env: Record<string, string | undefined> };
+
+/** Host only: which classifier this room runs. */
+export const setClassifier = mutation({
+  args: {
+    roomId: v.id("teams"),
+    classifier: v.union(
+      v.literal("model+gemini"),
+      v.literal("model+claude"),
+      v.literal("gemini"),
+      v.literal("claude"),
+      v.literal("model"),
+      v.literal("rules"),
+    ),
+  },
+  handler: async (ctx, { roomId, classifier }) => {
+    const { member: host } = await requireOwner(ctx, roomId);
+    await ctx.db.patch(roomId, { classifier });
+    await writeLog(ctx, {
+      teamId: roomId,
+      level: "info",
+      kind: "settings",
+      text: `@${host.handle} set the classifier to ${classifier}`,
+    });
+    return null;
+  },
+});
+
+/** What the classifier setting can offer on this deployment: which providers have keys, whether our model is uploaded. */
+export const classifierOptions = query({
+  args: { roomId: v.string() },
+  handler: async (ctx, args) => {
+    const roomId = ctx.db.normalizeId("teams", args.roomId);
+    const room = roomId ? await viewRoom(ctx, roomId) : null;
+    if (!room) return null;
+    const model = await ctx.db
+      .query("settings")
+      .withIndex("by_key", (q) => q.eq("key", PAIR_MODEL_KEY))
+      .first();
+    const version = (model?.value as { version?: unknown } | undefined)?.version;
+    return {
+      current: room.team.classifier ?? "model+gemini",
+      isHost: room.member !== null && room.team.ownerId === room.member.userId,
+      gemini: !!process.env.GEMINI_API_KEY,
+      claude: !!process.env.ANTHROPIC_API_KEY,
+      model: typeof version === "string" ? version : null,
+    };
   },
 });

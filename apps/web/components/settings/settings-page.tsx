@@ -11,6 +11,7 @@ import { PageHeader } from "../shell/page-header";
 import { FormError, Input } from "../ui/field";
 import { Section } from "../ui/section";
 import { AdmissionChoice } from "./admission-choice";
+import { ClassifierChoice } from "./classifier-choice";
 
 function InviteSection({ room }: { room: Room }) {
   const rotate = useMutation(api.rooms.rotateInvite);
@@ -85,6 +86,9 @@ export function SettingsPage({ roomId }: { roomId: string }) {
                 <AdmissionChoice room={room} />
               </Section>
             ) : null}
+            <Section title="Classifier">
+              <ClassifierChoice room={room} />
+            </Section>
             <LeaveSection room={room} />
           </main>
         </>
