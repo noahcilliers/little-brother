@@ -15,7 +15,7 @@ const PER_AGENT_FINISHED_CAP = 100;
 const FAILED_CAP = 200;
 const LESSON_CAP = 50;
 
-/** Other live agents' open work, and work they finished within the active window, in `me`'s session. */
+/** Other agents' open work, and work they finished within the active window, in `me`'s session. */
 export async function sessionWork(ctx: QueryCtx, me: Doc<"agents">, now: number): Promise<Doc<"nodes">[]> {
   // Agents without a session (rows from before sessions existed) count as one shared session, as in
   // toCandidates; an index lookup on `undefined` matches exactly those.
@@ -26,7 +26,10 @@ export async function sessionWork(ctx: QueryCtx, me: Doc<"agents">, now: number)
       .withIndex("by_lb_session", (q) => q.eq("sessionId", sessionId))
       .order("desc")
       .take(SESSION_AGENTS_CAP)
-  ).filter((a) => a._id !== me._id && a.status !== "offline");
+  )
+  // Offline peers included: a teammate who finished still has unmerged work on their branch, and the windows
+  // below age it out. Dropping them missed every dependency on work that ended before the dependent began.
+    .filter((a) => a._id !== me._id);
   const out: Doc<"nodes">[] = [];
   for (const peer of peers) {
     const recent = (outcome: "open" | "succeeded", since: number, cap: number) =>

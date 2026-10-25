@@ -12,6 +12,13 @@ const FAILURE_LINES: RegExp[] = [
   /\berror TS\d+:/,
   /^Found [1-9]\d* errors?\b/m,
   /^npm (ERR!|error) /m,
+  // The runner died before any test ran: a missing dependency or a module that won't load. These print no
+  // summary line, and piped through `tail` they exit 0 (the eval's jsdom case: a stale path went unlearned).
+  /\bMISSING DEPENDENCY\b/,
+  /\bCannot find (module|dependency|package) ['"]/,
+  /^\s*(ModuleNotFoundError|ImportError|SyntaxError|ReferenceError|TypeError):\s/m,
+  /\bERROR collecting\b/,
+  /^\s*Error: (Failed to load|Cannot find)/m,
 ];
 
 /** Whether a test run's output shows a failure, whatever its exit code. */

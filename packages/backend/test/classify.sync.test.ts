@@ -177,7 +177,7 @@ describe("runSyncChecks", () => {
     expect(inbox.map((i) => [i.agentId, i.action])).toEqual([[ash, "warn"]]);
   });
 
-  test("signature change of a function another agent calls → semantic_conflict, block both sides", async () => {
+  test("signature change of a function another agent calls → semantic_conflict; the caller is told how to adapt, nobody is stopped", async () => {
     await insert(t, {
       agentId: joshua,
       text: "EDIT checkout src/checkout/pay-flow.ts",
@@ -201,11 +201,13 @@ describe("runSyncChecks", () => {
     const js = await sync(t, mine);
     expect(js[0]).toMatchObject({
       relation: "semantic_conflict",
-      action: "block",
+      action: "warn",
       direction: "other_needs_new",
     });
     const { inbox } = await rows(t);
-    expect(inbox.map((i) => [i.agentId, i.action])).toEqual([[joshua, "block"]]);
+    const told = new Map(inbox.map((i) => [i.agentId, i.text]));
+    expect(told.get(joshua)).toContain("update your calls to match it");
+    expect(told.get(noah)).toContain("still uses the old interface");
   });
 
   test("unrelated files → nothing", async () => {

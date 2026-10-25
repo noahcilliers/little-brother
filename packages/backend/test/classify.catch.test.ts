@@ -52,4 +52,41 @@ describe("catches", () => {
     // The owner of a redirected duplicate isn't interrupted at all; nobody is told twice.
     expect(notices.filter((n) => n.classificationId === caught[0]?._id).length).toBeLessThanOrEqual(1);
   });
+
+  test("work from a teammate who already finished still counts: depending on it is caught", async () => {
+    const t = makeT();
+    const noah = await joinMember(t, "noah");
+    const leo = await joinMember(t, "leo");
+    const mw = {
+      tool: "Write",
+      toolUseId: "n-mw",
+      files: ["src/auth/require-admin.ts"],
+      touches: [
+        {
+          path: "src/auth/require-admin.ts",
+          op: "create",
+          symbol: "src/auth/require-admin.ts::requireAdmin",
+        },
+      ],
+    };
+    await hook(t, noah, envelope("UserPromptSubmit", "n2", { prompt: "add admin middleware" }));
+    await hook(t, noah, envelope("PreToolUse", "n2", mw));
+    await hook(t, noah, envelope("PostToolUse", "n2", mw));
+    await hook(t, noah, envelope("SessionEnd", "n2"));
+
+    await hook(t, leo, envelope("UserPromptSubmit", "l2", { prompt: "admin-only delete endpoint" }));
+    await hook(
+      t,
+      leo,
+      envelope("PreToolUse", "l2", {
+        tool: "Edit",
+        toolUseId: "l-route",
+        files: ["src/catalog/routes.ts"],
+        touches: [{ path: "src/catalog/routes.ts", op: "write" }],
+        references: ["src/auth/require-admin.ts::requireAdmin"],
+      }),
+    );
+    const caught = await rows(t);
+    expect(caught.map((c) => c.relation)).toContain("ordering_dependency");
+  });
 });

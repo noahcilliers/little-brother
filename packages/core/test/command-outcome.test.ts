@@ -60,3 +60,18 @@ describe("commandFailed", () => {
     expect(commandFailed({ hookFailed: false, exitCode: 0, verb: "TEST", output: "14 passed" })).toBe(false);
   });
 });
+
+describe("runner failures before any test runs", () => {
+  it("reads a missing dependency piped through tail as a failure", () => {
+    const out = "> vitest run test/unit\n\n MISSING DEPENDENCY  Cannot find dependency 'jsdom'\n\n RUN  v3.2.7 /tmp/shop";
+    expect(commandFailed({ hookFailed: false, exitCode: 0, verb: "TEST", output: out })).toBe(true);
+    expect(testOutputFailed("E   ModuleNotFoundError: No module named 'click'")).toBe(false);
+    expect(testOutputFailed("ModuleNotFoundError: No module named 'click'")).toBe(true);
+    expect(testOutputFailed("=== ERROR collecting tests/test_context.py ===")).toBe(true);
+  });
+
+  it("does not flag a grep that mentions an error", () => {
+    expect(commandFailed({ hookFailed: false, exitCode: 0, verb: "RUN", output: "MISSING DEPENDENCY" })).toBe(false);
+  });
+});
+

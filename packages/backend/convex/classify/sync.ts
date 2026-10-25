@@ -1,4 +1,4 @@
-import { bySeverity, classifyStructural, type Judgment } from "@lb/core";
+import { bySeverity, classifyStructural, interventionAction, type Judgment } from "@lb/core";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { claimGate, openConflictGate } from "./gate";
@@ -32,7 +32,7 @@ export async function runSyncChecks(ctx: MutationCtx, nodeId: Id<"nodes">): Prom
   for (const j of judgments) {
     const id = rows.get(j.otherNodeId);
     const row = id ? await ctx.db.get(id) : null;
-    const action = row && row.nodeId === nodeId ? row.action : j.action;
+    const action = row && row.nodeId === nodeId ? row.action : interventionAction(j);
     if (action !== "ignore") applied.push({ ...j, action });
   }
   return { judgments: [...gated, ...applied].sort(bySeverity), rowIds: [...new Set(rows.values())] };

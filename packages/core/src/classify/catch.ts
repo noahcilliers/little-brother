@@ -28,6 +28,7 @@ export type InterventionInput = {
   relation: Relation;
   action: Action;
   confidence: number;
+  evidence?: string[];
   /** Tokens the catch would spare (the duplicated task, or the failed attempt behind a lesson); unknown → undefined. */
   avoidedTokens?: number;
 };
@@ -38,10 +39,22 @@ export type InterventionInput = {
  * apply; never raises one.
  */
 export function interventionAction(i: InterventionInput): Action {
+  // An interface change (rename, signature change, an imported symbol changing) has a mechanical fix: use
+  // the new interface. Stopping the agent made it abandon its own task in the STALE-bench runs; telling it
+  // the new shape lets it finish against it.
+  if (isInterfaceChange(i) && (i.action === "block" || i.action === "serialize")) return "warn";
   if (i.action !== "serialize" || NEVER_DOWNGRADE.has(i.relation)) return i.action;
   if (i.avoidedTokens === undefined) return i.action;
   const expected = i.confidence * i.avoidedTokens;
   return expected > NUDGE_COST.deny ? i.action : "warn";
+}
+
+/** Settled by the interface rules: R4 (delete/rename vs use), R5 (signature change vs call), R12 (imported symbol). */
+export function isInterfaceChange(j: { relation: Relation; evidence?: string[] }): boolean {
+  return (
+    (j.relation === "semantic_conflict" || j.relation === "ordering_dependency") &&
+    (j.evidence ?? []).some((e) => /^R(4|5|12):/.test(e))
+  );
 }
 
 export type CardNode = {

@@ -80,8 +80,9 @@ export async function toCandidates(
       out.push({ ...base, failedMemory: true });
       continue;
     }
-    if (n.agentId === next.agentId || agent.status === "offline" || agent.sessionId !== mine?.sessionId)
-      continue;
+    // A finished agent's work still counts: its branch hasn't landed, and the active window (done + 30 min)
+    // already ages it out. Skipping offline agents hid every clash with a teammate who finished first.
+    if (n.agentId === next.agentId || agent.sessionId !== mine?.sessionId) continue;
     if (n.kind === "knowledge" || !isActive(n, now)) continue;
     out.push({ ...base, node: { ...base.node, priority: await priority.of(n) }, failedMemory: false });
   }

@@ -1,3 +1,4 @@
+import { isInterfaceChange } from "./catch";
 import { bySeverity } from "./decide";
 import { type Judgment, type Relation, TYPE_OF } from "./types";
 
@@ -47,7 +48,14 @@ function line(j: Judgment, who: Counterpart): string {
   }
   const built = who.card && j.relation !== "repeats_failure" ? ` They built: ${who.card}.` : "";
   // Rules can label a textual clash as duplicated work (two creates of one file); advise by what it is.
-  const next = j.type === "duplicate" ? NEXT_STEP.duplicate : NEXT_STEP[j.relation];
+  const next =
+    j.type === "duplicate"
+      ? NEXT_STEP.duplicate
+      : isInterfaceChange(j)
+        ? j.direction === "other_needs_new"
+          ? `${who.name}'s code still uses the old interface; they've been told the new one. Keep going, and keep the old call working if it's cheap.`
+          : "Their version is the new interface (shown above): update your calls to match it and keep going; don't wait or stop."
+        : NEXT_STEP[j.relation];
   return `[little-brother] ${j.type ?? TYPE_OF[j.relation]} · ${lead}${built} ${next}`.trim();
 }
 

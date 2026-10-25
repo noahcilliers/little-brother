@@ -46,3 +46,13 @@ describe("contractCard", () => {
     expect(card).toContain("export const users = table('users', {");
   });
 });
+
+describe("interface changes", () => {
+  it("are told how to adapt instead of being stopped", () => {
+    const j = { relation: "semantic_conflict" as const, action: "block" as const, confidence: 0.9 };
+    expect(interventionAction({ ...j, evidence: ["R5: issueToken(user) now takes (user, ttl)"] })).toBe(
+      "warn",
+    );
+    expect(interventionAction({ ...j, evidence: ["judge: incompatible auth"] })).toBe("block");
+  });
+});
