@@ -8,7 +8,7 @@ import { STORY_SHIFT } from "./film-timeline";
 const ST = STORY_SHIFT;
 // biome-ignore format: one stretch per row
 const TEMPO: [clock: number, rate: number][] = [
-  [0, 0.9],          // stats, then the problem
+  [0, 1.4],          // the problem and its stats
   [ST + 5.6, 0.9],   // people join
   [ST + 19.2, 0.45], // duplicate catch
   [ST + 23.2, 0.45], // stale catch

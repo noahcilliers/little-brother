@@ -131,6 +131,10 @@
 .lp .fc-controls .fc-ctl:hover {
   border-color: var(--fg);
 }
+.lp .fc-controls .fc-ctl[aria-pressed="true"] {
+  border-color: var(--film-accent);
+  color: var(--film-accent);
+}
 .lp .fc-scrub {
   flex: 1;
   min-width: 160px;

@@ -80,7 +80,9 @@ export function Film() {
       <FilmControls
         p={film.t}
         playing={film.playing}
+        fast={film.fast}
         onToggle={film.toggle}
+        onSpeed={film.toggleSpeed}
         onRestart={film.restart}
         onSeek={film.seek}
       />
