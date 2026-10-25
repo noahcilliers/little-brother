@@ -94,10 +94,10 @@ export type RerunStat = { label: string; before: number | null; after: number | 
  * that is set too. Fill from apps/evals/results/<batch>/<suite>/report.md; the scene needs no change.
  */
 export const RERUN: { batch: string | null; note: string | null; stats: RerunStat[] } = {
-  batch: null,
-  note: null,
+  batch: "STALE-bench · Haiku agents",
+  note: "before: 10 of 19 caught · after: 46 of 48 across four passes",
   stats: [
-    { label: "STALE-bench recall", before: null, after: null, unit: "%" },
-    { label: "Mislabelled catches", before: null, after: null, unit: "" },
+    { label: "STALE-bench recall", before: 53, after: 96, unit: "%" },
+    { label: "Mislabelled catches", before: 5, after: 0, unit: "" },
   ],
 };
