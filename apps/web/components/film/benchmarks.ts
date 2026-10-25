@@ -84,3 +84,20 @@ export const RESULTS = {
     note: "pilot · 60 runs · 0 false positives · 88% flagged before the first edit",
   },
 } satisfies Record<string, Result>;
+
+/** One number from the rerun; `before` is the same measure from the batch that found the bugs, when known. */
+export type RerunStat = { label: string; before: number | null; after: number | null; unit: string };
+
+/**
+ * The rerun after tonight's fixes (deny-once, calls inside f-strings, two new functions in one file). Empty until
+ * it lands: the benchmark beat (runs-why.tsx) shows a stat only once its `after` is set, and its `before` only when
+ * that is set too. Fill from apps/evals/results/<batch>/<suite>/report.md; the scene needs no change.
+ */
+export const RERUN: { batch: string | null; note: string | null; stats: RerunStat[] } = {
+  batch: null,
+  note: null,
+  stats: [
+    { label: "STALE-bench recall", before: null, after: null, unit: "%" },
+    { label: "Mislabelled catches", before: null, after: null, unit: "" },
+  ],
+};

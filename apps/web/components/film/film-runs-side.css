@@ -1,0 +1,73 @@
+/* "How we measure" outcomes and the Convex sidebar finished runs land in. */
+.lp .rn-out.hit,
+.lp .rn-rows em.hit {
+  color: var(--film-accent);
+}
+.lp .rn-out.miss,
+.lp .rn-out.mislabel,
+.lp .rn-rows em.miss,
+.lp .rn-rows em.mislabel {
+  color: var(--hot);
+}
+.lp .rn-out.unmaterialized,
+.lp .rn-rows em.unmaterialized {
+  color: var(--faint);
+}
+
+.lp .rn-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 18px 18px 10px;
+  border: 1px solid color-mix(in srgb, var(--film-accent) calc(var(--rn-pulse, 0) * 100%), var(--line-2));
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.lp .rn-side-head {
+  margin: 0;
+}
+.lp .rn-side-head b {
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.lp .rn-count {
+  font: 800 96px / 1 var(--sans);
+  letter-spacing: -0.05em;
+  color: var(--film-accent);
+  font-variant-numeric: tabular-nums;
+}
+.lp .rn-side-sub {
+  font: 400 14px var(--sans);
+  color: var(--muted);
+}
+.lp .rn-rows {
+  display: grid;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp .rn-rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font: 400 12px / 1.4 var(--mono);
+}
+.lp .rn-rows b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.lp .rn-rows span {
+  color: var(--muted);
+}
+.lp .rn-rows em {
+  grid-column: 1 / -1;
+  font-style: normal;
+  color: var(--muted);
+}
